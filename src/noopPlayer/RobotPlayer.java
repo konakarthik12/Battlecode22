@@ -5,8 +5,7 @@ import battlecode.common.*;
 /**
  * This player does nothing
  */
-public strictfp class NOOPplayer {
-
+public strictfp class RobotPlayer {
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
