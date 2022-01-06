@@ -1,11 +1,11 @@
-package tutle1;
+package turtle1;
 
 import battlecode.common.*;
 
-import static tutle1.Utils.directions;
+import static turtle1.Utils.directions;
 
-public class Builder {
-    public static void run(RobotController rc) throws GameActionException {
+class Builder {
+    static void run(RobotController rc) throws GameActionException {
         for (RobotInfo robotInfo : rc.senseNearbyRobots()) {
             if (robotInfo.type == RobotType.ARCHON) {
                 Direction dirToArchon = rc.getLocation().directionTo(robotInfo.location);

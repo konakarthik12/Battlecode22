@@ -7,7 +7,7 @@ import battlecode.common.RobotController;
 import java.util.Random;
 
 @SuppressWarnings("InfiniteLoopStatement")
-public class RobotPlayer {
+public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
         Utils.rng = new Random(rc.getID() + 1);
 //        Utils.rng.setSeed(20);

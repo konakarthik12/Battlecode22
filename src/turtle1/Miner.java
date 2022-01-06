@@ -1,18 +1,18 @@
-package tutle1;
+package turtle1;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import static tutle1.Utils.rng;
+import static turtle1.Utils.rng;
 
 
-public class Miner {
+class Miner {
 
     static MapLocation destination = null;
 
-    public static void run(RobotController rc) throws GameActionException {
+    static void run(RobotController rc) throws GameActionException {
 
         while (destination == null || destination.equals(rc.getLocation()) || destination.distanceSquaredTo(rc.getLocation()) < 36) {
             destination = new MapLocation(rng.nextInt(rc.getMapHeight()), rng.nextInt(rc.getMapWidth()));

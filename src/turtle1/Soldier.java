@@ -1,8 +1,9 @@
-package monkey1;
+package turtle1;
 
 import battlecode.common.RobotController;
 
-class WatchTower {
+class Soldier {
     static void run(RobotController rc) {
+
     }
 }

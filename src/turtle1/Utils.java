@@ -1,4 +1,4 @@
-package tutle1;
+package turtle1;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
@@ -7,14 +7,22 @@ import battlecode.common.RobotType;
 
 import java.util.Random;
 
-public class Utils {
+class Utils {
+
     static final Direction[] directions = {Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH, Direction.NORTHWEST, Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST};
     static Random rng = null;
+    private static RobotController rc;
 
-    public static RobotInfo getNearbyArchon(RobotController rc) {
+    static RobotInfo getNearbyArchon() {
         RobotInfo[] robotInfos = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo robotInfo : robotInfos)
             if (robotInfo.type == RobotType.ARCHON) return robotInfo;
         return null;
+    }
+
+    static void init(RobotController rc) {
+        Utils.rc = rc;
+        rng = new Random(rc.getID() + 1);
+
     }
 }

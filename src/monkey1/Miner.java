@@ -7,11 +7,11 @@ import battlecode.common.RobotController;
 
 import static monkey1.Utils.rng;
 
-public class Miner {
+class Miner {
 
     static MapLocation destination = null;
 
-    public static void run(RobotController rc) throws GameActionException {
+    static void run(RobotController rc) throws GameActionException {
         if (destination == null) {
             destination = new MapLocation(rng.nextInt(rc.getMapHeight()), rng.nextInt(rc.getMapWidth()));
 //            System.out.println(rc.getMapHeight() + " " +  rc.getMapWidth());

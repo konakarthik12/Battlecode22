@@ -1,4 +1,4 @@
-package tutle1;
+package turtle1;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -8,9 +8,9 @@ import battlecode.common.RobotType;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static tutle1.Utils.directions;
+import static turtle1.Utils.directions;
 
-public class Archon {
+class Archon {
 
     static final int earlyMinerCap = 15;
     static int minersBuilt = 0;
@@ -20,7 +20,7 @@ public class Archon {
         buildDirs.addAll(Arrays.asList(Direction.cardinalDirections()));
     }
 
-    public static void run(RobotController rc) throws GameActionException {
+    static void run(RobotController rc) throws GameActionException {
         if (minersBuilt * rc.getArchonCount() < earlyMinerCap) {
             for (Direction dir : directions) {
                 if (rc.canBuildRobot(RobotType.MINER, dir)) {
