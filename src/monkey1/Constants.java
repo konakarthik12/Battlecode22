@@ -4,7 +4,7 @@ import battlecode.common.Direction;
 
 import java.util.Random;
 
-class Utils {
+class Constants {
     static final Direction[] directions = {
             Direction.EAST,
             Direction.WEST,
@@ -15,5 +15,7 @@ class Utils {
             Direction.SOUTHEAST,
             Direction.SOUTHWEST
     };
-    static Random rng = null;
+    static final int earlyMinerCap = 15; // all archon's combined
+    static final double minerSoldierRatio = 1.0;
+
 }

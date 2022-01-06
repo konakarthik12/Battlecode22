@@ -5,11 +5,11 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
-import static monkey1.Utils.directions;
+import static monkey1.utils.Utils.*;
+import static monkey1.Constants.*;
 
 class Archon {
 
-    static final int earlyMinerCap = 15;
     static int minersBuilt = 0;
 
     static void run(RobotController rc) throws GameActionException {
@@ -18,6 +18,12 @@ class Archon {
                 if (rc.canBuildRobot(RobotType.MINER, dir)) {
                     rc.buildRobot(RobotType.MINER, dir);
                     ++minersBuilt;
+                }
+            }
+        } else {
+            for (Direction dir : directions) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+                    rc.buildRobot(RobotType.SOLDIER, dir);
                 }
             }
         }
