@@ -3,12 +3,13 @@ package noopPlayer;
 import battlecode.common.*;
 
 /**
- * This player does nothing
+ * This player's job does nothing, idk we have this
  */
+
 public strictfp class RobotPlayer {
 
     /**
-     * run() is the method that is called when a robot is instantiated in the Battlecode world.
+     * run() is the method that is called when a robot is instantiated in the BattleCode world.
      * It is like the main function for your robot. If this method returns, the robot dies!
      *
      * @param rc  The RobotController object. You use it to perform actions from this robot, and to get
