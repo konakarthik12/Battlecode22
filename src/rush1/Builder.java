@@ -1,4 +1,4 @@
-package noopPlayer;
+package rush1;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

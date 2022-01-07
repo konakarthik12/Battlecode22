@@ -5,26 +5,23 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static monkey1.utils.Utils.*;
-import static monkey1.Constants.*;
+import static monkey1.Constants.directions;
+import static monkey1.utils.Utils.randomInt;
 
 class Miner {
 
+    static final int minerLowDist = 10;
+    static final int minerHighDist = 18;
     static MapLocation destination = null;
     static MapLocation spawn = null;
-
     static int highX = 0;
     static int lowX = 0;
     static int highY = 0;
     static int lowY = 0;
-
-    static final int minerLowDist = 10;
-    static final int minerHighDist = 18;
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();

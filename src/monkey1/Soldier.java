@@ -6,9 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static monkey1.Constants.*;
+import static monkey1.Constants.directions;
 import static monkey1.Miner.*;
-import static monkey1.utils.Utils.*;
+import static monkey1.utils.Utils.randomInt;
 
 class Soldier {
     private static MapLocation destination = null;

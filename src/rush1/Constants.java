@@ -1,4 +1,4 @@
-package monkey1;
+package rush1;
 
 import battlecode.common.Direction;
 

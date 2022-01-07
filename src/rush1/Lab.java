@@ -1,9 +1,10 @@
-package noopPlayer;
+package rush1;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
-class Soldier {
+class Lab {
+
     static void setup(RobotController rc) throws GameActionException {
 
     }

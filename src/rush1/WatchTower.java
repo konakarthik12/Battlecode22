@@ -1,12 +1,10 @@
-package noopPlayer;
+package rush1;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
-class Builder {
-
-
-    public static void setup(RobotController rc) {
+class WatchTower {
+    static void setup(RobotController rc) throws GameActionException {
 
     }
 

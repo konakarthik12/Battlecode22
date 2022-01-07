@@ -9,7 +9,7 @@ import java.util.Random;
  * The run() method inside this class is like your main function: this is what we'll call once your robot
  * is created!
  */
- public strictfp class RobotPlayer {
+public strictfp class RobotPlayer {
 
     /**
      * A random number generator.
