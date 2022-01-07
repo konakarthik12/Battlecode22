@@ -12,9 +12,11 @@ import static turtle2.Utils.directions;
 
 class Archon {
 
-    static final int earlyMinerCap = 15;
     static int minersBuilt = 0;
+    static final int earlyMinerCap = 15;
     static ArrayList<Direction> buildDirs = new ArrayList<>();
+
+    static final boolean first_builder = false;
 
     static {
         buildDirs.addAll(Arrays.asList(Direction.cardinalDirections()));
