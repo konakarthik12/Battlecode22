@@ -146,6 +146,29 @@ class Miner {
         return go;
     }
 
+    static double nextMove(RobotController rc, MapLocation cur, int depth) throws GameActionException {
+        int curDistSq = cur.distanceSquaredTo(destination);
+        if (depth == 3) {
+            return rc.senseRubble(cur) + curDistSq; // expected time
+        }
+        Direction go = Direction.EAST;
+        double curScore = rc.senseRubble(cur) + curDistSq;
+        for (Direction dir : directions) {
+            if (rc.canSenseLocation(cur.add(dir))) {
+                if (cur.add(dir).distanceSquaredTo(destination) < curDistSq) {
+//                    int rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                    double score = nextMove(rc, cur.add(dir), depth+1);
+
+
+                }
+            }
+        }
+        if (depth == 0) {
+            if (rc.canMove(go)) rc.move(go);
+        }
+        return curScore;
+    }
+
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         lowX = Math.max(spawn.x - minerLowDist, 0);
