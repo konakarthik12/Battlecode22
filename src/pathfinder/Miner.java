@@ -3,6 +3,7 @@ package pathfinder;
 import battlecode.common.*;
 import org.omg.PortableInterceptor.INACTIVE;
 
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -13,6 +14,23 @@ class Miner {
 //    static MapLocation destination = new MapLocation(28,5);
     static MapLocation destination = null;
     static MapLocation nearestLead = null;
+
+    static Direction spfa(RobotController rc) throws GameActionException {
+        MapLocation cur = rc.getLocation();
+        Direction go = null;
+        Queue bfs = new Queue();
+        int[] rubble = new int[49];
+
+        for (int dx = -3; dx <= 3; ++dx) {
+            for (int dy = -3; dy <= 3; ++dy) {
+                MapLocation loc = cur.translate(dx, dy);
+                if (rc.onTheMap(loc)) {
+                    rubble[(3+dx) * 7 + (3+dy)] = rc.senseRubble(loc);
+                }
+            }
+        }
+        return go;
+    }
 
     static MapLocation[] closerToDest(RobotController rc, MapLocation cur) throws GameActionException {
         MapLocation[] ret = new MapLocation[8];
@@ -35,8 +53,8 @@ class Miner {
         int[][] score = new int[7][7];
         for (int i = 0; i < 7; ++i) for (int j = 0; j < 7; ++j) score[i][j] = Integer.MAX_VALUE;
 
-        final int rubbleSensitivity = 5;
-        final int distSensitivity = 5;
+        final int rubbleSensitivity = 50;
+        final int distSensitivity = 10;
 
         for (int x = cur.x - 3; x <= cur.x + 3; ++x) {
             int rubble = 0;
@@ -81,7 +99,7 @@ class Miner {
                     int rubble = rc.senseRubble(cur.translate(dx, s));
                     int distSq = cur.translate(dx, s).distanceSquaredTo(destination);
                     int diffSq = cur.distanceSquaredTo(destination) - distSq;
-                    score[3 + dx][3 + s] += (4-s) * (rubble * rubbleSensitivity + distSq * distSensitivity);
+                    score[3 + dx][3 + s] += (4-s)/2 * (rubble * rubbleSensitivity + distSq * distSensitivity);
                 }
 
                 if (rc.canSenseLocation(cur.translate(dx, -s))) {
@@ -92,7 +110,7 @@ class Miner {
                     int rubble = rc.senseRubble(cur.translate(dx, -s));
                     int distSq = cur.translate(dx, -s).distanceSquaredTo(destination);
                     int diffSq = cur.distanceSquaredTo(destination) - distSq;
-                    score[3 + dx][3 + s] += (4-s) * (rubble * rubbleSensitivity + distSq * distSensitivity);
+                    score[3 + dx][3 + s] += (4-s)/2 * (rubble * rubbleSensitivity + distSq * distSensitivity);
                 }
             }
             for (int dy = -s; dy <= s; ++dy) {
@@ -104,7 +122,7 @@ class Miner {
                     int rubble = rc.senseRubble(cur.translate(s, dy));
                     int distSq = cur.translate(s, dy).distanceSquaredTo(destination);
                     int diffSq = cur.distanceSquaredTo(destination) - distSq;
-                    score[3 + s][3 + dy] += (4-s) * (rubble * rubbleSensitivity + distSq * distSensitivity);
+                    score[3 + s][3 + dy] += (4-s)/2 * (rubble * rubbleSensitivity + distSq * distSensitivity);
                 }
 
                 if (rc.canSenseLocation(cur.translate(-s, dy))) {
@@ -115,7 +133,7 @@ class Miner {
                     int rubble = rc.senseRubble(cur.translate(-s, dy));
                     int distSq = cur.translate(-s, dy).distanceSquaredTo(destination);
                     int diffSq = cur.distanceSquaredTo(destination) - distSq;
-                    score[3 - s][3 + dy] += (4-s) * (rubble * rubbleSensitivity + distSq * distSensitivity);
+                    score[3 - s][3 + dy] += (4-s)/2 * (rubble * rubbleSensitivity + distSq * distSensitivity);
                 }
             }
         }
@@ -132,8 +150,26 @@ class Miner {
             }
         }
 
-        if (best == Integer.MAX_VALUE) {
-//            go = cur.directionTo(reachable[rng.nextInt(reachable.length)]);
+        if (!rc.canMove(go)) go = directions[rng.nextInt(8)];
+
+        return go;
+    }
+
+    static Direction cheapNext(RobotController rc) throws GameActionException {
+        Direction go = Direction.EAST;
+        MapLocation cur = rc.getLocation();
+        int distSq = cur.distanceSquaredTo(destination);
+
+        int[][] rubble = new int[7][7];
+        int[][] score = new int[7][7];
+
+        for (int dx = -3; dx <= 3; ++dx) {
+            for (int dy = -3; dy <= 3; ++dy) {
+                MapLocation loc = cur.translate(dx, dy);
+                if (rc.onTheMap(loc)) {
+                    rubble[3+dx][3+dy] = rc.senseRubble(loc);
+                }
+            }
         }
 
         return go;
@@ -221,7 +257,7 @@ class Miner {
         final int sensitivity = 5;
         final int EPS = 3;
 
-        MapLocation[] locations = rc.getAllLocationsWithinRadiusSquared(cur, 8);
+        MapLocation[] locations = rc.getAllLocationsWithinRadiusSquared(cur, 18);
 
         int[] moveScores = new int[8]; // score for east, north, ... northeast northwest...
         Arrays.fill(moveScores,0);
@@ -229,20 +265,16 @@ class Miner {
         int curDistSq = cur.distanceSquaredTo(destination);
 
         int i = 0;
-        int c1 = 1;
-        int c2 = 4;
+        int c1 = 25;
+        int c2 = 3;
+        int c3 = 100;
         for (Direction dir : directions) {
             for (MapLocation location : locations) {
                 int distToDest = location.distanceSquaredTo(destination) - rc.adjacentLocation(dir).distanceSquaredTo(destination);
                 int distToMove = rc.adjacentLocation(dir).distanceSquaredTo(location);
-//                int rubble = rc.senseRubble(location);
-                int rubble = 100;
+                int rubble = rc.senseRubble(location);
 
-                if (rc.onTheMap(location.add(dir))) {
-                    rubble = rc.senseRubble(location.add(dir));
-                }
-
-                int scoreDelta = 1000000 * rubble - c1 * distToDest + c2 * distToMove;
+                int scoreDelta = (c3 * rubble - c1 * distToDest) / (1 + distToMove / c2);
                 moveScores[i] += scoreDelta;
             }
             i++;
@@ -265,7 +297,7 @@ class Miner {
 //            }
 //        }
 
-        rc.setIndicatorString(Arrays.toString(moveScores));
+//        rc.setIndicatorString(Arrays.toString(moveScores));
 
         int minIndex = 0;
         for (int j = 0; j < 8; ++j) {
@@ -293,20 +325,25 @@ class Miner {
     }
 
     static void run(RobotController rc) throws GameActionException {
-        if (destination == null) {
-            destination = new MapLocation(rng.nextInt(40) + 5, rng.nextInt(15) + 5);
+        if (destination == null || destination.equals(rc.getLocation())) {
+//            destination = new MapLocation(rng.nextInt(40) + 5, rng.nextInt(15) + 5);
+            destination = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
 //            destination = new MapLocation(22, 12);
+//            cheapNext(rc);
 //            next(rc);
         }
-        rc.setIndicatorString(destination.toString());
+
+//        rc.setIndicatorString(destination.toString());
+        rc.setIndicatorDot(destination, 255, 0 ,0);
 
         MapLocation cur = rc.getLocation();
-//        Direction go = nextMove(rc);
-        Direction go = next(rc);
+        Direction go = nextMove(rc);
+//        Direction go = next(rc);
+//        if (cur.distanceSquaredTo(destination) < 3) go = nextMove(rc);
 
         for (MapLocation location : rc.getAllLocationsWithinRadiusSquared(cur, 2)) {
             if (rc.canMineLead(location)) {
-//                rc.mineLead(location);
+                rc.mineLead(location);
             }
         }
         if (rc.canMove(go)) rc.move(go);

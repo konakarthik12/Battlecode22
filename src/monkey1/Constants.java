@@ -2,8 +2,8 @@ package monkey1;
 
 import battlecode.common.Direction;
 
-class Constants {
-    static final Direction[] directions = {
+public class Constants {
+    public static final Direction[] directions = {
             Direction.EAST,
             Direction.WEST,
             Direction.NORTH,
@@ -13,7 +13,7 @@ class Constants {
             Direction.SOUTHEAST,
             Direction.SOUTHWEST
     };
-    static final int earlyMinerCap = 15; // all archon's combined
-    static final double minerSoldierRatio = 1.0;
+    static final int earlyMinerCap = 40; // all archon's combined
+    static final double minerSoldierRatio = 2.5;
 
 }
