@@ -6,14 +6,14 @@ import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
 class Archon {
-    static boolean builtMiner = false;
+    static int builtMiner = 0;
 
     static void run(RobotController rc) throws GameActionException {
-        if (builtMiner) return;
+        if (builtMiner > 3) return;
         for (Direction dir : Constants.directions) {
             if (rc.canBuildRobot(RobotType.MINER, dir)) {
                 rc.buildRobot(RobotType.MINER, dir);
-                builtMiner = true;
+                builtMiner++;
                 break;
             }
         }

@@ -8,7 +8,6 @@ import battlecode.common.RobotType;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static turtle1.Utils.directions;
 
 class Archon {
 
@@ -22,7 +21,7 @@ class Archon {
 
     static void run(RobotController rc) throws GameActionException {
         if (minersBuilt * rc.getArchonCount() < earlyMinerCap) {
-            for (Direction dir : directions) {
+            for (Direction dir : Utils.directions) {
                 if (rc.canBuildRobot(RobotType.MINER, dir)) {
                     rc.buildRobot(RobotType.MINER, dir);
                     minersBuilt++;

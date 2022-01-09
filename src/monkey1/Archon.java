@@ -2,8 +2,7 @@ package monkey1;
 
 import battlecode.common.*;
 
-import static monkey1.Constants.*;
-import static monkey1.utils.Utils.randomInt;
+
 
 class Archon {
 
@@ -14,7 +13,7 @@ class Archon {
         MapLocation loc = rc.getLocation();
         rc.writeSharedArray(63, (loc.x << 6) + loc.y);
 //        if (minersBuilt < 4) {
-//            for (Direction dir : directions) {
+//            for (Direction dir : Constants.directions) {
 //                if (rc.canBuildRobot(RobotType.MINER, dir))  {
 //                    rc.buildRobot(RobotType.MINER, dir);
 //                    minersBuilt++;
@@ -24,8 +23,8 @@ class Archon {
 //        } else {
 //            return;
 //        }
-        if (minersBuilt * rc.getArchonCount() < earlyMinerCap) {
-            for (Direction dir : directions) {
+        if (minersBuilt * rc.getArchonCount() < Constants.earlyMinerCap) {
+            for (Direction dir : Constants.directions) {
                 if (rc.canBuildRobot(RobotType.MINER, dir)) {
                     rc.buildRobot(RobotType.MINER, dir);
                     ++minersBuilt;
@@ -33,8 +32,8 @@ class Archon {
             }
         } else {
             if (soldiersBuilt < 30) {
-                if (soldiersBuilt < minerSoldierRatio * minersBuilt) {
-                    for (Direction dir : directions) {
+                if (soldiersBuilt < Constants.minerSoldierRatio * minersBuilt) {
+                    for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                             rc.buildRobot(RobotType.SOLDIER, dir);
                             ++soldiersBuilt;
@@ -42,7 +41,7 @@ class Archon {
                         }
                     }
                 } else {
-                    for (Direction dir : directions) {
+                    for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.MINER, dir)) {
                             rc.buildRobot(RobotType.MINER, dir);
                             ++minersBuilt;
@@ -51,23 +50,23 @@ class Archon {
                     }
                 }
             } else {
-                if (randomInt(0, 100) <= 5) {
-                    for (Direction dir : directions) {
+                if (Utils.randomInt(0, 100) <= 5) {
+                    for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.BUILDER, dir)) {
                             rc.buildRobot(RobotType.BUILDER, dir);
                             break;
                         }
                     }
-                } else if (randomInt(0, 100) <= 10) {
-                    for (Direction dir : directions) {
+                } else if (Utils.randomInt(0, 100) <= 10) {
+                    for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.MINER, dir)) {
                             rc.buildRobot(RobotType.MINER, dir);
                             ++minersBuilt;
                             break;
                         }
                     }
-                } else if (randomInt(0, 100) <= 40) {
-                    for (Direction dir : directions) {
+                } else if (Utils.randomInt(0, 100) <= 40) {
+                    for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                             rc.buildRobot(RobotType.SOLDIER, dir);
                             ++soldiersBuilt;

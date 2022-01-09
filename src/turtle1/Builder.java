@@ -2,7 +2,6 @@ package turtle1;
 
 import battlecode.common.*;
 
-import static turtle1.Utils.directions;
 
 class Builder {
     static void run(RobotController rc) throws GameActionException {
@@ -15,7 +14,7 @@ class Builder {
                         rc.move(opposite);
                     }
                 } else {
-                    for (Direction dir : directions) {
+                    for (Direction dir : Utils.directions) {
                         MapLocation dirLoc = rc.getLocation().add(dir);
                         RobotInfo watchTower = rc.senseRobotAtLocation(dirLoc);
                         if (watchTower != null && watchTower.team.isPlayer() && watchTower.mode == RobotMode.PROTOTYPE && rc.canRepair(dirLoc)) {

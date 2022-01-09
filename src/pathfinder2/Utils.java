@@ -8,14 +8,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-public class Utils {
+class Utils {
 
     static Random rng = null;
     private static RobotController rc;
 
-    public static void setup(RobotController rc) {
+    static void setup(RobotController rc) {
         Utils.rc = rc;
-        rng = new Random(rc.getID() + 420);
+        rng = new Random(rc.getID() + 422);
     }
 
     /**
@@ -25,11 +25,11 @@ public class Utils {
      * @param b upper bound
      * @return random integer in range [a,b]
      */
-    public static int randomInt(int a, int b) {
-        return rng.nextInt(b - a + 1) + a;
+    static int randomInt(int a, int b) {
+        return Utils.rng.nextInt(b - a + 1) + a;
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         recurse("m", 0, 0);
 //        AtomicIntegerArray lengths = new AtomicIntegerArray(25);
 
@@ -81,26 +81,26 @@ public class Utils {
 
     static String s = "abcdefghijklmnopqrstuvwxy";
 
-    public static MapLocation toLocation(char c) {
+    static MapLocation toLocation(char c) {
         int x = s.indexOf(c) % 5;
         int y = s.indexOf(c) / 5;
         return new MapLocation(x - 2, -y + 2);
 
     }
 
-    public static char toChar(MapLocation loc) {
+    static char toChar(MapLocation loc) {
         return s.charAt((loc.x + 2) + -(loc.y - 2) * 5);
     }
 
 
-    public static boolean isSubset(String big, String small) {
+    static boolean isSubset(String big, String small) {
         for (char c : small.toCharArray()) {
             if (big.indexOf(c) == -1) return false;
         }
         return true;
     }
 
-    public static Direction randomDirection() {
-        return Constants.directions[rng.nextInt(8)];
+    static Direction randomDirection() {
+        return Constants.directions[Utils.rng.nextInt(8)];
     }
 }

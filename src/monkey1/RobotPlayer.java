@@ -3,7 +3,6 @@ package monkey1;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
-import monkey1.utils.Utils;
 
 @SuppressWarnings("InfiniteLoopStatement")
 public strictfp class RobotPlayer {

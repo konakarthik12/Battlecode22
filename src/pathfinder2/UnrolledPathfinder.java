@@ -2,11 +2,12 @@ package pathfinder2;
 
 import battlecode.common.*;
 
-public class UnrolledPathfinder {
+class UnrolledPathfinder {
     static final int RUBBLE_CONSTANT = 1;
-    static final int DIST_CONSTANT = 2;
-    public static MapLocation pathfind(RobotController rc, MapLocation dest) throws GameActionException {
+    static final int DIST_CONSTANT = 1;
+    static MapLocation pathfind(RobotController rc, MapLocation dest) throws GameActionException {
         MapLocation m_location = rc.getLocation();
+        int dest_dist = dest.distanceSquaredTo(m_location);
         MapLocation a_location = m_location.translate(-2, 2);
         int min_a_cost = 5000;
         MapLocation min_a_move = null;
@@ -512,100 +513,100 @@ public class UnrolledPathfinder {
             min_x_move = i_location;
         }
         MapLocation best_target = null;
-        int best_min = 60000;
+        int best_min = 6000;
         int temp;
         temp = min_a_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(a_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(a_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(a_location.toString());
             best_target = min_a_move;
             best_min = temp;
         }
         temp = min_b_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(b_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(b_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(b_location.toString());
             best_target = min_b_move;
             best_min = temp;
         }
         temp = min_c_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(c_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(c_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(c_location.toString());
             best_target = min_c_move;
             best_min = temp;
         }
         temp = min_d_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(d_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(d_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(d_location.toString());
             best_target = min_d_move;
             best_min = temp;
         }
         temp = min_e_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(e_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(e_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(e_location.toString());
             best_target = min_e_move;
             best_min = temp;
         }
         temp = min_f_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(f_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(f_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(f_location.toString());
             best_target = min_f_move;
             best_min = temp;
         }
         temp = min_j_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(j_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(j_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(j_location.toString());
             best_target = min_j_move;
             best_min = temp;
         }
         temp = min_k_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(k_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(k_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(k_location.toString());
             best_target = min_k_move;
             best_min = temp;
         }
         temp = min_o_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(o_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(o_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(o_location.toString());
             best_target = min_o_move;
             best_min = temp;
         }
         temp = min_p_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(p_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(p_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(p_location.toString());
             best_target = min_p_move;
             best_min = temp;
         }
         temp = min_t_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(t_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(t_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(t_location.toString());
             best_target = min_t_move;
             best_min = temp;
         }
         temp = min_u_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(u_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(u_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(u_location.toString());
             best_target = min_u_move;
             best_min = temp;
         }
         temp = min_v_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(v_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(v_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(v_location.toString());
             best_target = min_v_move;
             best_min = temp;
         }
         temp = min_w_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(w_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(w_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(w_location.toString());
             best_target = min_w_move;
             best_min = temp;
         }
         temp = min_x_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(x_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(x_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(x_location.toString());
             best_target = min_x_move;
             best_min = temp;
         }
         temp = min_y_cost * RUBBLE_CONSTANT + (dest.distanceSquaredTo(y_location)) * DIST_CONSTANT;
-        if (temp < best_min) {
+        if (dest.distanceSquaredTo(y_location) <= dest_dist && temp < best_min) {
             rc.setIndicatorString(y_location.toString());
             best_target = min_y_move;
             best_min = temp;

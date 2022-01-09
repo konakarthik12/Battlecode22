@@ -1,10 +1,8 @@
 package pathfinder;
 
-import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
 class WatchTower {
-    static void run(RobotController rc) throws GameActionException {
-
+    static void run(RobotController rc) {
     }
 }

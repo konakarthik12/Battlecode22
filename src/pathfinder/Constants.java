@@ -1,4 +1,4 @@
-package monkey1;
+package pathfinder;
 
 import battlecode.common.Direction;
 

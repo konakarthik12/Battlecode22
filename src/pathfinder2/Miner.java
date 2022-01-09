@@ -21,7 +21,7 @@ class Miner {
         } else {
 
             MapLocation pathfind = UnrolledPathfinder.pathfind(rc, destination);
-            if(pathfind==null) return Utils.randomDirection();
+            if (pathfind == null) return Utils.randomDirection();
             Direction direction = curLoc.directionTo(pathfind);
 
             if (curLoc.add(direction).equals(lastLoc)) {
@@ -44,6 +44,7 @@ class Miner {
         if (destination == null || destination.equals(rc.getLocation())) {
             // todo: out of bounds
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+
             locations++;
         }
         for (MapLocation mapLocation : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), rc.getType().actionRadiusSquared)) {
@@ -52,9 +53,16 @@ class Miner {
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         Direction go = nextMove(rc);
 
-        if (go != null && rc.canMove(go)) {
+        if (rc.canMove(go)) {
             lastLoc = rc.getLocation();
             rc.move(go);
+        } else if (rc.isLocationOccupied(rc.getLocation().add(go))) {
+            for (int i = 0; i < 10; i++) {
+                Direction randDir = Utils.randomDirection();
+                if (rc.canMove(randDir)) {
+                    rc.move(randDir);
+                }
+            }
         }
         if (rc.getRoundNum() == 2000) {
             System.out.println("Visited " + locations + " locations");

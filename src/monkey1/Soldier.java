@@ -2,18 +2,11 @@ package monkey1;
 
 import battlecode.common.*;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static monkey1.Constants.directions;
-import static monkey1.Miner.*;
-import static monkey1.utils.Utils.randomInt;
-import static monkey1.utils.Utils.rng;
 
 class Soldier {
     static Direction previousStep = Direction.CENTER;
     private static MapLocation destination = null;
+    private static MapLocation spawn = null;
     private static int soldierLowDist = 15;
     private static int soldierHighDist = 20;
 
@@ -37,7 +30,7 @@ class Soldier {
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = directions[i % 8];
+            Direction dir = Constants.directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
@@ -52,7 +45,7 @@ class Soldier {
             }
         }
 
-//        for (Direction dir : directions) {
+//        for (Direction dir : Constants.directions) {
 //            if (dir.equals(lastDir.opposite())) continue;
 //            MapLocation next = cur.add(dir);
 //
@@ -73,7 +66,7 @@ class Soldier {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : directions) {
+                for (Direction dir : Constants.directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
@@ -87,10 +80,10 @@ class Soldier {
 
     static void run(RobotController rc) throws GameActionException {
 //        if (destination == null || rc.getLocation().equals(destination)) {
-//            destination = new MapLocation((rng.nextInt(rc.getMapWidth()) - 3) + 3, (rng.nextInt(rc.getMapHeight() - 3) + 3));
+//            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
 //        }
         if (destination == null) {
-            destination = new MapLocation((rng.nextInt(rc.getMapWidth()) - 3) + 3, (rng.nextInt(rc.getMapHeight() - 3) + 3));
+            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
         rc.setIndicatorString(destination.toString());
 

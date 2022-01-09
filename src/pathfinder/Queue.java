@@ -1,11 +1,11 @@
 package pathfinder;
 
-public class Queue {
-    public int[] q = new int[49];
-    public int front = 0;
-    public int size = 0;
+class Queue {
+    int[] q = new int[49];
+    int front = 0;
+    int size = 0;
 
-    public Queue() {
+    Queue() {
 
     }
 

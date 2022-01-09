@@ -5,7 +5,6 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import static turtle1.Utils.rng;
 
 
 class Miner {
@@ -15,7 +14,7 @@ class Miner {
     static void run(RobotController rc) throws GameActionException {
 
         while (destination == null || destination.equals(rc.getLocation()) || destination.distanceSquaredTo(rc.getLocation()) < 36) {
-            destination = new MapLocation(rng.nextInt(rc.getMapHeight()), rng.nextInt(rc.getMapWidth()));
+            destination = new MapLocation(Utils.rng.nextInt(rc.getMapHeight()), Utils.rng.nextInt(rc.getMapWidth()));
         }
 
         rc.setIndicatorString(destination.toString());

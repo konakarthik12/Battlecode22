@@ -5,15 +5,8 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import java.awt.*;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
-import static monkey1.Constants.directions;
-import static monkey1.utils.Utils.randomInt;
-import static monkey1.utils.Utils.rng;
 
 class Miner {
 
@@ -35,7 +28,7 @@ class Miner {
         MapLocation[] ret = new MapLocation[8];
         int tot = 0;
         int curDistSq = cur.distanceSquaredTo(destination);
-        for (Direction dir : directions) {
+        for (Direction dir : Constants.directions) {
             if (rc.canSenseLocation(cur.add(dir)) && cur.add(dir).distanceSquaredTo(destination) <= curDistSq) {
                 ret[tot++] = cur.add(dir);
             }
@@ -149,7 +142,7 @@ class Miner {
             }
         }
 
-        if (!rc.canMove(go)) go = directions[randomInt(0,7)];
+        if (!rc.canMove(go)) go = Constants.directions[Utils.randomInt(0,7)];
 
         return go;
     }
@@ -163,7 +156,7 @@ class Miner {
         Direction go = Direction.EAST;
         double curScore = rc.senseRubble(cur) + curDistSq + dist;
         double temp = Double.MAX_VALUE;
-        for (Direction dir : directions) {
+        for (Direction dir : Constants.directions) {
             if (rc.canSenseLocation(cur.add(dir))) {
                 MapLocation temp2 = cur.add(dir);
 //                int tempDist = Math.max(Math.abs(temp2.x -destination.x), Math.abs(temp2.y - destination.y));
@@ -202,7 +195,7 @@ class Miner {
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = directions[i % 8];
+            Direction dir = Constants.directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
@@ -217,7 +210,7 @@ class Miner {
             }
         }
 
-//        for (Direction dir : directions) {
+//        for (Direction dir : Constants.directions) {
 //            if (dir.equals(lastDir.opposite())) continue;
 //            MapLocation next = cur.add(dir);
 //
@@ -238,7 +231,7 @@ class Miner {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : directions) {
+                for (Direction dir : Constants.directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
@@ -264,7 +257,7 @@ class Miner {
 
 //        if (rc.getRoundNum() > 300) rc.resign();
 
-        for (Direction dir : directions) {
+        for (Direction dir : Constants.directions) {
             if (dir.equals(lastDir.opposite())) continue;
             if (rc.getID() == 13192)
                 System.out.println(dir + " " + lastDir);
@@ -320,9 +313,9 @@ class Miner {
     static void run(RobotController rc) throws GameActionException {
         if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 2) {
             ++numReached;
-//            destination = new MapLocation(randomInt(lowX, highX-1), randomInt(lowY, highY-1));
-//            destination = new MapLocation(randomInt(lowX, highX), randomInt(lowY, highY));
-            destination = new MapLocation((rng.nextInt(rc.getMapWidth()) - 3) + 3, (rng.nextInt(rc.getMapHeight() - 3) + 3));
+//            destination = new MapLocation(Utils.randomInt(lowX, highX-1), Utils.randomInt(lowY, highY-1));
+//            destination = new MapLocation(Utils.randomInt(lowX, highX), Utils.randomInt(lowY, highY));
+            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
@@ -337,7 +330,7 @@ class Miner {
 //        } else betterNextMove(rc, rc.getLocation(), 0, previousStep);
 
         for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 2)) {
-            if (rc.senseLead(loc) > 2 && randomInt(0, near) == 0) {
+            if (rc.senseLead(loc) > 2 && Utils.randomInt(0, near) == 0) {
                 destination = loc;
                 near += 3;
             }
@@ -357,9 +350,9 @@ class Miner {
 
 //        if (rc.canMove(go)) rc.move(go);
 //        else {
-//            List<Direction> shuffledDirections = Arrays.asList(directions);
-//            Collections.shuffle(shuffledDirections);
-//            for (Direction dir : shuffledDirections) {
+//            List<Direction> shuffledConstants.directions = Arrays.asList(Constants.directions);
+//            Collections.shuffle(shuffledConstants.directions);
+//            for (Direction dir : shuffledConstants.directions) {
 //                if (rc.canMove(dir)) {
 //                    rc.move(dir);
 //                    break;

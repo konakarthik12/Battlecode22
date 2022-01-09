@@ -4,9 +4,6 @@ import battlecode.common.*;
 
 import java.util.Arrays;
 
-import static monkey1.Constants.directions;
-import static monkey1.utils.Utils.randomInt;
-import static monkey1.utils.Utils.rng;
 
 class Builder {
     static Direction previousStep = Direction.CENTER;
@@ -17,7 +14,7 @@ class Builder {
         MapLocation[] ret = new MapLocation[8];
         int tot = 0;
         int curDistSq = cur.distanceSquaredTo(destination);
-        for (Direction dir : directions) {
+        for (Direction dir : Constants.directions) {
             if (rc.canSenseLocation(cur.add(dir)) && cur.add(dir).distanceSquaredTo(destination) <= curDistSq) {
                 ret[tot++] = cur.add(dir);
             }
@@ -41,7 +38,7 @@ class Builder {
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = directions[i % 8];
+            Direction dir = Constants.directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
@@ -56,7 +53,7 @@ class Builder {
             }
         }
 
-//        for (Direction dir : directions) {
+//        for (Direction dir : Constants.directions) {
 //            if (dir.equals(lastDir.opposite())) continue;
 //            MapLocation next = cur.add(dir);
 //
@@ -77,7 +74,7 @@ class Builder {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : directions) {
+                for (Direction dir : Constants.directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
@@ -95,9 +92,9 @@ class Builder {
 
     static void run(RobotController rc) throws GameActionException {
         if (destination == null) {
-//            destination = new MapLocation(randomInt(lowX, highX), randomInt(lowY, highY));
-//            destination = new MapLocation(randomInt(lowX, highX), randomInt(lowY, highY));
-            destination = new MapLocation((rng.nextInt(rc.getMapWidth()) - 3) + 3, (rng.nextInt(rc.getMapHeight() - 3) + 3));
+//            destination = new MapLocation(Utils.randomInt(lowX, highX), Utils.randomInt(lowY, highY));
+//            destination = new MapLocation(Utils.randomInt(lowX, highX), Utils.randomInt(lowY, highY));
+            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
 
         nextMove(rc, rc.getLocation(), 0, previousStep);
