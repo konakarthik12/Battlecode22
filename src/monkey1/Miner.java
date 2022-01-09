@@ -23,14 +23,13 @@ class Miner {
 
     static final int minerLowDist = 10;
     static final int minerHighDist = 18;
-//    static final int minerLowDist = 1000;
-//    static final int minerHighDist = 1000;
     static MapLocation destination = null;
     static MapLocation spawn = null;
     static int highX = 0;
     static int lowX = 0;
     static int highY = 0;
     static int lowY = 0;
+    static int near = 0;
 
     static MapLocation[] closerToDest(RobotController rc, MapLocation cur) throws GameActionException {
         MapLocation[] ret = new MapLocation[8];
@@ -319,7 +318,7 @@ class Miner {
 
     static int called = 0;
     static void run(RobotController rc) throws GameActionException {
-        if (destination == null || rc.getLocation().equals(destination)) {
+        if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 2) {
             ++numReached;
 //            destination = new MapLocation(randomInt(lowX, highX-1), randomInt(lowY, highY-1));
 //            destination = new MapLocation(randomInt(lowX, highX), randomInt(lowY, highY));
@@ -338,11 +337,18 @@ class Miner {
 //        } else betterNextMove(rc, rc.getLocation(), 0, previousStep);
 
         for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 2)) {
+            if (rc.senseLead(loc) > 2 && randomInt(0, near) == 0) {
+                destination = loc;
+                near += 3;
+            }
             if (rc.canMineLead(loc)) {
                 // if see enemy mine all lead
-                if (rc.senseLead(loc) > 1) rc.mineLead(loc);
+                if (rc.senseLead(loc) > 1) {
+                    rc.mineLead(loc);
+                }
             }
         }
+        near = 0;
 
         if (rc.getRoundNum() >= 1998) {
             System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
