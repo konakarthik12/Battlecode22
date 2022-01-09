@@ -17,6 +17,7 @@ import static monkey1.utils.Utils.rng;
 
 class Miner {
 
+    static int numReached = 0;
     static int numSteps = 0;
     static Direction previousStep = Direction.CENTER;
 
@@ -186,35 +187,52 @@ class Miner {
         return Math.min(temp, 10000000.0);
     }
 
-    static int numReached = 0;
-
     static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
         int curDist = cur.distanceSquaredTo(destination);
         int score = Integer.MAX_VALUE;
         int rubble = rc.senseRubble(cur);
+        if (rc.isLocationOccupied(cur) && cur != rc.getLocation()) rubble = 1000;
         Direction nextDirection = Direction.CENTER;
 
         if (cur.equals(destination)) {
             return 0;
         } else if (depth == 3) {
-            return (10 + rc.senseRubble(cur)) + curDist;
+            return (20 + rubble) + curDist;
         }
 
-        for (Direction dir : directions) {
+        int toDest = cur.directionTo(destination).ordinal();
+
+        for (int i = (7 + toDest); i < (10 + toDest); ++i) {
+            Direction dir = directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
-
             if (rc.canSenseLocation(next)) {
-                int nextDist = next.distanceSquaredTo(destination);
-                if (nextDist <= curDist) {
-                    int nextScore = 10 + rubble + nextMove(rc, next, depth+1, dir);
+//                int dist = next.distanceSquaredTo(destination);
+//                if (dist <= curDist) {
+                    int nextScore = 20 + rubble + nextMove(rc, next, depth + 1, dir);
                     if (score > nextScore) {
                         score = nextScore;
                         nextDirection = dir;
                     }
-                }
+//                }
             }
         }
+
+//        for (Direction dir : directions) {
+//            if (dir.equals(lastDir.opposite())) continue;
+//            MapLocation next = cur.add(dir);
+//
+//            if (rc.canSenseLocation(next)) {
+//                int nextDist = next.distanceSquaredTo(destination);
+//                if (nextDist <= curDist) {
+//                    int nextScore = 10 + rubble + nextMove(rc, next, depth+1, dir);
+//                    if (score > nextScore) {
+//                        score = nextScore;
+//                        nextDirection = dir;
+//                    }
+//                }
+//            }
+//        }
 
         if (depth == 0) {
             if (rc.canMove(nextDirection)) {
@@ -287,10 +305,6 @@ class Miner {
         return score;
     }
 
-    static void debug(RobotController rc) throws GameActionException {
-
-    }
-
     static Direction directMove(RobotController rc) throws GameActionException {
         return rc.getLocation().directionTo(destination);
     }
@@ -303,6 +317,7 @@ class Miner {
         highY = Math.min(spawn.y + minerLowDist, rc.getMapHeight());
     }
 
+    static int called = 0;
     static void run(RobotController rc) throws GameActionException {
         if (destination == null || rc.getLocation().equals(destination)) {
             ++numReached;
@@ -318,16 +333,19 @@ class Miner {
         if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
             Direction go = directMove(rc);
             if (rc.canMove(go)) rc.move(go);
-//        } else nextMove(rc, rc.getLocation(), 0,0);
+//        } else optimizedNext(rc, encode(rc.getLocation(), 0, previousStep));
         } else nextMove(rc, rc.getLocation(), 0, previousStep);
 //        } else betterNextMove(rc, rc.getLocation(), 0, previousStep);
 
         for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 2)) {
-            if (rc.canMineLead(loc)) rc.mineLead(loc);
+            if (rc.canMineLead(loc)) {
+                // if see enemy mine all lead
+                if (rc.senseLead(loc) > 1) rc.mineLead(loc);
+            }
         }
 
         if (rc.getRoundNum() >= 1998) {
-            System.out.println(rc.getID() + " Reached " + numReached + " Locations");
+            System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
             rc.disintegrate();
         }
 

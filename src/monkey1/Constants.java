@@ -4,16 +4,16 @@ import battlecode.common.Direction;
 
 public class Constants {
     public static final Direction[] directions = {
-            Direction.EAST,
-            Direction.WEST,
             Direction.NORTH,
-            Direction.SOUTH,
-            Direction.NORTHWEST,
             Direction.NORTHEAST,
+            Direction.EAST,
             Direction.SOUTHEAST,
-            Direction.SOUTHWEST
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
     };
-    static final int earlyMinerCap = 40; // all archon's combined
+    static final int earlyMinerCap = 50; // all archon's combined
     static final double minerSoldierRatio = 2.5;
 
 }
