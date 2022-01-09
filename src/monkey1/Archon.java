@@ -13,6 +13,17 @@ class Archon {
     static int soldiersBuilt = 0;
 
     static void run(RobotController rc) throws GameActionException {
+        if (minersBuilt < 4) {
+            for (Direction dir : directions) {
+                if (rc.canBuildRobot(RobotType.MINER, dir))  {
+                    rc.buildRobot(RobotType.MINER, dir);
+                    minersBuilt++;
+                    break;
+                }
+            }
+        } else {
+            return;
+        }
         if (minersBuilt * rc.getArchonCount() < earlyMinerCap) {
             for (Direction dir : directions) {
                 if (rc.canBuildRobot(RobotType.MINER, dir)) {

@@ -6,12 +6,12 @@ import java.util.Random;
 
 public class Utils {
 
-    static Random rng = null;
+    public static Random rng = null;
     private static RobotController rc;
 
     public static void setup(RobotController rc) {
         Utils.rc = rc;
-        rng = new Random(rc.getID() + 420);
+        rng = new Random(rc.getID() + 422);
     }
 
     /**
