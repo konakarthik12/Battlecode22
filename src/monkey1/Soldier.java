@@ -96,9 +96,14 @@ class Soldier {
 
         nextMove(rc, rc.getLocation(), 0, previousStep);
 
-        if (rc.getRoundNum() % 50 == 0) {
-            int loc = rc.readSharedArray(0);
-            destination = new MapLocation((loc >> 6) & 63, loc & 63);
+        if (rc.getRoundNum() % 100 == 0) {
+//            if (rc.getRoundNum() % 200 == 0) {
+                int loc = rc.readSharedArray(0);
+                destination = new MapLocation((loc >> 6) & 63, loc & 63);
+//            } else {
+//                int loc = rc.readSharedArray(63);
+//                destination = new MapLocation((loc >> 6) & 63, loc & 63);
+//            }
         }
 
 

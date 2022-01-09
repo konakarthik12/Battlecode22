@@ -1,9 +1,6 @@
 package monkey1;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 import static monkey1.Constants.*;
 import static monkey1.utils.Utils.randomInt;
@@ -14,6 +11,8 @@ class Archon {
     static int soldiersBuilt = 0;
 
     static void run(RobotController rc) throws GameActionException {
+        MapLocation loc = rc.getLocation();
+        rc.writeSharedArray(63, (loc.x << 6) + loc.y);
 //        if (minersBuilt < 4) {
 //            for (Direction dir : directions) {
 //                if (rc.canBuildRobot(RobotType.MINER, dir))  {
@@ -67,7 +66,7 @@ class Archon {
                             break;
                         }
                     }
-                } else if (randomInt(0, 100) <= 20) {
+                } else if (randomInt(0, 100) <= 40) {
                     for (Direction dir : directions) {
                         if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                             rc.buildRobot(RobotType.SOLDIER, dir);
