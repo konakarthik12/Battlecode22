@@ -1,4 +1,4 @@
-package monkey1;
+package monkey2;
 
 import battlecode.common.*;
 
@@ -89,7 +89,7 @@ class Soldier {
 
         nextMove(rc, rc.getLocation(), 0, previousStep);
 
-        if (rc.getRoundNum() % 75 == 0) {
+        if (rc.getRoundNum() % 50 == 0) {
 //            if (rc.getRoundNum() % 200 == 0) {
                 int loc = rc.readSharedArray(0);
                 destination = new MapLocation((loc >> 6) & 63, loc & 63);

@@ -1,8 +1,8 @@
-package monkey1;
+package monkey2;
 
 import battlecode.common.*;
 
-import static monkey1.Utils.randomInt;
+import static monkey2.Utils.randomInt;
 
 
 class Archon {
@@ -11,6 +11,7 @@ class Archon {
     static int soldiersBuilt = 0;
 
     static void run(RobotController rc) throws GameActionException {
+        // make archon heal team mates
         MapLocation loc = rc.getLocation();
         rc.writeSharedArray(63, (loc.x << 6) + loc.y);
 //        if (minersBuilt < 4) {

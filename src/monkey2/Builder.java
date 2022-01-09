@@ -1,8 +1,10 @@
-package monkey1;
+package monkey2;
 
 import battlecode.common.*;
 
 import java.util.Arrays;
+
+import static monkey2.Constants.directions;
 
 
 class Builder {
@@ -14,7 +16,7 @@ class Builder {
         MapLocation[] ret = new MapLocation[8];
         int tot = 0;
         int curDistSq = cur.distanceSquaredTo(destination);
-        for (Direction dir : Constants.directions) {
+        for (Direction dir : directions) {
             if (rc.canSenseLocation(cur.add(dir)) && cur.add(dir).distanceSquaredTo(destination) <= curDistSq) {
                 ret[tot++] = cur.add(dir);
             }
@@ -38,7 +40,7 @@ class Builder {
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = Constants.directions[i % 8];
+            Direction dir = directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
@@ -74,7 +76,7 @@ class Builder {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : Constants.directions) {
+                for (Direction dir : directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
@@ -99,16 +101,20 @@ class Builder {
 
         nextMove(rc, rc.getLocation(), 0, previousStep);
 
+        // FIX BUILDER
         if (rc.getLocation().equals(destination)) {
-            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.EAST)) rc.buildRobot(RobotType.WATCHTOWER, Direction.EAST);
-            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.NORTH)) rc.buildRobot(RobotType.WATCHTOWER, Direction.NORTH);
-            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.WEST)) rc.buildRobot(RobotType.WATCHTOWER, Direction.WEST);
-            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.SOUTH)) rc.buildRobot(RobotType.WATCHTOWER, Direction.SOUTH);
-
-            if (rc.canRepair(rc.adjacentLocation(Direction.EAST))) rc.repair(rc.adjacentLocation(Direction.EAST));
-            if (rc.canRepair(rc.adjacentLocation(Direction.NORTH))) rc.repair(rc.adjacentLocation(Direction.NORTH));
-            if (rc.canRepair(rc.adjacentLocation(Direction.WEST))) rc.repair(rc.adjacentLocation(Direction.WEST));
-            if (rc.canRepair(rc.adjacentLocation(Direction.SOUTH))) rc.repair(rc.adjacentLocation(Direction.SOUTH));
+            boolean arePrototypes = false;
+            for (Direction dir : Direction.cardinalDirections()) {
+                MapLocation dirLoc = rc.getLocation().add(dir);
+                if (rc.onTheMap(dirLoc)) {
+                    RobotInfo watchTower = rc.senseRobotAtLocation(dirLoc);
+                    if (watchTower != null && watchTower.team.isPlayer() && watchTower.mode == RobotMode.PROTOTYPE && rc.canRepair(dirLoc)) {
+                        rc.repair(dirLoc);
+                    } else if (rc.canBuildRobot(RobotType.WATCHTOWER, dir)) {
+                        rc.buildRobot(RobotType.WATCHTOWER, dir);
+                    }
+                }
+            }
 //            for (Direction dir : Direction.cardinalDirections()) {
 //                RobotInfo info = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
 //                if (info != null && info.mode == RobotMode.PORTABLE) arePrototypes = true;
@@ -128,6 +134,16 @@ class Builder {
 //                    }
 //                }
 //            }
+
+//            if (rc.canRepair(rc.adjacentLocation(Direction.EAST))) rc.repair(rc.adjacentLocation(Direction.EAST));
+//            if (rc.canRepair(rc.adjacentLocation(Direction.NORTH))) rc.repair(rc.adjacentLocation(Direction.NORTH));
+//            if (rc.canRepair(rc.adjacentLocation(Direction.WEST))) rc.repair(rc.adjacentLocation(Direction.WEST));
+//            if (rc.canRepair(rc.adjacentLocation(Direction.SOUTH))) rc.repair(rc.adjacentLocation(Direction.SOUTH));
+//
+//            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.EAST)) rc.buildRobot(RobotType.WATCHTOWER, Direction.EAST);
+//            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.NORTH)) rc.buildRobot(RobotType.WATCHTOWER, Direction.NORTH);
+//            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.WEST)) rc.buildRobot(RobotType.WATCHTOWER, Direction.WEST);
+//            if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.SOUTH)) rc.buildRobot(RobotType.WATCHTOWER, Direction.SOUTH);
         }
     }
 }
