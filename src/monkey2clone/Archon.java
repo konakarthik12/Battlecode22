@@ -1,8 +1,8 @@
-package monkey2;
+package monkey2clone;
 
 import battlecode.common.*;
 
-import static monkey2.Utils.randomInt;
+import static monkey2clone.Utils.randomInt;
 
 
 class Archon {
@@ -19,7 +19,6 @@ class Archon {
             }
         }
     }
-
     static void run(RobotController rc) throws GameActionException {
         MapLocation loc = rc.getLocation();
         rc.writeSharedArray(63, (loc.x << 6) + loc.y);
@@ -55,7 +54,7 @@ class Archon {
                     }
                 } else if (randomInt(0, 100) <= 10) {
                     for (Direction dir : Constants.directions) {
-                        if (rc.canBuildRobot(RobotType.MINER, dir)) {
+                        if (rc.canBuildRobot(RobotType.MINER, dir)){
                             rc.buildRobot(RobotType.MINER, dir);
                             ++minersBuilt;
                             break;

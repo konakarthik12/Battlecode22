@@ -1,11 +1,14 @@
-package monkey2;
+package monkey2clone;
 
 import battlecode.common.*;
+
+import java.awt.*;
 
 
 class Soldier {
     static Direction previousStep = Direction.CENTER;
-    private static MapLocation destination = null;
+    static MapLocation destination = null;
+    static int sinceLastAttack = 0;
 
     static void setup(RobotController rc) throws GameActionException {
     }
@@ -55,13 +58,43 @@ class Soldier {
         return score;
     }
 
-    static void attack(RobotController rc) throws GameActionException {
+    static void attack(RobotController rc) throws GameActionException{
+        int priority = 100000;
+        MapLocation target = rc.getLocation();
         for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            if (rc.canAttack(robotInfo.location)) {
-                rc.attack(robotInfo.location);
-                rc.writeSharedArray(0, (robotInfo.location.x << 6) + robotInfo.location.y);
+            int multiplier;
+            switch (robotInfo.getType()) {
+                case SAGE: multiplier = 0; break;
+                case SOLDIER: multiplier = 1; break;
+                case WATCHTOWER: multiplier = 2; break;
+                case MINER: multiplier = 3; break;
+                case BUILDER: multiplier = 4; break;
+                default: multiplier = 5;
+            }
+
+            int score = multiplier * 10000 + robotInfo.getHealth();
+            if (score < priority) {
+                priority = score;
+                target = robotInfo.location;
             }
         }
+
+        if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
+
+        if (rc.canAttack(target))  {
+            rc.attack(target);
+            sinceLastAttack = 0;
+        } else {
+            ++sinceLastAttack;
+        }
+
+//        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+//            if (rc.canAttack(robotInfo.location)) {
+//                rc.attack(robotInfo.location);
+//                rc.writeSharedArray(0, (robotInfo.location.x << 6) + robotInfo.location.y);
+////                rc.writeSharedArray(Utils.randomInt(0,4), (robotInfo.location.x << 6) + robotInfo.location.y);
+//            }
+//        }
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
@@ -70,7 +103,8 @@ class Soldier {
             rc.setIndicatorString(destination.toString());
         }
 
-        if (rc.getRoundNum() % 50 == 0) {
+//        if (rc.getRoundNum() % 50 == 0) {
+        if (sinceLastAttack >= Constants.soldierPatience) {
             int loc = rc.readSharedArray(0);
             destination = new MapLocation((loc >> 6) & 63, loc & 63);
             rc.setIndicatorString(destination.toString());

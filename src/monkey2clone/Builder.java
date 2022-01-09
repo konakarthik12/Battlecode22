@@ -1,14 +1,14 @@
-package monkey2;
+package monkey2clone;
 
 import battlecode.common.*;
 
+import static monkey2clone.Constants.directions;
 
-class Soldier {
+
+class Builder {
     static Direction previousStep = Direction.CENTER;
-    private static MapLocation destination = null;
-
-    static void setup(RobotController rc) throws GameActionException {
-    }
+    static MapLocation destination = null;
+    static MapLocation spawn;
 
     static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
         int curDist = cur.distanceSquaredTo(destination);
@@ -26,7 +26,7 @@ class Soldier {
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = Constants.directions[i % 8];
+            Direction dir = directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
@@ -38,12 +38,13 @@ class Soldier {
             }
         }
 
+
         if (depth == 0) {
             if (rc.canMove(nextDirection)) {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : Constants.directions) {
+                for (Direction dir : directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
@@ -55,31 +56,36 @@ class Soldier {
         return score;
     }
 
-    static void attack(RobotController rc) throws GameActionException {
-        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            if (rc.canAttack(robotInfo.location)) {
-                rc.attack(robotInfo.location);
-                rc.writeSharedArray(0, (robotInfo.location.x << 6) + robotInfo.location.y);
+    static void buildWatchTowerCardinal(RobotController rc) throws GameActionException {
+        if (rc.getLocation().equals(destination)) {
+            boolean arePrototypes = false;
+            for (Direction dir : Direction.cardinalDirections()) {
+                MapLocation dirLoc = rc.getLocation().add(dir);
+                if (rc.onTheMap(dirLoc)) {
+                    RobotInfo watchTower = rc.senseRobotAtLocation(dirLoc);
+                    if (watchTower != null && watchTower.team.isPlayer() && watchTower.mode == RobotMode.PROTOTYPE && rc.canRepair(dirLoc)) {
+                        rc.repair(dirLoc);
+                    } else if (rc.canBuildRobot(RobotType.WATCHTOWER, dir)) {
+                        rc.buildRobot(RobotType.WATCHTOWER, dir);
+                    }
+                }
             }
         }
+    }
+
+    static void setup(RobotController rc) throws GameActionException {
+        spawn = rc.getLocation();
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
         if (destination == null) {
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
-            rc.setIndicatorString(destination.toString());
-        }
-
-        if (rc.getRoundNum() % 50 == 0) {
-            int loc = rc.readSharedArray(0);
-            destination = new MapLocation((loc >> 6) & 63, loc & 63);
-            rc.setIndicatorString(destination.toString());
         }
     }
 
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         nextMove(rc, rc.getLocation(), 0, previousStep);
-        attack(rc);
+        if (rc.getLocation().equals(destination)) buildWatchTowerCardinal(rc);
     }
 }
