@@ -107,6 +107,11 @@ class Builder {
             if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.NORTH)) rc.buildRobot(RobotType.WATCHTOWER, Direction.NORTH);
             if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.WEST)) rc.buildRobot(RobotType.WATCHTOWER, Direction.WEST);
             if (rc.canBuildRobot(RobotType.WATCHTOWER, Direction.SOUTH)) rc.buildRobot(RobotType.WATCHTOWER, Direction.SOUTH);
+
+            if (rc.canRepair(rc.adjacentLocation(Direction.EAST))) rc.repair(rc.adjacentLocation(Direction.EAST));
+            if (rc.canRepair(rc.adjacentLocation(Direction.NORTH))) rc.repair(rc.adjacentLocation(Direction.NORTH));
+            if (rc.canRepair(rc.adjacentLocation(Direction.WEST))) rc.repair(rc.adjacentLocation(Direction.WEST));
+            if (rc.canRepair(rc.adjacentLocation(Direction.SOUTH))) rc.repair(rc.adjacentLocation(Direction.SOUTH));
         }
     }
 }

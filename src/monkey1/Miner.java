@@ -351,7 +351,7 @@ class Miner {
         near = 0;
 
         if (rc.getRoundNum() >= 1998) {
-            System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
+//            System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
             rc.disintegrate();
         }
 

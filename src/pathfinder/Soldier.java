@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import static monkey1.Constants.*;
 import static monkey1.utils.Utils.randomInt;
+import static monkey1.utils.Utils.rng;
 
 class Soldier {
 
@@ -216,21 +217,30 @@ class Soldier {
     }
 
     static void run(RobotController rc) throws GameActionException {
-        if (destination == null || rc.getLocation().equals(destination)) {
-            destination = new MapLocation(randomInt(lowX, highX), randomInt(lowY, highY));
+        if (destination == null) {
+            destination = new MapLocation((rng.nextInt(rc.getMapWidth()) - 3) + 3, (rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
 
-        RobotInfo[] test = rc.senseNearbyRobots();
+        if (rc.getRoundNum() % 50 == 0) {
+            int loc = rc.readSharedArray(0);
+            if (loc > 0) destination = new MapLocation((loc) & 63, (loc >> 6) & 63);
+        }
 
-        boolean haveWritten = false;
+//        if (destination == null || rc.getLocation().equals(destination)) {
+//            destination = new MapLocation(randomInt(lowX, highX), randomInt(lowY, highY));
+//        }
+
+
+        Team enemy = (rc.getTeam() == Team.A) ? Team.B : Team.A;
+//        RobotInfo[] test = rc.senseNearbyRobots();
+        RobotInfo[] test = rc.senseNearbyRobots(RobotType.SOLDIER.visionRadiusSquared, enemy);
+
+        System.out.println(rc.readSharedArray(0));
 
         for (RobotInfo r : test) {
+            rc.writeSharedArray(0, (r.location.x << 6) + r.location.y);
             if (rc.canAttack(r.location)) {
                 rc.attack(r.location);
-                if (!haveWritten) {
-                    rc.writeSharedArray(0, (r.location.x << 6) + r.location.y);
-                    haveWritten = true;
-                }
             }
         }
 

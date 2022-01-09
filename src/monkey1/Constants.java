@@ -13,7 +13,7 @@ public class Constants {
             Direction.WEST,
             Direction.NORTHWEST
     };
-    static final int earlyMinerCap = 50; // all archon's combined
+    static final int earlyMinerCap = 100; // all archon's combined
     static final double minerSoldierRatio = 2.5;
 
 }
