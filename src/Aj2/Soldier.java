@@ -1,8 +1,6 @@
-package monkey2clone;
+package Aj2;
 
 import battlecode.common.*;
-
-import java.awt.*;
 
 
 class Soldier {
@@ -64,14 +62,24 @@ class Soldier {
         for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             int multiplier;
             switch (robotInfo.getType()) {
-                case SAGE: multiplier = 0; break;
-                case SOLDIER: multiplier = 1; break;
-                case WATCHTOWER: multiplier = 2; break;
-                case MINER: multiplier = 3; break;
-                case BUILDER: multiplier = 4; break;
-                default: multiplier = 5;
+                case SAGE:
+                    multiplier = 0;
+                    break;
+                case SOLDIER:
+                    multiplier = 1;
+                    break;
+                case BUILDER:
+                    multiplier = 2;
+                    break;
+                case WATCHTOWER:
+                    multiplier = 3;
+                    break;
+                case MINER:
+                    multiplier = 4;
+                    break;
+                default:
+                    multiplier = 5;
             }
-
             int score = multiplier * 10000 + robotInfo.getHealth();
             if (score < priority) {
                 priority = score;
@@ -81,11 +89,15 @@ class Soldier {
 
         if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
 
-        if (rc.canAttack(target))  {
+        if (rc.canAttack(target)){
             rc.attack(target);
             sinceLastAttack = 0;
         } else {
             ++sinceLastAttack;
+        }
+
+        if (sinceLastAttack == 1 && target.equals(rc.getLocation())) {
+
         }
 
 //        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
@@ -99,10 +111,17 @@ class Soldier {
 
     static void setDestination(RobotController rc) throws GameActionException {
         if (destination == null) {
-            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+//            destination = new MapLocation(rc.readSharedArray(8) / 64, rc.readSharedArray(8) % 64);
+            if(Utils.randomInt(0, 4) == 0 && rc.readSharedArray(8) == 65535){
+                destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+                rc.writeSharedArray(8, destination.x * 64 + destination.y);
+            } else {
+                destination = new MapLocation(rc.readSharedArray(8) / 64, rc.readSharedArray(8) % 64);
+            }
             rc.setIndicatorString(destination.toString());
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }
+
 
 //        if (rc.getRoundNum() % 50 == 0) {
         if (sinceLastAttack >= Constants.soldierPatience) {
@@ -112,10 +131,32 @@ class Soldier {
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }
     }
-
+    static void checkLead(RobotController rc) throws GameActionException{
+        int lead = 0;
+        int teamMiner = 0;
+        int oppSoldier = 0;
+        for(MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 20)){
+            if(rc.senseLead(loc) > 1) lead++;
+        }
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+            if(robotInfo.getType().equals(RobotType.SOLDIER)){
+                oppSoldier++;
+            }
+        }
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam())) {
+            if(robotInfo.getType().equals(RobotType.MINER)){
+                teamMiner++;
+            }
+        }
+        if(lead - 5 * teamMiner - 1000 * oppSoldier >= 10){
+            rc.writeSharedArray(7, rc.getLocation().x * 64 + rc.getLocation().y);
+            rc.writeSharedArray(5, rc.readSharedArray(5) + lead - 5 * teamMiner);
+        }
+    }
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         nextMove(rc, rc.getLocation(), 0, previousStep);
         attack(rc);
+        checkLead(rc);
     }
 }
