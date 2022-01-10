@@ -65,11 +65,26 @@ class Miner {
     }
 
     static void move(RobotController rc) throws GameActionException {
-        if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
-            Direction go = directMove(rc);
-            if (rc.canMove(go)) rc.move(go);
-        } else {
-            nextMove(rc, rc.getLocation(), 0, previousStep);
+//        if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
+//            Direction go = directMove(rc);
+//            if (rc.canMove(go)) rc.move(go);
+//        } else {
+//            nextMove(rc, rc.getLocation(), 0, previousStep);
+//        }
+        MapLocation loc = rc.getLocation();
+        int curDist = loc.distanceSquaredTo(destination);
+        Direction nextDirection = Pathfinder.pathfind(rc, destination);
+
+        if (rc.canMove(nextDirection)) {
+            previousStep = nextDirection;
+            rc.move(nextDirection);
+        } else if (curDist > 2) {
+            for (Direction dir : Constants.directions) {
+                MapLocation next = loc.add(dir);
+                if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
+                    if (rc.canMove(dir)) rc.move(dir);
+                }
+            }
         }
     }
 
@@ -81,6 +96,7 @@ class Miner {
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
+
     static void excessLead(RobotController rc) throws GameActionException{
         int excess = 0;
         int minerCount = 0;
@@ -96,6 +112,7 @@ class Miner {
         }
         rc.writeSharedArray(5, rc.readSharedArray(5) + Math.max(0, excess - 4 * minerCount));
     }
+
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         move(rc);

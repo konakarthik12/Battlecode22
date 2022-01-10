@@ -90,7 +90,6 @@ class Miner {
 
         int startCount = Clock.getBytecodeNum();
         Direction nextDirection = Pathfinder.pathfind(rc, destination);
-        rc.setIndicatorString(String.valueOf(Clock.getBytecodeNum() - startCount));
 
         if (rc.canMove(nextDirection)) {
             previousStep = nextDirection;
