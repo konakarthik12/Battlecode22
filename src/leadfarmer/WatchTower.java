@@ -1,4 +1,4 @@
-package monkey2;
+package leadfarmer;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

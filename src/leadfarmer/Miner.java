@@ -1,13 +1,14 @@
-package turtle2;
+package leadfarmer;
 
 import battlecode.common.*;
 
-class Soldier {
+class Miner {
 
     static int numReached = 0;
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
+    static int near = 0;
 
 
     static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
@@ -80,35 +81,44 @@ class Soldier {
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
 
-    static void attack(RobotController rc) throws GameActionException {
-        int priority = 100000;
-        MapLocation target = rc.getLocation();
-        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            int multiplier;
-            switch (robotInfo.getType()) {
-                case SAGE: multiplier = 0; break;
-                case SOLDIER: multiplier = 1; break;
-                case WATCHTOWER: multiplier = 2; break;
-                case MINER: multiplier = 3; break;
-                case BUILDER: multiplier = 4; break;
-                default: multiplier = 5;
-            }
-
-            int score = multiplier * 10000 + robotInfo.getHealth();
-            if (score < priority) {
-                priority = score;
-                target = robotInfo.location;
-            }
-        }
-
-        if (rc.canAttack(target)) {
-            rc.writeSharedArray(0, (target.x << 6) + target.y);
-            rc.attack(target);
-        }
-    }
-
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         move(rc);
+        /*
+        for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 20)) {
+            if (rc.senseLead(loc) > 2 && Utils.randomInt(0, near) == 0) {
+                destination = loc;
+                near += 3;
+            }
+            if (rc.canMineLead(loc)) {
+                if (rc.senseLead(loc) > 2) {
+                    rc.mineLead(loc);
+                }
+            }
+        }
+        near = 0;
+        */
+//      RobotInfo[] robots = rc.senseNearbyRobots();
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
+        int minerCount = 0;
+        // ...
+        for(RobotInfo robot : robots){
+            if(robot.type.equals(RobotType.MINER)) {
+                minerCount++;
+            }
+        }
+        // ...
+        for(MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 16)){
+            if(rc.senseLead(loc) > 7 && minerCount == 0){
+                destination = loc;
+            }
+            if(rc.canMineLead(loc) && rc.senseLead(loc) > 5){
+                rc.mineLead(loc);
+            }
+        }
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+            rc.writeSharedArray(Utils.randInt(0, 4), (1 << 12) + (robotInfo.location.x << 6) + robotInfo.location.y);
+            break;
+        }
     }
 }

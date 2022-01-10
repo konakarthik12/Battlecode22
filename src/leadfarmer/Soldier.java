@@ -1,14 +1,15 @@
-package turtle2;
+package leadfarmer;
 
 import battlecode.common.*;
 
-class Soldier {
 
-    static int numReached = 0;
+class Soldier {
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
-    static MapLocation spawn = null;
+    static int sinceLastAttack = 0;
 
+    static void setup(RobotController rc) throws GameActionException {
+    }
 
     static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
         int curDist = cur.distanceSquaredTo(destination);
@@ -20,7 +21,7 @@ class Soldier {
         if (cur.equals(destination)) {
             return 0;
         } else if (depth == 3) {
-            return (10 + rubble) + curDist;
+            return (20 + rubble) + curDist;
         }
 
         int toDest = cur.directionTo(destination).ordinal();
@@ -30,7 +31,7 @@ class Soldier {
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
-                int nextScore = 10 + rubble + nextMove(rc, next, depth + 1, dir);
+                int nextScore = 20 + rubble + nextMove(rc, next, depth + 1, dir);
                 if (score > nextScore) {
                     score = nextScore;
                     nextDirection = dir;
@@ -51,36 +52,11 @@ class Soldier {
                 }
             }
         }
+
         return score;
     }
 
-    static Direction directMove(RobotController rc) throws GameActionException {
-        return rc.getLocation().directionTo(destination);
-    }
-
-    static void setup(RobotController rc) throws GameActionException {
-        spawn = rc.getLocation();
-    }
-
-    static void move(RobotController rc) throws GameActionException {
-        if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
-            Direction go = directMove(rc);
-            if (rc.canMove(go)) rc.move(go);
-        } else {
-            nextMove(rc, rc.getLocation(), 0, previousStep);
-        }
-    }
-
-    static void setDestination(RobotController rc) throws GameActionException {
-        if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 0) {
-            ++numReached;
-            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
-        }
-        rc.setIndicatorString(destination.toString());
-        rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
-    }
-
-    static void attack(RobotController rc) throws GameActionException {
+    static void attack(RobotController rc) throws GameActionException{
         int priority = 100000;
         MapLocation target = rc.getLocation();
         for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
@@ -101,14 +77,41 @@ class Soldier {
             }
         }
 
-        if (rc.canAttack(target)) {
-            rc.writeSharedArray(0, (target.x << 6) + target.y);
+        if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
+
+        if (rc.canAttack(target))  {
             rc.attack(target);
+            sinceLastAttack = 0;
+        } else {
+            ++sinceLastAttack;
+        }
+
+//        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+//            if (rc.canAttack(robotInfo.location)) {
+//                rc.attack(robotInfo.location);
+//                rc.writeSharedArray(0, (robotInfo.location.x << 6) + robotInfo.location.y);
+////                rc.writeSharedArray(Utils.randomInt(0,4), (robotInfo.location.x << 6) + robotInfo.location.y);
+//            }
+//        }
+    }
+
+    static void setDestination(RobotController rc) throws GameActionException {
+        if (destination == null) {
+            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+            rc.setIndicatorString(destination.toString());
+        }
+
+//        if (rc.getRoundNum() % 50 == 0) {
+        if (sinceLastAttack >= Constants.soldierPatience) {
+            int loc = rc.readSharedArray(0);
+            destination = new MapLocation((loc >> 6) & 63, loc & 63);
+            rc.setIndicatorString(destination.toString());
         }
     }
 
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
-        move(rc);
+        nextMove(rc, rc.getLocation(), 0, previousStep);
+        attack(rc);
     }
 }

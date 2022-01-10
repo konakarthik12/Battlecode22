@@ -1,9 +1,6 @@
-package monkey2clone;
+package leadfarmer;
 
 import battlecode.common.*;
-
-import static monkey2clone.Utils.randomInt;
-
 
 class Archon {
 
@@ -33,7 +30,7 @@ class Archon {
         MapLocation loc = rc.getLocation();
         rc.writeSharedArray(63, (loc.x << 6) + loc.y);
 
-        if (minersBuilt * rc.getArchonCount() < Constants.earlyMinerCap && randomInt(1,rc.getArchonCount()) == 1) {
+        if (minersBuilt * rc.getArchonCount() < Constants.earlyMinerCap && Utils.randInt(1,rc.getArchonCount()) == 1) {
             summonUnitAnywhere(rc, RobotType.MINER);
         } else {
             if (soldiersBuilt < 30) {
@@ -55,14 +52,14 @@ class Archon {
                     }
                 }
             } else {
-                if (randomInt(0, 100) <= 5) {
+                if (Utils.randInt(0, 100) <= 5) {
                     for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.BUILDER, dir)) {
                             rc.buildRobot(RobotType.BUILDER, dir);
                             break;
                         }
                     }
-                } else if (randomInt(0, 100) <= 10) {
+                } else if (Utils.randInt(0, 100) <= 10) {
                     for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.MINER, dir)){
                             rc.buildRobot(RobotType.MINER, dir);
@@ -70,7 +67,7 @@ class Archon {
                             break;
                         }
                     }
-                } else if (randomInt(0, 100) <= 40) {
+                } else if (Utils.randInt(0, 100) <= 40) {
                     for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                             rc.buildRobot(RobotType.SOLDIER, dir);

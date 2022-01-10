@@ -1,15 +1,14 @@
-package turtle2;
+package leadfarmer;
 
 import battlecode.common.*;
 
-class Miner {
+import static leadfarmer.Constants.directions;
 
-    static int numReached = 0;
+
+class Builder {
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
-    static MapLocation spawn = null;
-    static int near = 0;
-
+    static MapLocation spawn;
 
     static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
         int curDist = cur.distanceSquaredTo(destination);
@@ -21,17 +20,17 @@ class Miner {
         if (cur.equals(destination)) {
             return 0;
         } else if (depth == 3) {
-            return (10 + rubble) + curDist;
+            return (20 + rubble) + curDist;
         }
 
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = Constants.directions[i % 8];
+            Direction dir = directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
-                int nextScore = 10 + rubble + nextMove(rc, next, depth + 1, dir);
+                int nextScore = 20 + rubble + nextMove(rc, next, depth + 1, dir);
                 if (score > nextScore) {
                     score = nextScore;
                     nextDirection = dir;
@@ -39,12 +38,13 @@ class Miner {
             }
         }
 
+
         if (depth == 0) {
             if (rc.canMove(nextDirection)) {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : Constants.directions) {
+                for (Direction dir : directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
@@ -52,47 +52,40 @@ class Miner {
                 }
             }
         }
+
         return score;
     }
 
-    static Direction directMove(RobotController rc) throws GameActionException {
-        return rc.getLocation().directionTo(destination);
+    static void buildWatchTowerCardinal(RobotController rc) throws GameActionException {
+        if (rc.getLocation().equals(destination)) {
+            boolean arePrototypes = false;
+            for (Direction dir : Direction.cardinalDirections()) {
+                MapLocation dirLoc = rc.getLocation().add(dir);
+                if (rc.onTheMap(dirLoc)) {
+                    RobotInfo watchTower = rc.senseRobotAtLocation(dirLoc);
+                    if (watchTower != null && watchTower.team.isPlayer() && watchTower.mode == RobotMode.PROTOTYPE && rc.canRepair(dirLoc)) {
+                        rc.repair(dirLoc);
+                    } else if (rc.canBuildRobot(RobotType.WATCHTOWER, dir)) {
+                        rc.buildRobot(RobotType.WATCHTOWER, dir);
+                    }
+                }
+            }
+        }
     }
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
     }
 
-    static void move(RobotController rc) throws GameActionException {
-        if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
-            Direction go = directMove(rc);
-            if (rc.canMove(go)) rc.move(go);
-        } else {
-            nextMove(rc, rc.getLocation(), 0, previousStep);
-        }
-    }
-
     static void setDestination(RobotController rc) throws GameActionException {
-        if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 0) {
-            ++numReached;
+        if (destination == null) {
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
-        rc.setIndicatorString(destination.toString());
-        rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
 
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
-        move(rc);
-        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
-        int minerCount = 0;
-        for(MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 16)){
-            if(rc.senseLead(loc) > 7 && minerCount == 0){
-                destination = loc;
-            }
-            if(rc.canMineLead(loc) && rc.senseLead(loc) > 5){
-                rc.mineLead(loc);
-            }
-        }
+        nextMove(rc, rc.getLocation(), 0, previousStep);
+        if (rc.getLocation().equals(destination)) buildWatchTowerCardinal(rc);
     }
 }
