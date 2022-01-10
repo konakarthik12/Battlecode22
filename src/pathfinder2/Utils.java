@@ -15,7 +15,7 @@ class Utils {
 
     static void setup(RobotController rc) {
         Utils.rc = rc;
-        rng = new Random(rc.getID() + 422);
+        rng = new Random(rc.getID() + 423);
     }
 
     /**
