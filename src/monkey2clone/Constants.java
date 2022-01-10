@@ -1,4 +1,4 @@
-package monkey2;
+package monkey2clone;
 
 import battlecode.common.Direction;
 
@@ -13,7 +13,9 @@ class Constants {
             Direction.WEST,
             Direction.NORTHWEST
     };
-    static final int earlyMinerCap = 30; // all archon's combined
+    // elements [0-4] in array store soldier enemies
+    static final int earlyMinerCap = 10; // all archon's combined
     static final double minerSoldierRatio = 2.5;
-
+    static final int minLeadForGold = 2000;
+    static final int soldierPatience = 20;
 }

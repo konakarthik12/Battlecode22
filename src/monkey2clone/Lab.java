@@ -1,5 +1,6 @@
-package monkey2;
+package monkey2clone;
 
+import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
 class Lab {

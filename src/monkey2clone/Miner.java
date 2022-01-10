@@ -1,4 +1,4 @@
-package monkey2;
+package monkey2clone;
 
 import battlecode.common.*;
 
@@ -52,7 +52,6 @@ class Miner {
                 }
             }
         }
-
         return score;
     }
 
@@ -85,7 +84,7 @@ class Miner {
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         move(rc);
-
+        /*
         for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 20)) {
             if (rc.senseLead(loc) > 2 && Utils.randomInt(0, near) == 0) {
                 destination = loc;
@@ -98,9 +97,27 @@ class Miner {
             }
         }
         near = 0;
-
+        */
+//      RobotInfo[] robots = rc.senseNearbyRobots();
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
+        int minerCount = 0;
+        // ...
+        for(RobotInfo robot : robots){
+            if(robot.type.equals(RobotType.MINER)) {
+                minerCount++;
+            }
+        }
+        // ...
+        for(MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 16)){
+            if(rc.senseLead(loc) > 7 && minerCount == 0){
+                destination = loc;
+            }
+            if(rc.canMineLead(loc) && rc.senseLead(loc) > 5){
+                rc.mineLead(loc);
+            }
+        }
         for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            rc.writeSharedArray(0, (robotInfo.location.x << 6) + robotInfo.location.y);
+            rc.writeSharedArray(Utils.randomInt(0, 4), (1 << 12) + (robotInfo.location.x << 6) + robotInfo.location.y);
             break;
         }
     }
