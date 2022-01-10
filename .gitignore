@@ -25,6 +25,7 @@ data/*
 /.idea/
 *.zip
 
+jsScripts/credentials.json
 # User-specific stuff:
 battlecode-scaffold.iws
 

@@ -1,0 +1,12 @@
+{
+  "private": "true",
+  "scripts": {
+    "submit": "",
+    "login": "node jsScripts/login.js",
+    "top10": "node jsScripts/top10.js"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "fs-extra": "^10.0.0"
+  }
+}
