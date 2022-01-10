@@ -64,6 +64,15 @@ class Miner {
     }
 
     static void move(RobotController rc) throws GameActionException {
+        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+            if (info.type.equals(RobotType.SOLDIER)) {
+                Direction go = rc.getLocation().directionTo(info.location).opposite();
+                if (rc.canMove(go)) {
+                    rc.move(go);
+                    return;
+                }
+            }
+        }
         if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
             Direction go = directMove(rc);
             if (rc.canMove(go)) rc.move(go);

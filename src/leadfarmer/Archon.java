@@ -30,10 +30,34 @@ class Archon {
         MapLocation loc = rc.getLocation();
         rc.writeSharedArray(63, (loc.x << 6) + loc.y);
 
+//        if (rc.getRoundNum() <= 4) {
+//            for (Direction dir : Constants.directions) {
+//                if (rc.canBuildRobot(RobotType.MINER, dir)) {
+//                    rc.buildRobot(RobotType.MINER, dir);
+//                }
+//            }
+//        }
+
+//        if (Utils.randInt(0, 1) == 0) {
+//            for (Direction dir : Constants.directions) {
+//                if (rc.canBuildRobot(RobotType.MINER, dir)) {
+//                    rc.buildRobot(RobotType.MINER, dir);
+//                }
+//            }
+//        } else {
+//            for (Direction dir : Constants.directions) {
+//                if (rc.canBuildRobot(RobotType.BUILDER, dir)) {
+//                    rc.buildRobot(RobotType.BUILDER, dir);
+//                }
+//            }
+//        }
+
+//        if (rc.getRoundNum() > 400) rc.resign();
+
         if (minersBuilt * rc.getArchonCount() < Constants.earlyMinerCap && Utils.randInt(1,rc.getArchonCount()) == 1) {
             summonUnitAnywhere(rc, RobotType.MINER);
         } else {
-            if (soldiersBuilt < 30) {
+            if (soldiersBuilt < 60) {
                 if (soldiersBuilt < Constants.minerSoldierRatio * minersBuilt) {
                     for (Direction dir : Constants.directions) {
                         if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {

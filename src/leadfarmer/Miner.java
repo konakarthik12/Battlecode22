@@ -109,7 +109,7 @@ class Miner {
         }
         // ...
         for(MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 16)){
-            if(rc.senseLead(loc) > 7 && minerCount == 0){
+            if(rc.senseLead(loc) > 2 && minerCount < 2){
                 destination = loc;
             }
             if(rc.canMineLead(loc) && rc.senseLead(loc) > 5){

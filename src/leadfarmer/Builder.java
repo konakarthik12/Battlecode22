@@ -10,6 +10,9 @@ class Builder {
     static MapLocation destination = null;
     static MapLocation spawn;
 
+    static boolean isLeadFarm = false;
+    static boolean assigned = false;
+
     static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
         int curDist = cur.distanceSquaredTo(destination);
         int score = Integer.MAX_VALUE;
@@ -78,12 +81,37 @@ class Builder {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
+        if (assigned && rc.getLocation().equals(destination)) rc.disintegrate();
+//        if (destination != null && rc.canSenseLocation(destination) && rc.senseLead(destination) != 0) assigned = false;
+        if (destination != null && rc.canSenseLocation(destination) && rc.senseLead(destination) != 0) {
+            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+            assigned = false;
+        }
+
         if (destination == null) {
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+        } else if (isLeadFarm && !assigned){
+            if (rc.senseLead(rc.getLocation()) == 0) {
+                rc.disintegrate();
+                return;
+            }
+            int bestDist = 10000;
+            for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.BUILDER.visionRadiusSquared)) {
+                if (rc.canSenseLocation(loc) && rc.senseLead(loc) == 0 && !rc.isLocationOccupied(loc)) {
+                    if (loc.distanceSquaredTo(rc.getLocation()) < bestDist) {
+                        bestDist = loc.distanceSquaredTo(rc.getLocation());
+                        destination = loc;
+                    }
+                    assigned = true;
+                }
+            }
         }
+        rc.setIndicatorString(destination.toString());
+        rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
 
     static void run(RobotController rc) throws GameActionException {
+        isLeadFarm = true;
         setDestination(rc);
         nextMove(rc, rc.getLocation(), 0, previousStep);
         if (rc.getLocation().equals(destination)) buildWatchTowerCardinal(rc);
