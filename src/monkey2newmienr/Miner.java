@@ -1,6 +1,7 @@
-package monkey2;
+package monkey2newmienr;
 
 import battlecode.common.*;
+import monkey2newmienr.Utils;
 
 class Miner {
 
@@ -85,17 +86,28 @@ class Miner {
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         move(rc);
-        for (RobotInfo rob : rc.senseNearbyRobots(13)) {
-            if (rob.type == rc.getType() && rob.team == rc.getTeam()) near++;
-        }
         int lead = 2;
-        int cnt = 0;
-        for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 2)) {
+        for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 5)) {
             int newlead = rc.senseLead(loc);
-            if (newlead > 2 && Utils.randomInt(0, cnt) <= newlead - lead && near <= 2) {
-                destination = loc;
-                cnt += 3;
-                lead = rc.senseLead(loc);
+            if (newlead > 2 && Utils.randomInt(0, near) <= newlead - lead) {
+                int set = 1;
+                for (Direction dir: Constants.directions) {
+                    if (loc.add(dir) == rc.getLocation() || (!rc.canSenseLocation(loc.add(dir)))) continue;
+                    RobotInfo x = rc.senseRobotAtLocation(loc.add(dir));
+                    if (x != null && x.type == rc.getType() && x.team == rc.getTeam()) {
+                        set = 0;
+                        break;
+                    }
+                }
+                if (loc != rc.getLocation() && rc.canSenseLocation(loc)) {
+                    RobotInfo x = rc.senseRobotAtLocation(loc);
+                    if (x != null && x.type == rc.getType() && x.team == rc.getTeam()) set = 0;
+                }
+                if (set == 1) {
+                    destination = loc;
+                    near += 3;
+                    lead = rc.senseLead(loc);
+                }
             }
             if (rc.canMineLead(loc)) {
                 if (rc.senseLead(loc) > 1) {

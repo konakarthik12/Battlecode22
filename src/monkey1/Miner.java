@@ -326,7 +326,7 @@ class Miner {
         } else nextMove(rc, rc.getLocation(), 0, previousStep);
 //        } else betterNextMove(rc, rc.getLocation(), 0, previousStep);
 
-        for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 2)) {
+        for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 5)) {
             if (rc.senseLead(loc) > 2 && Utils.randomInt(0, near) == 0) {
                 destination = loc;
                 near += 3;
