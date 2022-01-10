@@ -2,8 +2,6 @@ package pathfinder;
 
 import battlecode.common.*;
 
-import java.util.Arrays;
-
 
 class Miner {
 
@@ -21,7 +19,50 @@ class Miner {
     static int lowY = 0;
     static int near = 0;
 
+    static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
+        int curDist = cur.distanceSquaredTo(destination);
+        int score = Integer.MAX_VALUE;
+        int rubble = rc.senseRubble(cur);
+        if (rc.isLocationOccupied(cur) && cur != rc.getLocation()) rubble = 1000;
+        Direction nextDirection = Direction.CENTER;
 
+        if (cur.equals(destination)) {
+            return 0;
+        } else if (depth == 3) {
+            return (10 + rubble) + curDist;
+        }
+
+        int toDest = cur.directionTo(destination).ordinal();
+
+        for (int i = (7 + toDest); i < (10 + toDest); ++i) {
+            Direction dir = Constants.directions[i % 8];
+            if (dir.equals(lastDir.opposite())) continue;
+            MapLocation next = cur.add(dir);
+            if (rc.canSenseLocation(next)) {
+                int nextScore = 10 + rubble + nextMove(rc, next, depth + 1, dir);
+                if (score > nextScore) {
+                    score = nextScore;
+                    nextDirection = dir;
+                }
+            }
+        }
+
+        if (depth == 0) {
+            if (rc.canMove(nextDirection)) {
+                previousStep = nextDirection;
+                rc.move(nextDirection);
+            } else {
+                for (Direction dir : Constants.directions) {
+                    MapLocation next = cur.add(dir);
+                    if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
+                        if (rc.canMove(dir)) rc.move(dir);
+                    }
+                }
+            }
+        }
+
+        return score;
+    }
 
     static Direction directMove(RobotController rc) throws GameActionException {
         return rc.getLocation().directionTo(destination);
@@ -38,25 +79,36 @@ class Miner {
     static int called = 0;
 
     static void run(RobotController rc) throws GameActionException {
-        if (destination == null || (rc.getLocation().equals(destination))) {
+        MapLocation curLoc = rc.getLocation();
+        if (destination == null || (curLoc.equals(destination))) {
             ++numReached;
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
-        rc.setIndicatorString(destination.toString());
-        rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
+        rc.setIndicatorLine(curLoc, destination, 255, 255, 255);
 
-        if (rc.getLocation().distanceSquaredTo(destination) <= 2) {
-            Direction go = directMove(rc);
-            if (rc.canMove(go)) rc.move(go);
-        } else {
-            Direction attempt = UnrolledPathfinder.pathfind(rc,destination);
-            if(rc.canMove(attempt)) rc.move(attempt);
+        int curDist = curLoc.distanceSquaredTo(destination);
+
+        int startCount = Clock.getBytecodeNum();
+        Direction nextDirection = Pathfinder.pathfind(rc, destination);
+        rc.setIndicatorString(String.valueOf(Clock.getBytecodeNum() - startCount));
+
+        if (rc.canMove(nextDirection)) {
+            previousStep = nextDirection;
+            rc.move(nextDirection);
+        } else if (curDist > 2) {
+            for (Direction dir : Constants.directions) {
+                MapLocation next = curLoc.add(dir);
+                if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
+                    if (rc.canMove(dir)) rc.move(dir);
+                }
+            }
         }
 
-        near = 0;
 
         if (rc.getRoundNum() >= 1998) {
             System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
+            int x = rc.readSharedArray(20);
+            rc.writeSharedArray(20, x + numReached);
             rc.disintegrate();
         }
 
