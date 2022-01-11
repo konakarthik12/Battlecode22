@@ -121,7 +121,7 @@ class Miner {
             if(rc.senseLead(loc) > 7 && minerCount == 0){
                 destination = loc;
             }
-            if(rc.canMineLead(loc) && rc.senseLead(loc) > 5){
+            while (rc.canMineLead(loc) && rc.senseLead(loc) > 1){
                 rc.mineLead(loc);
             }
         }

@@ -331,11 +331,9 @@ class Miner {
                 destination = loc;
                 near += 3;
             }
-            if (rc.canMineLead(loc)) {
                 // if see enemy mine all lead
-                if (rc.senseLead(loc) > 1) {
-                    rc.mineLead(loc);
-                }
+            while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) {
+                rc.mineLead(loc);
             }
         }
         near = 0;
