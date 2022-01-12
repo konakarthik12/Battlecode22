@@ -96,9 +96,16 @@ class Soldier {
             ++sinceLastAttack;
         }
 
-        if (sinceLastAttack == 1 && target.equals(rc.getLocation())) {
-
+        if(target == rc.getLocation()) return;
+        int rubble = rc.senseRubble(rc.getLocation());
+        Direction bestDir = Direction.CENTER;
+        for(Direction dir : Aj2.Constants.directions){
+            if(rc.onTheMap(rc.getLocation().add(dir)) && rc.senseRubble(rc.getLocation().add(dir)) < rubble && target.distanceSquaredTo(rc.getLocation().add(dir)) <= RobotType.SOLDIER.actionRadiusSquared){
+                bestDir = dir;
+                rubble = rc.senseRubble(rc.getLocation().add(dir));
+            }
         }
+        if(rc.canMove(bestDir)) rc.move(bestDir);
 
 //        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
 //            if (rc.canAttack(robotInfo.location)) {
@@ -154,8 +161,8 @@ class Soldier {
         }
     }
     static void run(RobotController rc) throws GameActionException {
-        setDestination(rc);
-        nextMove(rc, rc.getLocation(), 0, previousStep);
+        if(sinceLastAttack >= 2) setDestination(rc);
+        if(sinceLastAttack >= 2) nextMove(rc, rc.getLocation(), 0, previousStep);
         attack(rc);
         checkLead(rc);
     }

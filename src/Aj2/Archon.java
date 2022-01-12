@@ -22,22 +22,20 @@ class Archon {
 
     static void adjustProbability(RobotController rc, int lead) throws GameActionException {
         int excessLead = rc.readSharedArray(5);
-        if (rc.getRoundNum() <= 5) minerProbability = 100;
+        if (rc.getRoundNum() <= 3) minerProbability = 100;
         else {
             minerProbability = 30;
-            minerProbability = 25 + excessLead / 10;
 
-            soldierProbability = 30 + lead/20;
+            soldierProbability = 50;
         }
 
     }
-
     static void adjustBudgets(RobotController rc, int lead) throws GameActionException {
         int excessLead = rc.readSharedArray(5);
-        if (rc.getRoundNum() <= 5) minerBudget = lead;
+        if (rc.getRoundNum() <= 3) minerBudget = lead;
         else {
-            minerBudget = 2 * lead / 3;
-            soldierBudget = 2 * lead / 3;
+            minerBudget = lead * RobotType.MINER.buildCostLead / RobotType.SOLDIER.buildCostLead;
+            soldierBudget = lead;
         }
     }
 
@@ -105,5 +103,6 @@ class Archon {
         rc.setIndicatorString(String.valueOf(archonIndex));
         summonUnits(rc);
         if(rc.getRoundNum() % 2 == 0) rc.writeSharedArray(5, 0);
+
     }
 }

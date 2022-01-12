@@ -80,14 +80,12 @@ class Soldier {
         }
 
         if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
-
         if (rc.canAttack(target))  {
             rc.attack(target);
             sinceLastAttack = 0;
         } else {
             ++sinceLastAttack;
         }
-
 //        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
 //            if (rc.canAttack(robotInfo.location)) {
 //                rc.attack(robotInfo.location);
