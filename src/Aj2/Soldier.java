@@ -100,7 +100,7 @@ class Soldier {
         int rubble = rc.senseRubble(rc.getLocation());
         Direction bestDir = Direction.CENTER;
         for(Direction dir : Aj2.Constants.directions){
-            if(rc.onTheMap(rc.getLocation().add(dir)) && rc.senseRubble(rc.getLocation().add(dir)) < rubble && target.distanceSquaredTo(rc.getLocation().add(dir)) <= RobotType.SOLDIER.actionRadiusSquared){
+            if(rc.onTheMap(rc.getLocation().add(dir)) && rc.senseRubble(rc.getLocation().add(dir)) < rubble && target.distanceSquaredTo(rc.getLocation().add(dir)) <= target.distanceSquaredTo(rc.getLocation())){
                 bestDir = dir;
                 rubble = rc.senseRubble(rc.getLocation().add(dir));
             }

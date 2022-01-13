@@ -140,8 +140,8 @@ class Miner {
                     lead = rc.senseLead(loc);
                 }
             }
-            while (rc.canMineLead(loc)) {
-                if (rc.senseLead(loc) > 1) {
+            while (rc.canMineLead(loc)){
+                if (rc.senseLead(loc) > 1){
                     rc.mineLead(loc);
                 }
                 else{

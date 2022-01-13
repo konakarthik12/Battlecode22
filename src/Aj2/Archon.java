@@ -24,9 +24,8 @@ class Archon {
         int excessLead = rc.readSharedArray(5);
         if (rc.getRoundNum() <= 3) minerProbability = 100;
         else {
-            minerProbability = 30;
-
-            soldierProbability = 50;
+            minerProbability = 10 + excessLead / 20 + (rc.getMapHeight() * rc.getMapWidth()) / 40 - rc.getRoundNum() / 100;
+            soldierProbability = 50 + lead / 10 + rc.getRoundNum() / 200;
         }
 
     }
