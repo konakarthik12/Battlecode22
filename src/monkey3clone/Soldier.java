@@ -1,8 +1,6 @@
-package monkey3;
+package monkey3clone;
 
 import battlecode.common.*;
-
-import java.awt.*;
 
 
 class Soldier {
@@ -95,7 +93,7 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int rubble = rc.senseRubble(cur);
 
-        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies) {
+        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies+1) {
             Direction go = Direction.CENTER;
             for (Direction dir : Constants.directions) {
                 if (rc.canSenseLocation(rc.adjacentLocation(dir)) &&  rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {

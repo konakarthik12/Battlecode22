@@ -1,4 +1,4 @@
-package monkey3;
+package monkey3clone;
 
 import battlecode.common.Direction;
 

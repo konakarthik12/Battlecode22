@@ -1,4 +1,4 @@
-package monkey3;
+package monkey3clone;
 
 import battlecode.common.*;
 
@@ -16,7 +16,6 @@ class Miner {
 
     static int turnsSearching = 0;
     static boolean isSearching = true;
-    static boolean isMinID = true;
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
@@ -80,6 +79,8 @@ class Miner {
                 }
             }
         }
+//        System.out.println(attackers);
+//        System.out.println(rc.readSharedArray(0));
 
 //        if (Utils.randomInt(1, allies) <= 3) {
             rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
@@ -87,24 +88,18 @@ class Miner {
     }
 
     static void senseAllies(RobotController rc) throws  GameActionException {
-        isMinID = true;
         near = 0;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (info.getType().equals(RobotType.MINER)) {
-                ++near;
-                if (info.getID() < rc.getID()) isMinID = false;
-            }
+            if (info.getType().equals(RobotType.MINER)) ++near;
         }
     }
 
     static void mine(RobotController rc) throws GameActionException {
-        //TODO make miners not clump up
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         lead = leadLocations.length;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID && Utils.randomInt(1, near) <= 1) destination = loc;
-            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
+            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && Utils.randomInt(1, near) <= 1) destination = loc;
             // maybe don't need to sense
         }
     }
