@@ -63,7 +63,7 @@ public class Archon {
             rc.writeSharedArray(58, k);
             // 228 in binary is 11 10 01 00
         }
-        if (archonID == 63) rc.writeSharedArray(flag, 1);
+        if (archonID == 1) rc.writeSharedArray(flag, 1);
     }
 
     static void reset(RobotController rc) throws GameActionException {
@@ -113,7 +113,7 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
 //        }
 
         int usedLead = rc.readSharedArray(usedLeadIdx);
-        int currFlag = rc.readSharedArray(flag) % rc.getArchonCount();
+        int currFlag = rc.readSharedArray(flag) % rc.getArchonCount() + 1;
         int leadHere = rc.readSharedArray(leadIdx) / rc.getArchonCount();
         if (rc.getRoundNum() <= 20) {
             if (enemiesInVision > 0) {
@@ -122,7 +122,7 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
                 usedLead += sCost;
             }
             int num = leadHere / mCost;
-            if (rc.readSharedArray(leadIdx) - num * rc.getArchonCount() * mCost - usedLead >= mCost && 64 - rc.readSharedArray(flag) == archonID) {
+            if (rc.readSharedArray(leadIdx) - num * rc.getArchonCount() * mCost - usedLead >= mCost && rc.readSharedArray(flag) == archonID) {
                 rc.writeSharedArray(flag, currFlag + 1);
                 num++;
             }
@@ -169,8 +169,9 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
     }
 
     static void run(RobotController rc) throws GameActionException {
-        if (archonID == 63) {
+        if (archonID == 1) {
             int currentLead = rc.getTeamLeadAmount(rc.getTeam());
+            System.out.println(currentLead + " HI?\n");
             rc.writeSharedArray(leadIdx, currentLead);
             rc.writeSharedArray(usedLeadIdx, 0);
         }
