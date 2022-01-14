@@ -115,14 +115,14 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
         int usedLead = rc.readSharedArray(usedLeadIdx);
         int currFlag = rc.readSharedArray(flag) % rc.getArchonCount() + 1;
         int leadHere = rc.readSharedArray(leadIdx) / rc.getArchonCount();
-        if (rc.getRoundNum() <= 20) {
+        if (rc.getRoundNum() <= 4) {
             if (enemiesInVision > 0) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 ++soldiersBuilt;
                 usedLead += sCost;
             }
             int num = leadHere / mCost;
-            if (rc.readSharedArray(leadIdx) - num * rc.getArchonCount() * mCost - usedLead >= mCost && rc.readSharedArray(flag) == archonID) {
+            if (rc.readSharedArray(leadIdx) - num * rc.getArchonCount() * mCost - usedLead >= mCost && currFlag == archonID) {
                 rc.writeSharedArray(flag, currFlag + 1);
                 num++;
             }
@@ -131,24 +131,20 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
         }
         else {
             // TODO don't spawn on rubble :skull:
-            if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10 || allies-miner < enemiesInVision) {
+            if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 ++soldiersBuilt;
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
-            } else if(miner == 0) {
-                minerSpawn(rc, 1);
-            } else if (leadHere >= sCost) {
-                ++soldiersBuilt;
+//            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
+            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
+                summonUnitAnywhere(rc, RobotType.MINER);
+                ++minersBuilt;
+            } else {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
-            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-                if (miner <= 2) {
-                    summonUnitAnywhere(rc, RobotType.MINER);
-                    ++minersBuilt;
-                } else {
-                    ++soldiersBuilt;
-                    summonUnitAnywhere(rc, RobotType.SOLDIER);
-                }
+                ++soldiersBuilt;
+                rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
+            if (rc.getRoundNum() % 5 == 0) minersBuilt--;
         }
         rc.writeSharedArray(usedLeadIdx, usedLead);
     }
@@ -171,7 +167,6 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
     static void run(RobotController rc) throws GameActionException {
         if (archonID == 1) {
             int currentLead = rc.getTeamLeadAmount(rc.getTeam());
-            System.out.println(currentLead + " HI?\n");
             rc.writeSharedArray(leadIdx, currentLead);
             rc.writeSharedArray(usedLeadIdx, 0);
         }

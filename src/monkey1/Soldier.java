@@ -24,7 +24,7 @@ class Soldier {
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         MapLocation target = rc.getLocation();
-        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(13, rc.getTeam().opponent())) {
             int multiplier;
             switch (robotInfo.getType()) {
                 case SAGE: multiplier = 0; break;
@@ -46,6 +46,7 @@ class Soldier {
         if (rc.canAttack(target))  {
             rc.attack(target);
             sinceLastAttack = 0;
+            destination = target;
         } else {
             ++sinceLastAttack;
         }
@@ -95,7 +96,7 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int rubble = rc.senseRubble(cur);
 
-        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies+1) {
+        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies) {
             Direction go = Direction.CENTER;
             for (Direction dir : Constants.directions) {
                 if (rc.canSenseLocation(rc.adjacentLocation(dir)) &&  rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
@@ -104,25 +105,37 @@ class Soldier {
                 }
             }
             if (rc.canMove(go)) rc.move(go);
-        } else if (visibleAttackers > visibleAllies) {
+        } else if (visibleAttackers > visibleAllies + 3) {
             Pathfinder.move(rc, spawn);
         } else {
             Pathfinder.move(rc, destination);
         }
     }
 
+    static void writeQuadrantInformation(RobotController rc) throws GameActionException {
+        // TODO test no random as well
+        MapLocation cur = rc.getLocation();
+        int quadrant = 4 * (4 * cur.x / rc.getMapWidth()) + (4 * cur.y / rc.getMapHeight());
+        // indices 2 - 17 are quadrant information for enemies and allies
+        int writeValue = (visibleEnemies << 8) + visibleAllies;
+        if (Utils.randomInt(1, visibleAllies) <= 1)
+            rc.writeSharedArray(2 + quadrant, writeValue);
+
+        writeValue = rc.senseNearbyLocationsWithLead().length;
+        if (Utils.randomInt(1, visibleAllies) <= 1)
+            rc.writeSharedArray(18 + quadrant, writeValue);
+
+        assert(quadrant < 16);
+    }
+
     static void senseEnemies(RobotController rc) throws GameActionException {
-//        int enemies = 0;
-//        int attackers = 0;
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
 
-//        visibleAllies = 1 + rc.senseNearbyRobots(-1, rc.getTeam()).length;
-//        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam().opponent())) {
-                ++visibleEnemies;
+                if (rc.getLocation().distanceSquaredTo(info.location) <= 13) visibleEnemies++;
                 switch (info.type) {
                     case SOLDIER: case WATCHTOWER: case SAGE:
                         ++visibleAttackers;

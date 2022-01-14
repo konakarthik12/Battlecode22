@@ -36,7 +36,19 @@ class Miner {
         // experiment with returning to spawn and with running directly opposite to soldiers
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             if (info.type.equals(RobotType.SOLDIER)) {
-                Pathfinder.move(rc, spawn);
+                int curr = rc.getLocation().distanceSquaredTo(info.location) + rc.senseRubble(rc.getLocation());
+                Direction best = null;
+                for (Direction dir: Constants.directions) {
+                    if (rc.adjacentLocation(dir).distanceSquaredTo(info.location) + rc.senseRubble(rc.getLocation()) > curr) {
+                        curr = rc.adjacentLocation(dir).distanceSquaredTo(info.location) + rc.senseRubble(rc.getLocation());
+                        best = dir;
+                    }
+                }
+                if (best == null) {
+                    Pathfinder.move(rc, spawn);
+                } else {
+                    if(rc.canMove(best)) rc.move(best);
+                }
                 return;
             }
         }
@@ -44,7 +56,7 @@ class Miner {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 5) {
+        if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
 //            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
@@ -97,7 +109,7 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             int newlead = rc.senseLead(loc);
-            if (newlead > 2 && Utils.randomInt(0, cnt) <= newlead - lead && near <= 2) {
+            if (newlead > 4 && Utils.randomInt(0, cnt) <= newlead - lead && near <= 2) {
                 destination = loc;
                 cnt += 3;
                 lead = rc.senseLead(loc);
