@@ -39,6 +39,9 @@ class Miner {
 //            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
         }
+
+        int x = rc.readSharedArray(34);
+        if (rc.getHealth() < 4) rc.writeSharedArray(34, Math.max(x-1, 0));
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }

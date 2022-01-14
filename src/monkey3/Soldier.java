@@ -92,7 +92,7 @@ class Soldier {
     static void readQuadrant(RobotController rc) throws GameActionException {
         for (int quadrant = 2; quadrant <= 17; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
-            int visAttackers = rc.readSharedArray(quadrant + 18) & 255;
+            int visAttackers = rc.readSharedArray(quadrant + 16) & 255;
             int visAllies = temp & 255;
             int visEnemies = (temp >> 8) & 255;
 
@@ -166,7 +166,6 @@ class Soldier {
 
         if (Utils.randomInt(1, visibleAllies) == 1) {
             rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
-//            rc.writeSharedArray(34, rc.readSharedArray(34) + visibleAttackers);
         }
     }
 

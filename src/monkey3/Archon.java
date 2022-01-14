@@ -92,7 +92,9 @@ public class Archon {
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
             } else if (Utils.randomInt(1, minersBuilt) <= 1) {
+//            } else if (Utils.randomInt(1, rc.readSharedArray(34)) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
+                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
                 ++minersBuilt;
             } else {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);

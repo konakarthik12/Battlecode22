@@ -22,7 +22,6 @@ class Constants {
     // [0,1] stores enemy and friendly visible soldier/enemy counts
     // [2, 17] stores quadrant information about enemies and allies
     // [18, 33] stores lead information and ??
-    // [34] is visible attackers
-    // [35] is num miners alive
+    // [34] is num miners alive
     // [59, 63] stores Archon locations
 }
