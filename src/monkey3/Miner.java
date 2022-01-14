@@ -24,6 +24,7 @@ class Miner {
 
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
+        if (visibleAllies < visibleEnemies)
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             if (info.type.equals(RobotType.SOLDIER)) {
                 Pathfinder.move(rc, spawn);
