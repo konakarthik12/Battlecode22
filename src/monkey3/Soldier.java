@@ -27,7 +27,7 @@ class Soldier {
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         MapLocation target = rc.getLocation();
-        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(13, rc.getTeam().opponent())) {
             int multiplier;
             switch (robotInfo.getType()) {
                 case SAGE: multiplier = 0; break;
@@ -55,6 +55,9 @@ class Soldier {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
+        if (sinceLastAttack > 15) {
+            readQuadrant(rc);
+        }
         if (destination == null || destination.equals(rc.getLocation())) {
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
@@ -89,13 +92,15 @@ class Soldier {
     static void readQuadrant(RobotController rc) throws GameActionException {
         for (int quadrant = 2; quadrant <= 17; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
+            int visAttackers = rc.readSharedArray(quadrant + 18) & 255;
             int visAllies = temp & 255;
             int visEnemies = (temp >> 8) & 255;
 
             int x = (quadrant - 2) / 4 * rc.getMapWidth()  / 4 + Utils.randomInt(0, rc.getMapWidth()/4);
             int y = (quadrant - 2) % 4 * rc.getMapHeight() / 4 + Utils.randomInt(0, rc.getMapHeight()/4);
 
-            if (visEnemies > visAllies + 1) {
+            if (visAttackers > visAllies + 1) {
+//            if (Math.abs(visAttackers-visAllies) < 3) {
                 isBackup = true;
                 destination = new MapLocation(x,y);
             }
@@ -135,7 +140,7 @@ class Soldier {
         if (Utils.randomInt(1, visibleAllies) <= 1)
             rc.writeSharedArray(2 + quadrant, rc.readSharedArray(2 + quadrant) + writeValue);
 
-        writeValue = rc.senseNearbyLocationsWithLead().length;
+        writeValue = (rc.senseNearbyLocationsWithLead().length << 8) + visibleAttackers;
         if (Utils.randomInt(1, visibleAllies) <= 1)
             rc.writeSharedArray(18 + quadrant, rc.readSharedArray(18+quadrant) + writeValue);
 
@@ -161,6 +166,7 @@ class Soldier {
 
         if (Utils.randomInt(1, visibleAllies) == 1) {
             rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
+//            rc.writeSharedArray(34, rc.readSharedArray(34) + visibleAttackers);
         }
     }
 

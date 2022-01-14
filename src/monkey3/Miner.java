@@ -52,7 +52,7 @@ class Miner {
         if (Utils.randomInt(1, visibleAllies) <= 1)
             rc.writeSharedArray(2 + quadrant, writeValue);
 
-        writeValue = lead;
+        writeValue = (lead << 8) + visibleAttackers;
         if (Utils.randomInt(1, visibleAllies) <= 1)
             rc.writeSharedArray(18 + quadrant, writeValue);
 
@@ -107,8 +107,8 @@ class Miner {
         lead = leadLocations.length;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID && Utils.randomInt(1, near) <= 1) destination = loc;
-            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
+            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID && Utils.randomInt(1, near) <= 1) destination = loc;
+//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
             // maybe don't need to sense
         }
     }
