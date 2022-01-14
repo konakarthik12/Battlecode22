@@ -10,12 +10,24 @@ public class Archon {
     static int enemiesInVision = 0;
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
+        Direction build = Direction.EAST;
+        int rubble = 1000;
         for (Direction dir : Constants.directions) {
             if (rc.canBuildRobot(type, dir)) {
-                rc.buildRobot(type, dir);
-                if (type == RobotType.MINER) ++minersBuilt;
-                if (type == RobotType.SOLDIER) ++soldiersBuilt;
+                int _rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                if (_rubble < rubble) {
+                    build = dir;
+                    rubble = _rubble;
+                }
+//                rc.buildRobot(type, dir);
+//                if (type == RobotType.MINER) ++minersBuilt;
+//                if (type == RobotType.SOLDIER) ++soldiersBuilt;
             }
+        }
+        if (rc.canBuildRobot(type, build)) {
+            rc.buildRobot(type, build);
+            if (type == RobotType.MINER) ++minersBuilt;
+            if (type == RobotType.SOLDIER) ++soldiersBuilt;
         }
     }
 
@@ -106,11 +118,8 @@ public class Archon {
 
     static void run(RobotController rc) throws GameActionException {
         senseLocalEnemies(rc);
-
         heal(rc);
-//        summonUnitAnywhere(rc, RobotType.MINER);
         summonUnits(rc);
-
         reset(rc);
     }
 
