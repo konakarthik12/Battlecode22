@@ -150,7 +150,15 @@ class Miner {
             }
         }
         near = 0;
-
+        int rubble = rc.senseRubble(rc.getLocation());
+        Direction bestDir = Direction.CENTER;
+        for(Direction dir : Aj2.Constants.directions){
+            if(rc.onTheMap(rc.getLocation().add(dir)) && rc.senseRubble(rc.getLocation().add(dir)) < rubble){
+                bestDir = dir;
+                rubble = rc.senseRubble(rc.getLocation().add(dir));
+            }
+        }
+        if(rc.canMove(bestDir)) rc.move(bestDir);
         for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             rc.writeSharedArray(0, (robotInfo.location.x << 6) + robotInfo.location.y);
             break;
