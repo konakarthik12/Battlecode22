@@ -99,7 +99,9 @@ public class Archon {
                 ++soldiersBuilt;
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
-            if (rc.getRoundNum() % 5 == 0) minersBuilt--;
+//            if (rc.getRoundNum() % 5 == 0) minersBuilt--;
+//            int x = rc.readSharedArray(1);
+//            if (rc.getRoundNum() % 10 == 0) rc.writeSharedArray(1, Math.max(x-1, 0));
         }
     }
 

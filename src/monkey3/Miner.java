@@ -24,7 +24,6 @@ class Miner {
 
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
-        if (visibleAllies < visibleEnemies)
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             if (info.type.equals(RobotType.SOLDIER)) {
                 Pathfinder.move(rc, spawn);
@@ -58,6 +57,10 @@ class Miner {
             rc.writeSharedArray(18 + quadrant, writeValue);
 
         assert(quadrant < 16);
+    }
+
+    static void readSharedArray(RobotController rc) throws GameActionException {
+
     }
 
     static void senseEnemies(RobotController rc) throws GameActionException {
