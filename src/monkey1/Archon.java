@@ -115,7 +115,7 @@ static void minerSpawn(RobotController rc, int num) throws GameActionException {
         int usedLead = rc.readSharedArray(usedLeadIdx);
         int currFlag = rc.readSharedArray(flag) % rc.getArchonCount() + 1;
         int leadHere = rc.readSharedArray(leadIdx) / rc.getArchonCount();
-        if (rc.getRoundNum() <= 4) {
+        if (rc.getRoundNum() <= 20) {
             if (enemiesInVision > 0) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 ++soldiersBuilt;

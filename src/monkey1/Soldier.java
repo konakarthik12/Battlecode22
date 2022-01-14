@@ -105,7 +105,7 @@ class Soldier {
                 }
             }
             if (rc.canMove(go)) rc.move(go);
-        } else if (visibleAttackers > visibleAllies + 3) {
+        } else if (visibleAttackers > visibleAllies + 1) {
             Pathfinder.move(rc, spawn);
         } else {
             Pathfinder.move(rc, destination);

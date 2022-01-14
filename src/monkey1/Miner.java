@@ -16,13 +16,16 @@ class Miner {
     static int turnsSearching = 0;
     static boolean isSearching = true;
 
+    static Direction forceDir = null;
+    static int forceTime = 0;
+
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         int dist = 63;
         destination = new MapLocation(Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
-        if (rc.getRoundNum() <= 20) {
+        if (rc.getRoundNum() <= 10) {
             for (MapLocation loc : rc.senseNearbyLocationsWithLead()) {
                 if (loc.distanceSquaredTo(rc.getLocation()) < dist) {
                     destination = loc;
@@ -34,6 +37,11 @@ class Miner {
 
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
+        if (forceTime > 0) {
+            forceTime--;
+            if (rc.canMove(forceDir))rc.move(forceDir);
+            return;
+        }
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             if (info.type.equals(RobotType.SOLDIER)) {
                 int curr = rc.getLocation().distanceSquaredTo(info.location) + rc.senseRubble(rc.getLocation());
@@ -47,6 +55,8 @@ class Miner {
                 if (best == null) {
                     Pathfinder.move(rc, spawn);
                 } else {
+                    forceDir = best;
+                    forceTime = 3;
                     if(rc.canMove(best)) rc.move(best);
                 }
                 return;
@@ -56,7 +66,7 @@ class Miner {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 5) {
+        if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 2) {
             ++numReached;
 //            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
@@ -109,7 +119,7 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             int newlead = rc.senseLead(loc);
-            if (newlead > 4 && Utils.randomInt(0, cnt) <= newlead - lead && near <= 2) {
+            if (newlead > 2 && Utils.randomInt(0, cnt) <= newlead - lead && near <= 2) {
                 destination = loc;
                 cnt += 3;
                 lead = rc.senseLead(loc);
