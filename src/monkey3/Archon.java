@@ -87,6 +87,7 @@ public class Archon {
             }
         }
         else {
+            // TODO don't spawn on rubble :skull:
             if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 ++soldiersBuilt;

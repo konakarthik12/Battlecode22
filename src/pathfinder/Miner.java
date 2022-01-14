@@ -90,6 +90,7 @@ class Miner {
 
         int startCount = Clock.getBytecodeNum();
         Direction nextDirection = Pathfinder.pathfind(rc, destination);
+//        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
 
         if (rc.canMove(nextDirection)) {
             previousStep = nextDirection;

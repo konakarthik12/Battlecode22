@@ -21,7 +21,8 @@ class Soldier {
 
 
     static void attack(RobotController rc) throws GameActionException{
-        int priority = 100000;
+        // TODO: prefer enemies on lower rubble
+        int priority = Integer.MAX_VALUE;
         MapLocation target = rc.getLocation();
         for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             int multiplier;
@@ -34,7 +35,7 @@ class Soldier {
                 default: multiplier = 5;
             }
 
-            int score = multiplier * 10000 + robotInfo.getHealth();
+            int score = multiplier * 1000000 + 1000 * rc.senseRubble(robotInfo.location) + robotInfo.getHealth();
             if (score < priority) {
                 priority = score;
                 target = robotInfo.location;
@@ -60,7 +61,7 @@ class Soldier {
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
 
-        if (toLeadFarm && rc.getLocation().distanceSquaredTo(spawn) < 15) {
+        if (toLeadFarm && rc.getLocation().distanceSquaredTo(spawn) < 10) {
             if (rc.senseLead(rc.getLocation()) == 0) {
                 rc.disintegrate();
                 return;
@@ -78,7 +79,7 @@ class Soldier {
             return;
         }
 
-        if (rc.getHealth() < 10) {
+        if (rc.getHealth() < 8) {
             destination = spawn;
             toLeadFarm = true;
             int soldiers = rc.readSharedArray(1) - 1;
@@ -94,7 +95,7 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int rubble = rc.senseRubble(cur);
 
-        if (visibleEnemies > 0 && visibleEnemies <= visibleAllies+1) {
+        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies+1) {
             Direction go = Direction.CENTER;
             for (Direction dir : Constants.directions) {
                 if (rc.canSenseLocation(rc.adjacentLocation(dir)) &&  rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
@@ -103,7 +104,7 @@ class Soldier {
                 }
             }
             if (rc.canMove(go)) rc.move(go);
-        } else if (visibleEnemies > visibleAllies) {
+        } else if (visibleAttackers > visibleAllies) {
             Pathfinder.move(rc, spawn);
         } else {
             Pathfinder.move(rc, destination);

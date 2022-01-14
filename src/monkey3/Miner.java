@@ -34,7 +34,8 @@ class Miner {
     static void setDestination(RobotController rc) throws GameActionException {
         if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
-            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
+//            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
+            destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
         }
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
@@ -81,7 +82,8 @@ class Miner {
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
-            if (rc.senseLead(loc) > 5 && Utils.randomInt(1, near) <= 1) destination = loc;
+            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && Utils.randomInt(1, near) <= 1) destination = loc;
+            // maybe don't need to sense
         }
     }
 
