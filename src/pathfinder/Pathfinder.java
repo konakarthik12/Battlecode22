@@ -5,56 +5,56 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import java.util.HashMap;
-
 class Pathfinder {
     static int temp;
     static Direction nextDirection;
+    private static RobotController rc;
+    static MapLocation dest;
 
-    // higher depth logic (don't save best direction)
-    static int regularLevel(RobotController rc, MapLocation cur, int depth) throws GameActionException {
-//        if (cur.equals(destination)) return 0;
 
-        int rubble = 10000;
-        if (depth == 0) rubble = 0;
-        else if (cur.equals(destination)) rubble = -1000;
-        else if (rc.canSenseLocation(cur) && !rc.isLocationOccupied(cur)) rubble = rc.senseRubble(cur) + 10;
+    static int regularLevel(MapLocation cur) throws GameActionException {
+        // destination -1000, obstacle 10000
+        int rubble = smartRubble(cur);
+        // use heuristic to estimate once u reach the perimeter of 5 by 5 square around robot
+        if (Math.abs(cur.x - rc.getLocation().x) == 2 || Math.abs(cur.y - rc.getLocation().y) == 2) {
+//            System.out.println(pathSoFar);
+            return rubble + cur.distanceSquaredTo(dest);
+        }
 
-        if (depth == 3) return rubble + cur.distanceSquaredTo(destination);
-
-        Direction toDest = rc.getLocation().directionTo(destination);
+        int score = Integer.MAX_VALUE;
+        Direction toDest = rc.getLocation().directionTo(dest);
         Direction beforeDest = toDest.rotateLeft();
         Direction afterDest = toDest.rotateRight();
-
-        int score = regularLevel(rc, cur.add(beforeDest), depth + 1);
-        Direction bestDir = beforeDest;
-
-        temp = regularLevel(rc, cur.add(toDest), depth + 1);
-        if (temp < score) {
-            score = temp;
-            bestDir = toDest;
+        for (Direction dir : new Direction[]{toDest, beforeDest, afterDest}) {
+            MapLocation newLoc = cur.add(dir);
+            int temp = regularLevel(newLoc);
+            if (temp < score) {
+                score = temp;
+                if (rc.getLocation().equals(cur)) nextDirection = dir;
+            }
         }
-
-        temp = regularLevel(rc, cur.add(afterDest), depth + 1);
-        if (temp < score) {
-            score = temp;
-            bestDir = afterDest;
-
-        }
-        if (depth == 0) nextDirection = bestDir;
 
         return rubble + score;
     }
 
 
-    static MapLocation destination;
-
-    public static Direction pathfind(RobotController rc, MapLocation dest) throws GameActionException {
-        destination = dest;
-
-        regularLevel(rc, rc.getLocation(), 0);
-
+    public static Direction pathfind(RobotController robotController, MapLocation destination) throws GameActionException {
+        dest = destination;
+        rc = robotController;
+        regularLevel(rc.getLocation());
         return nextDirection;
     }
 
+    static boolean inBounds(MapLocation loc) {
+        return loc.x >= 0 && loc.x < rc.getMapWidth() && loc.y >= 0 && loc.y < rc.getMapHeight();
+    }
+
+    static int smartRubble(MapLocation cur) throws GameActionException {
+        if (rc.getLocation().equals(cur)) return 0;
+        else if (cur.equals(dest)) return -1000;
+        else if (rc.canSenseLocation(cur) && !rc.isLocationOccupied(cur)) return rc.senseRubble(cur) + 10;
+        //out of bounds or is occupied
+        return 10000;
+
+    }
 }

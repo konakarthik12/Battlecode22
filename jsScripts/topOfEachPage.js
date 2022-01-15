@@ -7,10 +7,11 @@ async function main() {
     axios.defaults.baseURL = 'https://play.battlecode.org/api/0/';
     axios.defaults.headers.common = {'Authorization': `Bearer ${access}`}
 
+    for (let i = 2; i <= 7; i++) {
+        let team = (await getTeamsOnPage(i)).find(team=>team['auto_accept_unranked']);
+        await requestMatch(team.id)
+    }
 
-    let allTeams = await getTeamsOnPage(1);
-    const teams = allTeams.filter(team => team['auto_accept_unranked']);
-    for (const team of teams) await requestMatch(team.id)
 }
 
 

@@ -89,7 +89,7 @@ class Miner {
         int curDist = curLoc.distanceSquaredTo(destination);
 
         int startCount = Clock.getBytecodeNum();
-        Direction nextDirection = Pathfinder.pathfind(rc, destination);
+        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
 //        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
 
         if (rc.canMove(nextDirection)) {

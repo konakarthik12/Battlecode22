@@ -92,7 +92,7 @@ class Miner {
             if (newlead > 2 && Utils.randomInt(0, near) <= newlead - lead) {
                 int set = 1;
                 for (Direction dir: Constants.directions) {
-                    if (loc.add(dir) == rc.getLocation() || (!rc.canSenseLocation(loc.add(dir)))) continue;
+                    if (loc.add(dir).equals(rc.getLocation()) || (!rc.canSenseLocation(loc.add(dir)))) continue;
                     RobotInfo x = rc.senseRobotAtLocation(loc.add(dir));
                     if (x != null && x.type == rc.getType() && x.team == rc.getTeam()) {
                         set = 0;

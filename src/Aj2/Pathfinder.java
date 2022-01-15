@@ -9,7 +9,6 @@ class Pathfinder {
     static int temp;
     static Direction nextDirection;
 
-    // higher depth logic (don't save best direction)
     static int regularLevel(RobotController rc, MapLocation cur, int depth) throws GameActionException {
         if (cur.equals(destination)) return 0;
 

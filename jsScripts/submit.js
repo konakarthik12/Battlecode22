@@ -1,5 +1,4 @@
-const axios = require('axios')
-const {login, requestMatch, getTeamsOnPage} = require("./api");
+import {login, requestMatch} from "./api";
 
 
 async function main() {
@@ -7,11 +6,12 @@ async function main() {
     axios.defaults.baseURL = 'https://play.battlecode.org/api/0/';
     axios.defaults.headers.common = {'Authorization': `Bearer ${access}`}
 
-
-    let allTeams = await getTeamsOnPage(1);
-    const teams = allTeams.filter(team => team['auto_accept_unranked']);
+    const {data} = await axios.post('team?ordering=-score,name&search=&page=1')
+    const teams = data.results.filter(team => team['auto_accept_unranked']);
     for (const team of teams) await requestMatch(team.id)
+
 }
+
 
 
 main()
