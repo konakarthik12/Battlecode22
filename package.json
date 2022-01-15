@@ -3,7 +3,8 @@
   "scripts": {
     "submit": "",
     "login": "node jsScripts/login.js",
-    "top10": "node jsScripts/top10.js"
+    "top10": "node jsScripts/top10.js",
+    "topOfEachPage": "node jsScripts/topOfEachPage.js"
   },
   "dependencies": {
     "axios": "^0.24.0",
