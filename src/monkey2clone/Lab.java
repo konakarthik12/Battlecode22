@@ -12,4 +12,7 @@ class Lab {
             rc.transmute();
         }
     }
+
+    public static void setup(RobotController rc) {
+    }
 }
