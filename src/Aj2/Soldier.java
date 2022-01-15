@@ -97,15 +97,15 @@ class Soldier {
         int delta = 0;
         for(RobotInfo robotInfo : rc.senseNearbyRobots(-1)){
             if(robotInfo.getType() == RobotType.SOLDIER || robotInfo.getType() == RobotType.SAGE || robotInfo.getType() == RobotType.WATCHTOWER){
-                if(robotInfo.getTeam() == rc.getTeam()) delta++;
-                else delta--;
+                if(robotInfo.getTeam() == rc.getTeam()) delta += 4;
+                else delta -= 5;
             }
         }
         if(target == rc.getLocation()) return;
         int rubble = rc.senseRubble(rc.getLocation());
         Direction bestDir = Direction.CENTER;
         for(Direction dir : Aj2.Constants.directions){
-            if(rc.onTheMap(rc.getLocation().add(dir)) && rc.senseRubble(rc.getLocation().add(dir)) < rubble && (target.distanceSquaredTo(rc.getLocation().add(dir)) <= target.distanceSquaredTo(rc.getLocation()) ^ delta < 0)){
+            if(rc.onTheMap(rc.getLocation().add(dir)) && rc.senseRubble(rc.getLocation().add(dir)) < rubble && (target.distanceSquaredTo(rc.getLocation().add(dir)) <= target.distanceSquaredTo(rc.getLocation()) ^ (delta < 0))){
                 bestDir = dir;
                 rubble = rc.senseRubble(rc.getLocation().add(dir));
             }
