@@ -55,7 +55,7 @@ class Soldier {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (sinceLastAttack > 15) {
+        if (sinceLastAttack > 10) {
             readQuadrant(rc);
         }
         if (destination == null || destination.equals(rc.getLocation())) {
@@ -100,7 +100,6 @@ class Soldier {
             int y = (quadrant - 2) % 4 * rc.getMapHeight() / 4 + Utils.randomInt(0, rc.getMapHeight()/4);
 
             if (visAttackers > visAllies + 1) {
-//            if (Math.abs(visAttackers-visAllies) < 3) {
                 isBackup = true;
                 destination = new MapLocation(x,y);
             }

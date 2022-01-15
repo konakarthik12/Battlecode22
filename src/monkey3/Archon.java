@@ -10,6 +10,8 @@ public class Archon {
     static int enemiesInVision = 0;
 
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
+    // TODO: store index representing which quadrant has most fighting
+    // TODO: change grid from 4 x 4 -> 5 x 5
     static int[] enemyEstimates = new int[64];
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
@@ -86,13 +88,14 @@ public class Archon {
         }
         else {
             // TODO don't spawn on rubble :skull:
+            int numMineris = rc.readSharedArray(34);
             if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 ++soldiersBuilt;
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
-//            } else if (Utils.randomInt(1, rc.readSharedArray(34)) <= 1) {
+//            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
+            } else if (Utils.randomInt(1, rc.readSharedArray(34)) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
                 rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
                 ++minersBuilt;
@@ -101,7 +104,7 @@ public class Archon {
                 ++soldiersBuilt;
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
-//            if (rc.getRoundNum() % 5 == 0) minersBuilt--;
+//            if (rc.getRoundNum() % 5 == 0 && minersBuilt > 0) minersBuilt--;
 //            int x = rc.readSharedArray(1);
 //            if (rc.getRoundNum() % 10 == 0) rc.writeSharedArray(1, Math.max(x-1, 0));
         }

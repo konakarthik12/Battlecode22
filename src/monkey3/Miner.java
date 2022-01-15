@@ -41,7 +41,7 @@ class Miner {
         }
 
         int x = rc.readSharedArray(34);
-        if (rc.getHealth() < 4) rc.writeSharedArray(34, Math.max(x-1, 0));
+        if (rc.getHealth() < 10) rc.writeSharedArray(34, Math.max(x-1, 0));
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
