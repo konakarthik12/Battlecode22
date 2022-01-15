@@ -9,7 +9,10 @@ class Soldier {
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
+
     static boolean toLeadFarm = false;
+    static boolean isBackup = false;
+
     static int sinceLastAttack = 0;
     static int visibleEnemies = 0;
     static int visibleAttackers = 0;
@@ -17,14 +20,14 @@ class Soldier {
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
+        readQuadrant(rc);
     }
-
 
     static void attack(RobotController rc) throws GameActionException{
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         MapLocation target = rc.getLocation();
-        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(13, rc.getTeam().opponent())) {
             int multiplier;
             switch (robotInfo.getType()) {
                 case SAGE: multiplier = 0; break;
@@ -51,12 +54,10 @@ class Soldier {
         }
     }
 
-    static void quadrantInformation(RobotController rc) throws GameActionException {
-        MapLocation cur = rc.getLocation();
-        int quadrant = 4 * (4 * cur.x / rc.getMapWidth()) + (4 * cur.y / rc.getMapHeight());
-    }
-
     static void setDestination(RobotController rc) throws GameActionException {
+        if (sinceLastAttack > 15) {
+            readQuadrant(rc);
+        }
         if (destination == null || destination.equals(rc.getLocation())) {
             destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
         }
@@ -81,9 +82,28 @@ class Soldier {
 
         if (rc.getHealth() < 8) {
             destination = spawn;
+            // TODO change to closest archon
             toLeadFarm = true;
             int soldiers = rc.readSharedArray(1) - 1;
             rc.writeSharedArray(1, Math.max(soldiers, 0));
+        }
+    }
+
+    static void readQuadrant(RobotController rc) throws GameActionException {
+        for (int quadrant = 2; quadrant <= 17; ++quadrant) {
+            int temp = rc.readSharedArray(quadrant);
+            int visAttackers = rc.readSharedArray(quadrant + 16) & 255;
+            int visAllies = temp & 255;
+            int visEnemies = (temp >> 8) & 255;
+
+            int x = (quadrant - 2) / 4 * rc.getMapWidth()  / 4 + Utils.randomInt(0, rc.getMapWidth()/4);
+            int y = (quadrant - 2) % 4 * rc.getMapHeight() / 4 + Utils.randomInt(0, rc.getMapHeight()/4);
+
+            if (visAttackers > visAllies + 1) {
+//            if (Math.abs(visAttackers-visAllies) < 3) {
+                isBackup = true;
+                destination = new MapLocation(x,y);
+            }
         }
     }
 
@@ -95,7 +115,7 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int rubble = rc.senseRubble(cur);
 
-        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies+1) {
+        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies) {
             Direction go = Direction.CENTER;
             for (Direction dir : Constants.directions) {
                 if (rc.canSenseLocation(rc.adjacentLocation(dir)) &&  rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
@@ -111,15 +131,27 @@ class Soldier {
         }
     }
 
+    static void writeQuadrantInformation(RobotController rc) throws GameActionException {
+        // TODO test no random as well
+        MapLocation cur = rc.getLocation();
+        int quadrant = 4 * (4 * cur.x / rc.getMapWidth()) + (4 * cur.y / rc.getMapHeight());
+        // indices 2 - 17 are quadrant information for enemies and allies
+        int writeValue = (visibleEnemies << 8) + visibleAllies;
+        if (Utils.randomInt(1, visibleAllies) <= 1)
+            rc.writeSharedArray(2 + quadrant, rc.readSharedArray(2 + quadrant) + writeValue);
+
+        writeValue = (rc.senseNearbyLocationsWithLead().length << 8) + visibleAttackers;
+        if (Utils.randomInt(1, visibleAllies) <= 1)
+            rc.writeSharedArray(18 + quadrant, rc.readSharedArray(18+quadrant) + writeValue);
+
+        assert(quadrant < 16);
+    }
+
     static void senseEnemies(RobotController rc) throws GameActionException {
-//        int enemies = 0;
-//        int attackers = 0;
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
 
-//        visibleAllies = 1 + rc.senseNearbyRobots(-1, rc.getTeam()).length;
-//        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam().opponent())) {
                 ++visibleEnemies;

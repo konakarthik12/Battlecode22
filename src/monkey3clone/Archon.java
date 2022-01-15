@@ -1,4 +1,4 @@
-package monkey3;
+package monkey3clone;
 
 import battlecode.common.*;
 
@@ -90,20 +90,10 @@ public class Archon {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 ++soldiersBuilt;
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
-//            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
-//            } else if (Utils.randomInt(1, rc.readSharedArray(34)) <= 1) {
+            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
-                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
                 ++minersBuilt;
-            } else {
-                summonUnitAnywhere(rc, RobotType.SOLDIER);
-                ++soldiersBuilt;
-                rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
-//            if (rc.getRoundNum() % 5 == 0) minersBuilt--;
-//            int x = rc.readSharedArray(1);
-//            if (rc.getRoundNum() % 10 == 0) rc.writeSharedArray(1, Math.max(x-1, 0));
         }
     }
 

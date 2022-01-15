@@ -7,7 +7,6 @@ import battlecode.common.RobotController;
 
 public class Pathfinder {
 
-//    static Direction nextDirection;
     static MapLocation destination;
 
     static int nextMove(RobotController rc, MapLocation cur, int depth) throws GameActionException {

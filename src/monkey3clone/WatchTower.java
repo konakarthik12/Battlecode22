@@ -1,4 +1,4 @@
-package monkey1;
+package monkey3clone;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

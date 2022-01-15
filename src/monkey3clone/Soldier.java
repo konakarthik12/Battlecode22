@@ -1,8 +1,6 @@
-package monkey1;
+package monkey3clone;
 
 import battlecode.common.*;
-
-import java.awt.*;
 
 
 class Soldier {
@@ -24,7 +22,7 @@ class Soldier {
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         MapLocation target = rc.getLocation();
-        for (RobotInfo robotInfo : rc.senseNearbyRobots(13, rc.getTeam().opponent())) {
+        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             int multiplier;
             switch (robotInfo.getType()) {
                 case SAGE: multiplier = 0; break;
@@ -46,7 +44,6 @@ class Soldier {
         if (rc.canAttack(target))  {
             rc.attack(target);
             sinceLastAttack = 0;
-            destination = target;
         } else {
             ++sinceLastAttack;
         }
@@ -96,7 +93,7 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int rubble = rc.senseRubble(cur);
 
-        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies) {
+        if (visibleEnemies > 0 && visibleAttackers <= visibleAllies+1) {
             Direction go = Direction.CENTER;
             for (Direction dir : Constants.directions) {
                 if (rc.canSenseLocation(rc.adjacentLocation(dir)) &&  rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
@@ -105,7 +102,7 @@ class Soldier {
                 }
             }
             if (rc.canMove(go)) rc.move(go);
-        } else if (visibleAttackers > visibleAllies + 1) {
+        } else if (visibleAttackers > visibleAllies) {
             Pathfinder.move(rc, spawn);
         } else {
             Pathfinder.move(rc, destination);
@@ -135,7 +132,7 @@ class Soldier {
 
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam().opponent())) {
-                if (rc.getLocation().distanceSquaredTo(info.location) <= 13) visibleEnemies++;
+                ++visibleEnemies;
                 switch (info.type) {
                     case SOLDIER: case WATCHTOWER: case SAGE:
                         ++visibleAttackers;

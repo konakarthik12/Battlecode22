@@ -1,4 +1,4 @@
-package Aj2;
+package monkey3clone;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
