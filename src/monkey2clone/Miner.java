@@ -37,12 +37,13 @@ class Miner {
         // experiment with returning to spawn and with running directly opposite to soldiers
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             if (info.type.equals(RobotType.SOLDIER)) {
-                int curr = rc.getLocation().distanceSquaredTo(info.location) + rc.senseRubble(rc.getLocation());
+                int dist = rc.getLocation().distanceSquaredTo(info.location);
+                int curr = rc.senseRubble(rc.getLocation());
                 Direction best = null;
                 for (Direction dir: Constants.directions) {
                     MapLocation adj = rc.adjacentLocation(dir);
-                    if (rc.canSenseLocation(adj) && rc.adjacentLocation(dir).distanceSquaredTo(info.location) + rc.senseRubble(adj) > curr) {
-                        curr = rc.adjacentLocation(dir).distanceSquaredTo(info.location) + rc.senseRubble(adj);
+                    if (rc.canSenseLocation(adj) && rc.adjacentLocation(dir).distanceSquaredTo(info.location) > dist && rc.senseRubble(adj) <= curr) {
+                        curr = rc.senseRubble(adj);
                         best = dir;
                     }
                 }
