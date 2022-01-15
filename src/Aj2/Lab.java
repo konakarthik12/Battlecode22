@@ -8,7 +8,7 @@ class Lab {
 
         int lead = rc.getTeamLeadAmount(rc.getTeam());
         int opponentLead = rc.getTeamLeadAmount(rc.getTeam().opponent());
-        if(lead >= Constants.minLeadForGold) {
+        if(lead >= Constants.minLeadForGold){
             rc.transmute();
         }
     }

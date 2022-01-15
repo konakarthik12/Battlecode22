@@ -13,7 +13,7 @@ class Miner {
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
     static int lead = 0;
-
+    static int healthLastTurn = 50;
     static int turnsSearching = 0;
     static boolean isSearching = true;
     static boolean isMinID = true;
@@ -39,9 +39,6 @@ class Miner {
 //            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
         }
-
-        int x = rc.readSharedArray(34);
-        if (rc.getHealth() < 4) rc.writeSharedArray(34, Math.max(x-1, 0));
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
@@ -117,7 +114,8 @@ class Miner {
     }
 
     static void writeShared(RobotController rc) throws GameActionException {
-
+        int x = rc.readSharedArray(34);
+        rc.writeSharedArray(34, x+1);
     }
 
     static void run(RobotController rc) throws GameActionException {
@@ -126,7 +124,7 @@ class Miner {
         setDestination(rc);
         move(rc);
         mine(rc);
-
+        writeShared(rc);
         writeQuadrantInformation(rc);
 
 //        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {

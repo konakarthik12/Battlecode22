@@ -22,6 +22,9 @@ class Constants {
     // [0,1] stores enemy and friendly visible soldier/enemy counts
     // [2, 17] stores quadrant information about enemies and allies
     // [18, 33] stores lead information and ??
-    // [34] is num miners alive
+    // [34] is num miners died in this turn
+    //bit hack bit 12,13,14,15 store whether archon built miner or not, to keep track of miner built
+    //and the lower bits store the number of miner practically dead
+    // [35] is num miners built
     // [59, 63] stores Archon locations
 }
