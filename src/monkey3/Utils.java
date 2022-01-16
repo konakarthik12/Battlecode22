@@ -34,7 +34,7 @@ class Utils {
      * @return random integer in range [a,b]
      */
     static int randomInt(int a, int b) {
-        if (b < a) return -1;
+        if (b-a < 0) return -1;
         return Utils.rng.nextInt(b - a + 1) + a;
     }
 }

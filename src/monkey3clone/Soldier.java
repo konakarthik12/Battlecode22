@@ -2,11 +2,7 @@ package monkey3clone;
 
 import battlecode.common.*;
 
-import java.awt.*;
-
-
 class Soldier {
-    static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation enemyLoc = null;
     static RobotInfo enemy = null;
@@ -109,9 +105,6 @@ class Soldier {
         }
     }
 
-    static void micro(RobotController rc) throws GameActionException {
-        RobotInfo[] team = rc.senseNearbyRobots(RobotType.SOLDIER.visionRadiusSquared, rc.getTeam());
-    }
 
     static void move(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
@@ -203,9 +196,12 @@ class Soldier {
         move(rc);
         attack(rc);
 
+//        writeQuadrantInformation(rc);
+//        readQuadrant(rc);
+
         rc.setIndicatorString(destination.toString());
         if (enemyLoc != null) {
-            rc.setIndicatorLine(rc.getLocation(), enemyLoc, 255, 0, 0);
+            rc.setIndicatorLine(rc.getLocation(), enemyLoc, 200, 50, 50);
         } else {
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }

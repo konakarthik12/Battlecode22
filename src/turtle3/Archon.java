@@ -1,4 +1,4 @@
-package monkey3clone;
+package turtle3;
 
 import battlecode.common.*;
 
@@ -148,12 +148,12 @@ public class Archon {
     }
     static void run(RobotController rc) throws GameActionException {
         senseLocalEnemies(rc);
+        heal(rc);
 
 //        if (rc.getRoundNum() == 10) setDestination(rc);
 //        if (rc.getRoundNum() > 10) move(rc);
 
         summonUnits(rc);
-        heal(rc);
         reset(rc);
     }
 
