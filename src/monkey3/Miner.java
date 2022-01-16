@@ -22,7 +22,7 @@ class Miner {
 
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
-        if (visibleAttackers+2 > visibleAllies) {
+        if (visibleAttackers > visibleAllies) {
             RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
             for (RobotInfo info : enemies) {
                 if (info.type.equals(RobotType.SOLDIER)) {
