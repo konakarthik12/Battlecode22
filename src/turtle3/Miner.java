@@ -1,10 +1,11 @@
-package monkey3clone;
+package turtle3;
 
 import battlecode.common.*;
 
 class Miner {
 
     static int numReached = 0;
+    static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
     static int near = 0;

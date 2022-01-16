@@ -13,7 +13,7 @@ class Utils {
 
     static void setup(RobotController rc) {
         Utils.rc = rc;
-        rng = new Random(rc.getID() + 422);
+        rng = new Random(rc.getID() + 420);
     }
 
     static MapLocation nearestArchon(RobotController rc) throws GameActionException {
@@ -21,7 +21,12 @@ class Utils {
         MapLocation cur = rc.getLocation();
         MapLocation best = cur;
         for (int i = 0; i < rc.getArchonCount(); ++i) {
-
+            int loc = rc.readSharedArray(63-i);
+            MapLocation mapLoc = new MapLocation((loc >> 6) & 63, loc & 63);
+            if (mapLoc.distanceSquaredTo(cur) < bestDist) {
+                bestDist = mapLoc.distanceSquaredTo(cur);
+                best = mapLoc;
+            }
         }
         return best;
     }

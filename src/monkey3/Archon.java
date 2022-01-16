@@ -2,7 +2,11 @@ package monkey3;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 public class Archon {
+
+    static MapLocation destination = null;
 
     static int archonID = 0;
     static int minersBuilt = 0;
@@ -11,8 +15,8 @@ public class Archon {
 
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
     // TODO: store index representing which quadrant has most fighting
-    // TODO: change grid from 4 x 4 -> 5 x 5
-    static int[] enemyEstimates = new int[64];
+    // TODO: change grid from 4 x 4 -> 5 x 5?
+//    static int[] enemyEstimates = new int[64];
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
         Direction build = Direction.EAST;
@@ -24,23 +28,26 @@ public class Archon {
                     build = dir;
                     rubble = _rubble;
                 }
-//                rc.buildRobot(type, dir);
-//                if (type == RobotType.MINER) ++minersBuilt;
-//                if (type == RobotType.SOLDIER) ++soldiersBuilt;
             }
         }
         if (rc.canBuildRobot(type, build)) {
             rc.buildRobot(type, build);
-            if (type == RobotType.MINER) ++minersBuilt;
-            if (type == RobotType.SOLDIER) ++soldiersBuilt;
+            if (type.equals(RobotType.MINER)) {
+                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
+                ++minersBuilt;
+            } else if (type.equals(RobotType.SOLDIER)) {
+                rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
+                ++soldiersBuilt;
+            }
         }
     }
 
     static void heal(RobotController rc) throws GameActionException {
+        // TODO add code to heal lowest health units
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
-            if (rc.canAttack(r.location)) {
-                rc.attack(r.location);
+            if (rc.canRepair(r.location)) {
+                rc.repair(r.location);
             }
         }
     }
@@ -54,22 +61,16 @@ public class Archon {
 
     static void reset(RobotController rc) throws GameActionException {
         enemiesInVision = 0;
-        for (int i = 2; i <= 17; ++i) {
-            enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
-        }
         if (archonID == rc.getArchonCount()) {
-            for (int i = 2; i < 59; ++i) {
-                rc.writeSharedArray(i, 0);
-            }
+//            for (int i = 2; i < 59; ++i) rc.writeSharedArray(i, 0);
+            for (int i = 0; i < 59; ++i) if (i != 1 && i != 34) rc.writeSharedArray(i, 0);
+//            for (int i = 0; i < 59; ++i) if (i != 1) rc.writeSharedArray(i, 0);
         }
     }
 
     static void summonUnits(RobotController rc) throws GameActionException {
         if (rc.getRoundNum() <= 4) {
-            if (enemiesInVision > 0) {
-                summonUnitAnywhere(rc, RobotType.SOLDIER);
-                ++soldiersBuilt;
-            }
+            if (enemiesInVision > 0) summonUnitAnywhere(rc, RobotType.SOLDIER);
             MapLocation[] leadLoc = rc.senseNearbyLocationsWithLead();
             if (leadLoc.length > 0) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
@@ -80,45 +81,77 @@ public class Archon {
                     go = go.rotateRight().rotateRight();
                     if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 }
-                ++minersBuilt;
             } else {
                 summonUnitAnywhere(rc, RobotType.MINER);
-                ++minersBuilt;
             }
-        }
-        else {
-            // TODO don't spawn on rubble :skull:
-            int numMineris = rc.readSharedArray(34);
-            if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10) {
+        } else {
+            // prioritize soldiers where needed
+            int numEnemies = 0;
+            int numSoldiers = rc.readSharedArray(1);
+            for (int i = 2; i < 18; ++i) {
+                int val = rc.readSharedArray(i);
+                numEnemies += (val >> 8) & 255;
+            }
+
+//            rc.setIndicatorString(numEnemies + " " + numSoldiers);
+            rc.setIndicatorString(numEnemies + " " + numSoldiers + " " + rc.readSharedArray(34));
+//            System.out.println(rc.readSharedArray(34));
+            int carryingCapacity = 10 + rc.getRoundNum() / 150; // 2000 / 150 = 200 / 15 = 13.5
+            int roll = Utils.randomInt(1, carryingCapacity);
+            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(34) ) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
-                ++soldiersBuilt;
-                rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
-//            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-//            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
-            } else if (Utils.randomInt(1, rc.readSharedArray(34)) <= 1) {
-                summonUnitAnywhere(rc, RobotType.MINER);
-                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
-                ++minersBuilt;
             } else {
-                summonUnitAnywhere(rc, RobotType.SOLDIER);
-                ++soldiersBuilt;
-                rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
+                if (Utils.randomInt(1, rc.getArchonCount()) == 1)
+                summonUnitAnywhere(rc, RobotType.MINER);
             }
-//            if (rc.getRoundNum() % 5 == 0 && minersBuilt > 0) minersBuilt--;
-//            int x = rc.readSharedArray(1);
-//            if (rc.getRoundNum() % 10 == 0) rc.writeSharedArray(1, Math.max(x-1, 0));
+
         }
     }
 
     static void senseLocalEnemies(RobotController rc) throws GameActionException {
         enemiesInVision += rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length;
+        rc.writeSharedArray(0, rc.readSharedArray(0) + enemiesInVision);
 //        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {}
+    }
+
+    static void setDestination(RobotController rc) throws GameActionException {
+        int score = Integer.MAX_VALUE;
+
+        for (int i = 63; i > 63 - rc.getArchonCount(); --i) {
+            int loc = rc.readSharedArray(i);
+            MapLocation cur = new MapLocation((loc >> 6) & 63, loc & 63);
+            int a = cur.distanceSquaredTo(new MapLocation(0, 0));
+            int b = cur.distanceSquaredTo(new MapLocation(rc.getMapWidth()-1, 0));
+            int c = cur.distanceSquaredTo(new MapLocation(rc.getMapWidth()-1, rc.getMapHeight()-1));
+            int d = cur.distanceSquaredTo(new MapLocation(0, rc.getMapHeight()-1));
+            int _score = Math.min(Math.min(a, b), Math.min(c, d));
+            if (score > _score) {
+                score = _score;
+                destination = cur;
+            }
+        }
+
+        if (!destination.equals(rc.getLocation()) && rc.canTransform()) {
+            rc.transform();
+            stillMoving = true;
+        }
+    }
+
+    static boolean stillMoving = false;
+
+    static void move(RobotController rc) throws GameActionException {
+        if (stillMoving) Pathfinder.move(rc, destination);
+        if (rc.getLocation().distanceSquaredTo(destination) <= 20) {
+            stillMoving = false;
+            if (rc.canTransform() && rc.getMode().equals(RobotMode.PORTABLE)) rc.transform();
+        }
     }
 
     static void run(RobotController rc) throws GameActionException {
         senseLocalEnemies(rc);
-        heal(rc);
         summonUnits(rc);
+
+        heal(rc);
         reset(rc);
     }
 
