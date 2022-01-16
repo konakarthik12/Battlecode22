@@ -19,6 +19,18 @@ class Miner {
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
+        int dist = 63;
+        destination = new MapLocation(Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
+        rc.setIndicatorString(destination.toString());
+        rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
+        if (rc.getRoundNum() <= 10) {
+            for (MapLocation loc : rc.senseNearbyLocationsWithLead()) {
+                if (loc.distanceSquaredTo(rc.getLocation()) < dist) {
+                    destination = loc;
+                    dist = loc.distanceSquaredTo(rc.getLocation());
+                }
+            }
+        }
     }
 
     static void move(RobotController rc) throws GameActionException {
