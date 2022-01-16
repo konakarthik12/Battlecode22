@@ -41,8 +41,8 @@ public class Archon {
     static void heal(RobotController rc) throws GameActionException {
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
-            if (rc.canAttack(r.location)) {
-                rc.attack(r.location);
+            if (rc.canRepair(r.location) && (r.type == RobotType.SOLDIER || visibleAllies == 0)) {
+                rc.repair(r.location);
             }
         }
     }
@@ -107,7 +107,7 @@ public class Archon {
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
             } else if (Utils.randomInt(1, minersBuilt) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
-                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
+                //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
             } else {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
@@ -148,8 +148,8 @@ public class Archon {
 
     static void run(RobotController rc) throws GameActionException {
         senseEnemies(rc);
-        heal(rc);
         summonUnits(rc);
+        heal(rc);
         reset(rc);
         rc.writeSharedArray(37 + archonID, 65535);
     }

@@ -12,6 +12,7 @@ class Miner {
     static int visibleEnemies = 0;
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
+    static boolean enemyArchon = false;
     static int lead = 0;
 
     static int turnsSearching = 0;
@@ -69,8 +70,8 @@ class Miner {
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
         }
 
-        int x = rc.readSharedArray(34);
-        if (rc.getHealth() < 4) rc.writeSharedArray(34, Math.max(x-1, 0));
+        //int x = rc.readSharedArray(34);
+        //if (rc.getHealth() < 4) rc.writeSharedArray(34, Math.max(x-1, 0));
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
@@ -112,13 +113,10 @@ class Miner {
     }
 
     static void senseEnemies(RobotController rc) throws GameActionException {
-//        int enemies = 0;
-//        int attackers = 0;
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
-//        visibleAllies = 1 + rc.senseNearbyRobots(RobotType.MINER.visionRadiusSquared, rc.getTeam()).length;
-//        for (RobotInfo info : rc.senseNearbyRobots(RobotType.MINER.visionRadiusSquared, rc.getTeam().opponent())) {
+        enemyArchon = false;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam())) {
                 if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
@@ -140,13 +138,12 @@ class Miner {
                     case WATCHTOWER:
                     case SAGE:
                         ++visibleAttackers;
+                    case ARCHON:
+                        enemyArchon = true;
                 }
             }
         }
-
-//        if (Utils.randomInt(1, allies) <= 3) {
         rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
-//        }
     }
 
     static void senseAllies(RobotController rc) throws  GameActionException {
@@ -167,6 +164,7 @@ class Miner {
         int hiLead = 5;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
+            if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
             if (rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID && Utils.randomInt(1, near) <= 1) {
                 destination = loc;
                 hiLead = rc.senseLead(loc);

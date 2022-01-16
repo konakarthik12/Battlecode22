@@ -132,11 +132,11 @@ class Soldier {
         int rubble = rc.senseRubble(cur);
 
         if (visibleEnemies > 0 && visibleAttackers <= visibleAllies) {
-            if (closeAlly > visibleAttackers + 1 || !(enemy.type == RobotType.SOLDIER)) {
+            if (!(enemy.type == RobotType.SOLDIER)) {
                 Pathfinder.move(rc, enemyLoc);
             }
             Direction go = Direction.CENTER;
-            int dist = 63;
+            int dist = rc.getLocation().distanceSquaredTo(enemyLoc);
             for (Direction dir : Constants.directions) {
                 if (closeAlly >= visibleAttackers) {
                     if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
@@ -150,13 +150,12 @@ class Soldier {
                 } else {
                     if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
                         && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
-                    if (rc.canMove(dir)) {
-                        go = dir;
-                        rubble = rc.senseRubble(rc.adjacentLocation(dir));
-                        dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
+                        if (rc.canMove(dir)) {
+                            go = dir;
+                            rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                            dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
+                        }
                     }
-                }
-
                 }
             }
             if (rc.canMove(go)) rc.move(go);
@@ -190,6 +189,7 @@ class Soldier {
         visibleAttackers = 0;
         visibleAllies = 0;
         closeAlly = 0;
+        int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam().opponent())) {
                 for (int i = 1; i <= rc.getArchonCount(); i++) {
@@ -212,7 +212,6 @@ class Soldier {
                     case SOLDIER: case WATCHTOWER: case SAGE:
                         ++visibleAttackers;
                 }
-                int priority = Integer.MAX_VALUE;
                 int multiplier;
                 switch (info.getType()) {
                     case SAGE: multiplier = 0; break;
@@ -222,10 +221,11 @@ class Soldier {
                     case MINER: multiplier = 4; break;
                     default: multiplier = 5;
                 }
-                int score = multiplier * 1000000 + 1000 * rc.senseRubble(info.location) + info.getHealth();
+                int score = multiplier * 1000000 + 1000 * rc.senseRubble(info.location) + info.getHealth() + rc.getLocation().distanceSquaredTo(info.location);
                 if (score < priority) {
                     enemyLoc = info.location;
                     enemy = info;
+                    priority = score;
                 }
             }
         }
