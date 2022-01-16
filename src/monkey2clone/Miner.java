@@ -138,6 +138,7 @@ class Miner {
                     case WATCHTOWER:
                     case SAGE:
                         ++visibleAttackers;
+                        break;
                     case ARCHON:
                         enemyArchon = true;
                 }
