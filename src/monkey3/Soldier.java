@@ -70,12 +70,12 @@ class Soldier {
             }
 
             int bestDist = 10000;
-            for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.BUILDER.visionRadiusSquared)) {
+            for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.SOLDIER.visionRadiusSquared)) {
                 if (rc.canSenseLocation(loc) && rc.senseLead(loc) == 0 && !rc.isLocationOccupied(loc)) {
-//                    if (loc.distanceSquaredTo(rc.getLocation()) < bestDist) {
+                    if (loc.distanceSquaredTo(rc.getLocation()) < bestDist) {
                         bestDist = loc.distanceSquaredTo(rc.getLocation());
                         destination = loc;
-//                    }
+                    }
                 }
             }
             return;

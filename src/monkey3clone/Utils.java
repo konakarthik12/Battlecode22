@@ -13,7 +13,7 @@ class Utils {
 
     static void setup(RobotController rc) {
         Utils.rc = rc;
-        rng = new Random(rc.getID() + 420);
+        rng = new Random(rc.getID() + 422);
     }
 
     static MapLocation nearestArchon(RobotController rc) throws GameActionException {
