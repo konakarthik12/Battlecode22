@@ -2,11 +2,6 @@ package monkey2;
 
 import battlecode.common.*;
 
-import java.awt.*;
-import java.util.Arrays;
-
-import static monkey2.Constants.directions;
-
 
 class Builder {
     static Direction previousStep = Direction.CENTER;
@@ -29,7 +24,7 @@ class Builder {
         int toDest = cur.directionTo(destination).ordinal();
 
         for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = directions[i % 8];
+            Direction dir = Constants.directions[i % 8];
             if (dir.equals(lastDir.opposite())) continue;
             MapLocation next = cur.add(dir);
             if (rc.canSenseLocation(next)) {
@@ -47,7 +42,7 @@ class Builder {
                 previousStep = nextDirection;
                 rc.move(nextDirection);
             } else {
-                for (Direction dir : directions) {
+                for (Direction dir : Constants.directions) {
                     MapLocation next = cur.add(dir);
                     if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
                         if (rc.canMove(dir)) rc.move(dir);
