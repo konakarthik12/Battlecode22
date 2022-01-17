@@ -1,4 +1,4 @@
-package monkey2clone;
+package monkey2newmienr;
 
 import battlecode.common.*;
 
@@ -23,7 +23,6 @@ class Soldier {
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
-        findEnemy(rc);
     }
 
     static void attack(RobotController rc) throws GameActionException{
@@ -58,14 +57,15 @@ class Soldier {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (sinceLastAttack > 20) {
+        if (sinceLastAttack > 5 && !isBackup) {
             readQuadrant(rc);
         }
         if(destination == null) {
             destination = new MapLocation(rc.getMapWidth() / 2 - 5 + Utils.randomInt(0, 10), rc.getMapHeight() / 2 - 5 + Utils.randomInt(0, 10));
         } else if (rc.canSenseLocation(destination)) {
+            isBackup = false;
             destination = new MapLocation( Utils.randomInt(1, rc.getMapWidth() - 1), Utils.randomInt(1, rc.getMapHeight() - 1));
-            findEnemy(rc);
+            readQuadrant(rc);
         }
 
         if (toLeadFarm && rc.getLocation().distanceSquaredTo(spawn) < 10) {
@@ -96,36 +96,32 @@ class Soldier {
     }
 
     static void readQuadrant(RobotController rc) throws GameActionException {
-        for (int quadrant = 2; quadrant <= 17; ++quadrant) {
-            int temp = rc.readSharedArray(quadrant);
-            int visAttackers = rc.readSharedArray(quadrant + 16) & 255;
-            int visAllies = temp & 255;
-            int visEnemies = (temp >> 8) & 255;
-
-            int x = (quadrant - 2) / 4 * rc.getMapWidth()  / 4 + Utils.randomInt(0, rc.getMapWidth()/4);
-            int y = (quadrant - 2) % 4 * rc.getMapHeight() / 4 + Utils.randomInt(0, rc.getMapHeight()/4);
-
-            if (visAttackers > visAllies + 1) {
-//            if (Math.abs(visAttackers-visAllies) < 3) {
+        int mDist = Integer.MAX_VALUE;
+        int sDist = Integer.MAX_VALUE;
+        MapLocation mLoc = null;
+        MapLocation sLoc = null;
+        for (int quadrant = 2; quadrant <= 26; ++quadrant) {
+            int visAttackers = rc.readSharedArray(quadrant + 25) & 127;
+            int visEnemies = (rc.readSharedArray(quadrant) >> 8) & 127;
+            int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + Utils.randomInt(0, rc.getMapWidth()/5 - 1);
+            int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5 - 1);
+            MapLocation target = new MapLocation(x, y);
+            if (visAttackers > 0 && rc.getLocation().distanceSquaredTo(target) < sDist) {
                 isBackup = true;
-                destination = new MapLocation(x,y);
+                sLoc = target;
+                sDist = rc.getLocation().distanceSquaredTo(target);
+            } else if (visEnemies > 0 && visAttackers == 0 && rc.getLocation().distanceSquaredTo(target) < mDist) {
+                isBackup = true;
+                mLoc = target;
+                mDist = rc.getLocation().distanceSquaredTo(target);
             }
         }
-    }
-
-    static void findEnemy(RobotController rc) throws GameActionException {
-        int dist = 500;
-        for (int i = 1; i <= rc.getArchonCount(); i++) {
-            if (rc.readSharedArray(37 + i) == 32767) continue;
-            int fromShared = rc.readSharedArray(33 + i);
-            MapLocation target = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
-            if (rc.getLocation().distanceSquaredTo(target) < dist) {
-                dist = rc.getLocation().distanceSquaredTo(target);
-                destination = target;
-            }
+        if (mLoc != null && mDist + 500 < sDist) {
+            destination = mLoc;
+        } else if (sLoc != null) {
+            destination = sLoc;
         }
     }
-
 
     static void move(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
@@ -140,7 +136,7 @@ class Soldier {
             for (Direction dir : Constants.directions) {
                 if (closeAlly >= visibleAttackers) {
                     if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
-                        && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                         if (rc.canMove(dir)) {
                             go = dir;
                             rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -149,7 +145,7 @@ class Soldier {
                     }
                 } else {
                     if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
-                        && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
                         if (rc.canMove(dir)) {
                             go = dir;
                             rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -171,17 +167,15 @@ class Soldier {
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         int lead = leadLocations.length;
         MapLocation cur = rc.getLocation();
-        int quadrant = 4 * (4 * cur.x / rc.getMapWidth()) + (4 * cur.y / rc.getMapHeight());
+        int quadrant = 5 * (5 * cur.x / rc.getMapWidth()) + (5 * cur.y / rc.getMapHeight());
         // indices 2 - 17 are quadrant information for enemies and allies
-        int writeValue = (visibleEnemies << 8) + visibleAllies;
-        if (Utils.randomInt(1, visibleAllies) <= 1)
+        int writeValue = (visibleEnemies << 8) + visibleAllies + (1<<15);
             rc.writeSharedArray(2 + quadrant, writeValue);
 
-        writeValue = (lead << 8) + visibleAttackers;
-        if (Utils.randomInt(1, visibleAllies) <= 1)
-            rc.writeSharedArray(18 + quadrant, writeValue);
+        writeValue = (lead << 8) + visibleAttackers + (1<<15);
+            rc.writeSharedArray(27 + quadrant, writeValue);
 
-        assert(quadrant < 16);
+        assert(quadrant < 27);
     }
 
     static void senseEnemies(RobotController rc) throws GameActionException {
@@ -192,23 +186,6 @@ class Soldier {
         int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam().opponent())) {
-                for (int i = 1; i <= rc.getArchonCount(); i++) {
-                    int typePriority = rc.readSharedArray(37 + i) & (1 << 15);
-                    int fromShared = rc.readSharedArray(64 - i);
-                    MapLocation arLoc = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
-                    fromShared = rc.readSharedArray(37 + i);
-                    if (typePriority == 0 && (info.location.distanceSquaredTo(arLoc) < fromShared || info.type == RobotType.SOLDIER)) {
-                        rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
-                        if (info.type == RobotType.SOLDIER) {
-                            rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc) + (1<<15));
-                        } else {
-                            rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc));
-                        }
-                    } else if (info.type == RobotType.SOLDIER && info.location.distanceSquaredTo(arLoc) < fromShared) {
-                        rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
-                        rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc) + (1<<15));
-                    }
-                }
                 ++visibleEnemies;
                 switch (info.type) {
                     case SOLDIER: case WATCHTOWER: case SAGE:
