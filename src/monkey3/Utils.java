@@ -1,5 +1,6 @@
 package monkey3;
 
+import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
@@ -36,5 +37,23 @@ class Utils {
     static int randomInt(int a, int b) {
         if (b-a < 0) return -1;
         return Utils.rng.nextInt(b - a + 1) + a;
+    }
+    static void move(RobotController rc, MapLocation destination) throws GameActionException {
+        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
+
+        if (rc.canMove(nextDirection)) {
+            rc.move(nextDirection);
+        } else {
+            int curDist = rc.getLocation().distanceSquaredTo(destination);
+            if (curDist > 2) {
+                for (Direction dir : Constants.directions) {
+                    MapLocation next = rc.getLocation().add(dir);
+                    if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
+                        if (rc.canMove(dir)) rc.move(dir);
+                    }
+                }
+            }
+        }
+
     }
 }
