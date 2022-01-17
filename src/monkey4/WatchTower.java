@@ -1,4 +1,4 @@
-package monkey2newmienr;
+package monkey4;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
@@ -8,7 +8,7 @@ class WatchTower {
     static void run(RobotController rc) throws GameActionException {
         RobotInfo[] robots = rc.senseNearbyRobots();
         int RobotsAttacked = 0;
-        for (RobotInfo robot : robots){
+        for (RobotInfo robot : robots) {
             if (rc.canAttack(robot.location)){
                 rc.attack(robot.location);
             }

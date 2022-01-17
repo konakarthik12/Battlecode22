@@ -1,4 +1,4 @@
-package monkey2newmienr;
+package monkey4;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

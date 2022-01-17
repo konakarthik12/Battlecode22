@@ -1,8 +1,6 @@
-package monkey3;
+package monkey4;
 
 import battlecode.common.*;
-
-import java.awt.*;
 
 public class Archon {
 
@@ -33,10 +31,9 @@ public class Archon {
         if (rc.canBuildRobot(type, build)) {
             rc.buildRobot(type, build);
             if (type.equals(RobotType.MINER)) {
-                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
+                rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
                 ++minersBuilt;
             } else if (type.equals(RobotType.SOLDIER)) {
-                rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
                 ++soldiersBuilt;
             }
         }
@@ -62,9 +59,12 @@ public class Archon {
     static void reset(RobotController rc) throws GameActionException {
         enemiesInVision = 0;
         if (archonID == rc.getArchonCount()) {
-//            for (int i = 2; i < 59; ++i) rc.writeSharedArray(i, 0);
-            for (int i = 0; i < 59; ++i) if (i != 1 && i != 34) rc.writeSharedArray(i, 0);
-//            for (int i = 0; i < 59; ++i) if (i != 1) rc.writeSharedArray(i, 0);
+            for (int i = 0; i < 36; ++i) {
+                int k = rc.readSharedArray(i);
+                if (((k >> 15) & 1) == 1) rc.writeSharedArray(i, k - (1 << 15));
+                else rc.writeSharedArray(i, 0);
+            }
+//            rc.writeSharedArray(58, 0);
         }
     }
 
@@ -87,28 +87,28 @@ public class Archon {
         } else {
             // prioritize soldiers where needed
             int numEnemies = 0;
-            int numSoldiers = rc.readSharedArray(1);
-            for (int i = 2; i < 18; ++i) {
+            int numSoldiers = 0;
+            for (int i = 0; i < 36; ++i) {
                 int val = rc.readSharedArray(i);
-                numEnemies += (val >> 8) & 255;
+                numEnemies += (val >> 7) & 255;
+                numSoldiers += val & 255;
             }
 
-            int carryingCapacity = 7 + rc.getRoundNum() / 150 + rc.getMapHeight() / 10 + rc.getMapWidth() / 10;
+            int carryingCapacity = 10 + rc.getRoundNum() / 150 + (rc.getMapHeight() / 10) + (rc.getMapWidth() / 10);
             int roll = Utils.randomInt(1, carryingCapacity);
+            rc.setIndicatorString(rc.readSharedArray(58) + " ");
 
-            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(34) ) {
+            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58) ) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
             } else {
                 if (Utils.randomInt(1, rc.getArchonCount()) == 1)
                 summonUnitAnywhere(rc, RobotType.MINER);
             }
-
         }
     }
 
     static void senseLocalEnemies(RobotController rc) throws GameActionException {
         enemiesInVision += rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length;
-        rc.writeSharedArray(0, rc.readSharedArray(0) + enemiesInVision);
 //        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {}
     }
 
@@ -152,25 +152,17 @@ public class Archon {
 
         if (archonID == 1 && rc.getRoundNum() % 50 == 0) {
             String printVal = "\n";
-            for (int i = 3; i >= 0; --i) {
-                for (int j = 0; j < 4; ++j) {
-                    int quad = (4*i + j + 2);
+            for (int i = 5; i >= 0; --i) {
+                for (int j = 0; j < 6; ++j) {
+                    int quad = (6*i + j);
                     int val = rc.readSharedArray(quad);
                     int allies = val & 255;
                     int enemies = (val >> 8) & 255;
                     printVal += enemies + " ";
-                    if ((quad-2) % 4 == 3) printVal += "\n";
                 }
+                printVal += "\n";
             }
-
-//            for (int i = 2; i <= 17; ++i) {
-//                int val = rc.readSharedArray(i);
-//                int allies = val & 255;
-//                int enemies = (val >> 8) & 255;
-//                printVal += enemies + " ";
-//                if ((i-2) % 4 == 3) printVal += "\n";
-//            }
-            System.out.print(printVal);
+//            System.out.print(printVal);
         }
 
         heal(rc);

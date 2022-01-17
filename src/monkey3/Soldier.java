@@ -14,6 +14,8 @@ class Soldier {
     static int visibleAttackers = 0;
     static int visibleAllies = 0;
 
+    static int attackersInRange = 0;
+
     static double allyDPS = 0;
     static double enemyDPS = 0;
 
@@ -94,7 +96,7 @@ class Soldier {
         int dist = Integer.MAX_VALUE;
         for (int quadrant = 2; quadrant <= 17; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
-            int visAttackers = rc.readSharedArray(quadrant + 18) & 255;
+            int visAttackers = rc.readSharedArray(quadrant + 16) & 255;
             int visAllies = temp & 255;
             int visEnemies = (temp >> 8) & 255;
 
@@ -108,12 +110,13 @@ class Soldier {
                     isBackup = true;
                     moving = true;
                     destination = new MapLocation(x,y);
+                    rc.setIndicatorLine(rc.getLocation(), destination, 0, 255, 0);
 //                }
             }
         }
-        if (!moving) {
-            destination = new MapLocation(Utils.randomInt(3,rc.getMapWidth()-3), Utils.randomInt(3, rc.getMapHeight()-3));
-        }
+//        if (!moving) {
+//            destination = new MapLocation(Utils.randomInt(3,rc.getMapWidth()-3), Utils.randomInt(3, rc.getMapHeight()-3));
+//        }
     }
 
     static void macro(RobotController rc) throws GameActionException {
@@ -125,7 +128,7 @@ class Soldier {
         int rubble = rc.senseRubble(cur);
 
         if (visibleAttackers > visibleAllies) {
-            Pathfinder.move(rc, spawn);
+            Pathfinder.move(rc, Utils.nearestArchon(rc));
         } else if (visibleAttackers >= 1) {
             // TODO better chasing after enemies
 //            Direction go = Direction.CENTER;
@@ -150,7 +153,7 @@ class Soldier {
                                              cur.y - cur.y % (rc.getMapHeight()/4) + rc.getMapHeight()/8);
         int x = 4 * cur.x / rc.getMapWidth();
         int y = 4 * cur.y / rc.getMapHeight();
-        int quadrant = 4*x + y;
+        int quadrant = x + 4*y;
 
         // weights for gamma averaging, max is a 15 x 15 so distance^2 to center is at most 10
         int dist = cur.distanceSquaredTo(center);
@@ -160,6 +163,7 @@ class Soldier {
         int prevValue = rc.readSharedArray(2 + quadrant);
         int writeValue = (dist * prevValue + (100 - dist) * newValue) / 100;
         if (prevValue == 0) writeValue = newValue;
+//        if (((writeValue >> 8) & 255) == 4) System.out.println("TEST " + cur.toString());
         rc.writeSharedArray(2 + quadrant, writeValue);
 
         int lead = (rc.senseNearbyLocationsWithLead().length << 8) + visibleAttackers;

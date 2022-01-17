@@ -1,13 +1,15 @@
-package monkey2newmienr;
+package monkey4;
 
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
 @SuppressWarnings("InfiniteLoopStatement")
 public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
         Utils.setup(rc);
+
         switch (rc.getType()) {
             case ARCHON: Archon.setup(rc); break;
             case MINER: Miner.setup(rc); break;

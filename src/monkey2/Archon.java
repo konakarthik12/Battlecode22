@@ -58,9 +58,6 @@ public class Archon {
 
     static void reset(RobotController rc) throws GameActionException {
         enemiesInVision = 0;
-        for (int i = 2; i <= 17; ++i) {
-            enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
-        }
         if (archonID == rc.getArchonCount()) {
             for (int i = 2; i < 34; ++i) {
                 rc.writeSharedArray(i, 0);
@@ -93,10 +90,8 @@ public class Archon {
                 numEnemies += (val >> 8) & 255;
             }
 
-//            rc.setIndicatorString(numEnemies + " " + numSoldiers);
-            rc.setIndicatorString(numEnemies + " " + numSoldiers + " " + rc.readSharedArray(42));
-//            System.out.println(rc.readSharedArray(34));
-            int carryingCapacity = 10 + rc.getRoundNum() / 150; // 2000 / 150 = 200 / 15 = 13.5
+//            rc.setIndicatorString(numEnemies + " " + numSoldiers + " " + rc.readSharedArray(42));
+            int carryingCapacity = 7 + rc.getRoundNum() / 150 + rc.getMapWidth()/10 + rc.getMapHeight()/10;
             int roll = Utils.randomInt(1, carryingCapacity);
             if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(42) ) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);

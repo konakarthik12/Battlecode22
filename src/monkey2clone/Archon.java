@@ -39,6 +39,7 @@ public class Archon {
     }
 
     static void heal(RobotController rc) throws GameActionException {
+        // TODO prioritize lower health soldiers
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
             if (rc.canRepair(r.location) && (r.type == RobotType.SOLDIER || visibleAllies == 0)) {
