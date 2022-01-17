@@ -17,11 +17,16 @@ class Utils {
     }
 
     static MapLocation nearestArchon(RobotController rc) throws GameActionException {
-        int bestDist = Integer.MAX_VALUE;
+        int dist = Integer.MAX_VALUE;
         MapLocation cur = rc.getLocation();
         MapLocation best = cur;
-        for (int i = 0; i < rc.getArchonCount(); ++i) {
-
+        for (int i = 1; i <= rc.getArchonCount(); ++i) {
+            int readPos = rc.readSharedArray(64 - i);
+            MapLocation archonPos = new MapLocation((readPos >> 6) & 63, readPos & 63);
+            if (cur.distanceSquaredTo(archonPos) < dist) {
+                best = archonPos;
+                dist = cur.distanceSquaredTo(archonPos);
+            }
         }
         return best;
     }

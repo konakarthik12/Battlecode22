@@ -14,7 +14,7 @@ class Miner {
     static int visibleAttackers = 0;
     static boolean enemyArchon = false;
     static int lead = 0;
-
+    static boolean pretendingDead = false;
     static int turnsSearching = 0;
     static boolean isSearching = true;
     static boolean isMinID = true;
@@ -70,8 +70,6 @@ class Miner {
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
         }
 
-        //int x = rc.readSharedArray(34);
-        //if (rc.getHealth() < 4) rc.writeSharedArray(34, Math.max(x-1, 0));
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
@@ -123,12 +121,20 @@ class Miner {
             } else {
                 if (info.type == RobotType.SOLDIER) {
                     for (int i = 1; i <= rc.getArchonCount(); i++) {
+                        int typePriority = rc.readSharedArray(37 + i) & (1 << 15);
                         int fromShared = rc.readSharedArray(64 - i);
                         MapLocation arLoc = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
                         fromShared = rc.readSharedArray(37 + i);
-                        if (info.location.distanceSquaredTo(arLoc) < fromShared) {
+                        if (typePriority == 0 && (info.location.distanceSquaredTo(arLoc) < fromShared || info.type == RobotType.SOLDIER)) {
                             rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
-                            rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc));
+                            if (info.type == RobotType.SOLDIER) {
+                                rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc) + (1<<15));
+                            } else {
+                                rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc));
+                            }
+                        } else if (info.type == RobotType.SOLDIER && info.location.distanceSquaredTo(arLoc) < fromShared) {
+                            rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
+                            rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc) + (1<<15));
                         }
                     }
                 }

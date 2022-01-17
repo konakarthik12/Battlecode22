@@ -26,9 +26,6 @@ public class Archon {
                     build = dir;
                     rubble = _rubble;
                 }
-//                rc.buildRobot(type, dir);
-//                if (type == RobotType.MINER) ++minersBuilt;
-//                if (type == RobotType.SOLDIER) ++soldiersBuilt;
             }
         }
         if (rc.canBuildRobot(type, build)) {
@@ -41,7 +38,7 @@ public class Archon {
     static void heal(RobotController rc) throws GameActionException {
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
-            if (rc.canRepair(r.location)) {
+            if (rc.canRepair(r.location) && (r.type == RobotType.SOLDIER || visibleAllies == 0)) {
                 rc.repair(r.location);
             }
         }
@@ -60,8 +57,11 @@ public class Archon {
             enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
         }
         if (archonID == rc.getArchonCount()) {
-            for (int i = 2; i < 34; ++i) {
-                rc.writeSharedArray(i, 0);
+            for (int i = 2; i < 53; ++i) {
+                int fromShared = rc.readSharedArray(i);
+                if ((fromShared >> 15) == 1) {
+                    rc.writeSharedArray(i, fromShared - (1 << 15));
+                } else rc.writeSharedArray(i, 0);
             }
         }
     }
@@ -101,17 +101,19 @@ public class Archon {
                     go = go.rotateRight().rotateRight();
                     if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 }
+                ++minersBuilt;
             } else if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10 || enemiesInVision > 0) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
+            } else if (Utils.randomInt(1, minersBuilt + rc.getArchonCount() - 1) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
-                rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
+                //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
             } else {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
+            //if (rc.getRoundNum() >= 300 && rc.getRoundNum() % 20 == 0) minersBuilt--;
 //            int x = rc.readSharedArray(1);
 //            if (rc.getRoundNum() % 10 == 0) rc.writeSharedArray(1, Math.max(x-1, 0));
         }
@@ -150,6 +152,5 @@ public class Archon {
         summonUnits(rc);
         heal(rc);
         reset(rc);
-        rc.writeSharedArray(37 + archonID, 65535);
     }
 }

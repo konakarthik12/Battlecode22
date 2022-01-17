@@ -9,6 +9,7 @@ class Soldier {
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation enemyLoc = null;
+    static int closeAlly = 0;
     static RobotInfo enemy = null;
     static MapLocation spawn = null;
 
@@ -22,16 +23,6 @@ class Soldier {
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
-        int dist = 500;
-        for (int i = 1; i <= rc.getArchonCount(); i++) {
-            if (rc.readSharedArray(37 + i) == 65535) continue;
-            int fromShared = rc.readSharedArray(33 + i);
-            MapLocation target = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
-            if (rc.getLocation().distanceSquaredTo(target) < dist) {
-                dist = rc.getLocation().distanceSquaredTo(target);
-                destination = target;
-            }
-        }
     }
 
     static void attack(RobotController rc) throws GameActionException{
@@ -66,13 +57,15 @@ class Soldier {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (sinceLastAttack > 20) {
+        if (sinceLastAttack > 5 && !isBackup) {
             readQuadrant(rc);
         }
         if(destination == null) {
             destination = new MapLocation(rc.getMapWidth() / 2 - 5 + Utils.randomInt(0, 10), rc.getMapHeight() / 2 - 5 + Utils.randomInt(0, 10));
         } else if (rc.canSenseLocation(destination)) {
-            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 2) + 2, (Utils.rng.nextInt(rc.getMapHeight() - 2) + 2));
+            isBackup = false;
+            destination = new MapLocation( Utils.randomInt(1, rc.getMapWidth() - 1), Utils.randomInt(1, rc.getMapHeight() - 1));
+            readQuadrant(rc);
         }
 
         if (toLeadFarm && rc.getLocation().distanceSquaredTo(spawn) < 10) {
@@ -103,25 +96,31 @@ class Soldier {
     }
 
     static void readQuadrant(RobotController rc) throws GameActionException {
-        for (int quadrant = 2; quadrant <= 17; ++quadrant) {
-            int temp = rc.readSharedArray(quadrant);
-            int visAttackers = rc.readSharedArray(quadrant + 16) & 255;
-            int visAllies = temp & 255;
-            int visEnemies = (temp >> 8) & 255;
-
-            int x = (quadrant - 2) / 4 * rc.getMapWidth()  / 4 + Utils.randomInt(0, rc.getMapWidth()/4);
-            int y = (quadrant - 2) % 4 * rc.getMapHeight() / 4 + Utils.randomInt(0, rc.getMapHeight()/4);
-
-            if (visAttackers > visAllies + 1) {
-//            if (Math.abs(visAttackers-visAllies) < 3) {
+        int mDist = Integer.MAX_VALUE;
+        int sDist = Integer.MAX_VALUE;
+        MapLocation mLoc = null;
+        MapLocation sLoc = null;
+        for (int quadrant = 2; quadrant <= 26; ++quadrant) {
+            int visAttackers = rc.readSharedArray(quadrant + 25) & 127;
+            int visEnemies = (rc.readSharedArray(quadrant) >> 8) & 127;
+            int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + Utils.randomInt(0, rc.getMapWidth()/5 - 1);
+            int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5 - 1);
+            MapLocation target = new MapLocation(x, y);
+            if (visAttackers > 0 && rc.getLocation().distanceSquaredTo(target) < sDist) {
                 isBackup = true;
-                destination = new MapLocation(x,y);
+                sLoc = target;
+                sDist = rc.getLocation().distanceSquaredTo(target);
+            } else if (visEnemies > 0 && visAttackers == 0 && rc.getLocation().distanceSquaredTo(target) < mDist) {
+                isBackup = true;
+                mLoc = target;
+                mDist = rc.getLocation().distanceSquaredTo(target);
             }
         }
-    }
-
-    static void micro(RobotController rc) throws GameActionException {
-        RobotInfo[] team = rc.senseNearbyRobots(RobotType.SOLDIER.visionRadiusSquared, rc.getTeam());
+        if (mLoc != null && mDist + 500 < sDist) {
+            destination = mLoc;
+        } else if (sLoc != null) {
+            destination = sLoc;
+        }
     }
 
     static void move(RobotController rc) throws GameActionException {
@@ -129,18 +128,29 @@ class Soldier {
         int rubble = rc.senseRubble(cur);
 
         if (visibleEnemies > 0 && visibleAttackers <= visibleAllies) {
-            if (visibleAllies > visibleAttackers + 2 || !(enemy.type == RobotType.SOLDIER)) {
+            if (!(enemy.type == RobotType.SOLDIER)) {
                 Pathfinder.move(rc, enemyLoc);
             }
             Direction go = Direction.CENTER;
-            int dist = 63;
+            int dist = rc.getLocation().distanceSquaredTo(enemyLoc);
             for (Direction dir : Constants.directions) {
-                if (rc.canSenseLocation(rc.adjacentLocation(dir)) &&  rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
-                        && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
-                    if (rc.canMove(dir)) {
-                        go = dir;
-                        rubble = rc.senseRubble(rc.adjacentLocation(dir));
-                        dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
+                if (closeAlly >= visibleAttackers) {
+                    if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
+                        if (rc.canMove(dir)) {
+                            go = dir;
+                            rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                            dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
+                        }
+                    }
+                } else {
+                    if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
+                        if (rc.canMove(dir)) {
+                            go = dir;
+                            rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                            dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
+                        }
                     }
                 }
             }
@@ -157,44 +167,30 @@ class Soldier {
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         int lead = leadLocations.length;
         MapLocation cur = rc.getLocation();
-        int quadrant = 4 * (4 * cur.x / rc.getMapWidth()) + (4 * cur.y / rc.getMapHeight());
+        int quadrant = 5 * (5 * cur.x / rc.getMapWidth()) + (5 * cur.y / rc.getMapHeight());
         // indices 2 - 17 are quadrant information for enemies and allies
-        int writeValue = (visibleEnemies << 8) + visibleAllies;
-        if (Utils.randomInt(1, visibleAllies) <= 1)
+        int writeValue = (visibleEnemies << 8) + visibleAllies + (1<<15);
             rc.writeSharedArray(2 + quadrant, writeValue);
 
-        writeValue = (lead << 8) + visibleAttackers;
-        if (Utils.randomInt(1, visibleAllies) <= 1)
-            rc.writeSharedArray(18 + quadrant, writeValue);
+        writeValue = (lead << 8) + visibleAttackers + (1<<15);
+            rc.writeSharedArray(27 + quadrant, writeValue);
 
-        assert(quadrant < 16);
+        assert(quadrant < 27);
     }
 
     static void senseEnemies(RobotController rc) throws GameActionException {
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
-
+        closeAlly = 0;
+        int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam().opponent())) {
-                if (info.type == RobotType.SOLDIER) {
-                    for (int i = 1; i <= rc.getArchonCount(); i++) {
-                        int fromShared = rc.readSharedArray(64 - i);
-                        MapLocation arLoc = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
-                        fromShared = rc.readSharedArray(37 + i);
-                        if (info.location.distanceSquaredTo(arLoc) < fromShared) {
-                            //System.out.println(info.location.distanceSquaredTo(arLoc));
-                            rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
-                            rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc));
-                        }
-                    }
-                }
                 ++visibleEnemies;
                 switch (info.type) {
                     case SOLDIER: case WATCHTOWER: case SAGE:
                         ++visibleAttackers;
                 }
-                int priority = Integer.MAX_VALUE;
                 int multiplier;
                 switch (info.getType()) {
                     case SAGE: multiplier = 0; break;
@@ -204,13 +200,26 @@ class Soldier {
                     case MINER: multiplier = 4; break;
                     default: multiplier = 5;
                 }
-                int score = multiplier * 1000000 + 1000 * rc.senseRubble(info.location) + info.getHealth();
+                int score = multiplier * 1000000 + 1000 * rc.senseRubble(info.location) + info.getHealth() + rc.getLocation().distanceSquaredTo(info.location);
                 if (score < priority) {
                     enemyLoc = info.location;
                     enemy = info;
+                    priority = score;
                 }
-            } else {
-                if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
+            }
+        }
+        int curDist = 0;
+        if (visibleAttackers > 0) {
+            curDist = rc.getLocation().distanceSquaredTo(enemyLoc);
+        }
+        for (RobotInfo info : rc.senseNearbyRobots(-1)) {
+            if (info.team == rc.getTeam()) {
+                visibleAllies++;
+                if (visibleAttackers > 0) {
+                    if (info.location.distanceSquaredTo(enemyLoc) <= curDist) {
+                        closeAlly++;
+                    }
+                }
             }
         }
         if (visibleEnemies == 0) {
@@ -232,7 +241,7 @@ class Soldier {
         if (enemyLoc != null) {
             rc.setIndicatorLine(rc.getLocation(), enemyLoc, 255, 0, 0);
         } else {
-            //rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
+            rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }
         writeQuadrantInformation(rc);
     }

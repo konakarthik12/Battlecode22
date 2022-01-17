@@ -26,9 +26,6 @@ public class Archon {
                     build = dir;
                     rubble = _rubble;
                 }
-//                rc.buildRobot(type, dir);
-//                if (type == RobotType.MINER) ++minersBuilt;
-//                if (type == RobotType.SOLDIER) ++soldiersBuilt;
             }
         }
         if (rc.canBuildRobot(type, build)) {
@@ -101,11 +98,12 @@ public class Archon {
                     go = go.rotateRight().rotateRight();
                     if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 }
+                ++minersBuilt;
             } else if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10 || enemiesInVision > 0) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-            } else if (Utils.randomInt(1, minersBuilt) <= 1) {
+            } else if (Utils.randomInt(1, minersBuilt + rc.getArchonCount() - 1) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
                 //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
             } else {
@@ -151,6 +149,6 @@ public class Archon {
         summonUnits(rc);
         heal(rc);
         reset(rc);
-        rc.writeSharedArray(37 + archonID, 65535);
+        rc.writeSharedArray(37 + archonID, 32767);
     }
 }

@@ -116,7 +116,7 @@ class Soldier {
     static void findEnemy(RobotController rc) throws GameActionException {
         int dist = 500;
         for (int i = 1; i <= rc.getArchonCount(); i++) {
-            if (rc.readSharedArray(37 + i) == 65535) continue;
+            if (rc.readSharedArray(37 + i) == 32767) continue;
             int fromShared = rc.readSharedArray(33 + i);
             MapLocation target = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
             if (rc.getLocation().distanceSquaredTo(target) < dist) {
@@ -197,14 +197,16 @@ class Soldier {
                     int fromShared = rc.readSharedArray(64 - i);
                     MapLocation arLoc = new MapLocation((fromShared >> 6) & 63, fromShared & 63);
                     fromShared = rc.readSharedArray(37 + i);
-                    if (info.location.distanceSquaredTo(arLoc) < fromShared && (info.type == RobotType.SOLDIER
-                        || (typePriority == 0))) {
+                    if (typePriority == 0 && (info.location.distanceSquaredTo(arLoc) < fromShared || info.type == RobotType.SOLDIER)) {
                         rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
                         if (info.type == RobotType.SOLDIER) {
                             rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc) + (1<<15));
                         } else {
                             rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc));
                         }
+                    } else if (info.type == RobotType.SOLDIER && info.location.distanceSquaredTo(arLoc) < fromShared) {
+                        rc.writeSharedArray(33 + i, (info.location.x << 6) + info.location.y);
+                        rc.writeSharedArray(37 + i, info.location.distanceSquaredTo(arLoc) + (1<<15));
                     }
                 }
                 ++visibleEnemies;
