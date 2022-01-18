@@ -60,7 +60,7 @@ public class MicroInfo {
                 return this.minDistToEnemy + this.rubble < o.minDistToEnemy + o.rubble;
             }
             if (4 * visibleAttackers > 3*numAllies+3) return -this.rubble + 10 * this.minDistToEnemy > 10 * o.minDistToEnemy - o.rubble;
-            else if (4 * numAllies > 3 * visibleAttackers+3) return 10 * this.minDistToEnemy + this.rubble < 10 * o.minDistToEnemy + o.rubble;
+            else if (numAllies > visibleAttackers+1) return 10 * this.minDistToEnemy + this.rubble < 10 * o.minDistToEnemy + o.rubble;
             if (this.incomingDamage < o.incomingDamage) return true;
             if (this.rubble < o.rubble - 10) return true;
         }

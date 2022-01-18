@@ -46,10 +46,10 @@ class Soldier {
             }
 //            int k = (robotInfo.health + 2)/3 * (10 * robotInfo.getType().damage / (10 + rc.senseRubble(robotInfo.location)));
 //            int k = 1000000 / ((robotInfo.health)) / (5 + rc.senseRubble(robotInfo.location)) / (5 + rc.senseRubble(robotInfo.location));
-            int k = (robotInfo.health) * (5 + rc.senseRubble(robotInfo.location));
-            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) + 1000 * robotInfo.getHealth();
+//            int k = (robotInfo.health) * (5 + rc.senseRubble(robotInfo.location));
+//            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) + 1000 * robotInfo.getHealth();
 //            score = (multiplier) * 100000000 + k;
-            score = (rc.senseRubble(robotInfo.location) + 10) * (robotInfo.health + visibleAllies);
+            int score = (rc.senseRubble(robotInfo.location) + 10) * (robotInfo.health + visibleAllies);
             if (score < bestScore) {
                 bestScore = score;
                 target = robotInfo.location;
