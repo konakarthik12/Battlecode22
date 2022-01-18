@@ -6,6 +6,7 @@ class Miner {
 
     static int numReached = 0;
     static MapLocation destination = null;
+    static MapLocation tempDestination = null;
     static MapLocation spawn = null;
     static MapLocation previous = null;
 
@@ -14,16 +15,17 @@ class Miner {
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
     static int lead = 0;
+    static boolean enemyArchon = false;
 
     static int turnsSearching = 0;
     static boolean isMinID = true;
 
-    // TODO experiment with returning to spawn and with running directly opposite to soldiers or nearest archon
+    // TODO experiment with returning to spawn and with running directly opposite to soldiers or nearest Archon
     // TODO make the miners add their count to shared array instead of pretending dead
     // TODO really overhaul miner running away
     // TODO make miners not clump up
 
-    static void setup(RobotController rc) throws GameActionException {
+    static void setup(RobotController rc) {
         spawn = rc.getLocation();
     }
 
@@ -72,29 +74,17 @@ class Miner {
         int colIndex = 6 * cur.x / rc.getMapWidth();
         int rowIndex = 6 * cur.y / rc.getMapHeight();
         int quadrant = 6 * rowIndex + colIndex;
-
-        // weights for gamma averaging, max is a 10 x 10, max square-distance from center is 50
         int dist = cur.distanceSquaredTo(center);
 
-
-        // indices 0 - 35 are quadrant information for enemies and allies
         int newValue = (visibleAttackers << 7) + visibleAllies;
         int prevValue = rc.readSharedArray(quadrant) & 32767;
         int writeValue = (dist * prevValue + (60 - dist) * newValue) / 60;
         if (prevValue == 0) writeValue = newValue;
         rc.writeSharedArray(quadrant, writeValue + (1 << 15));
-
-//        int lead = (rc.senseNearbyLocationsWithLead().length << 8) + visibleAttackers;
-//        int oldVal = rc.readSharedArray(18 + quadrant);
-//        writeValue = (oldVal * dist + (50-dist) * lead) / 50;
-//        if (oldVal == 0) writeValue = lead;
-//        rc.writeSharedArray(18 + quadrant, writeValue);
-
-        assert quadrant < 36;
-        assert dist <= 60;
     }
 
-    static void senseEnemies(RobotController rc) throws GameActionException {
+    static void senseEnemies(RobotController rc) {
+        enemyArchon = false;
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
@@ -105,6 +95,7 @@ class Miner {
             } else {
                 ++visibleEnemies;
                 switch (info.type) {
+                    case ARCHON: enemyArchon = true; break;
                     case SOLDIER:
                     case WATCHTOWER:
                     case SAGE:
@@ -114,7 +105,7 @@ class Miner {
         }
     }
 
-    static void senseAllies(RobotController rc) throws GameActionException {
+    static void senseAllies(RobotController rc) {
         isMinID = true;
         near = 0;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
@@ -132,16 +123,13 @@ class Miner {
         if (lead > 0) turnsSearching = 0;
         int highLead = 4;
         for (MapLocation loc : leadLocations) {
-            while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
+            while (rc.canMineLead(loc) && (rc.senseLead(loc) > 1 || enemyArchon)) rc.mineLead(loc);
             if (rc.canSenseLocation(loc) && rc.senseLead(loc) > highLead && isMinID && Utils.randomInt(1, near) <= 1) {
                 destination = loc;
                 highLead = rc.senseLead(loc);
             }
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
-            // maybe don't need to sense
         }
     }
-
 
     static void run(RobotController rc) throws GameActionException {
         senseAllies(rc);

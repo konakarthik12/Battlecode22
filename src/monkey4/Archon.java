@@ -13,8 +13,7 @@ public class Archon {
 
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
     // TODO: store index representing which quadrant has most fighting
-    // TODO: change grid from 4 x 4 -> 5 x 5?
-//    static int[] enemyEstimates = new int[64];
+    // TODO: add code to heal lowest health units
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
         Direction build = Direction.EAST;
@@ -40,13 +39,16 @@ public class Archon {
     }
 
     static void heal(RobotController rc) throws GameActionException {
-        // TODO add code to heal lowest health units
+        MapLocation toHeal = null;
+        int leastHealth = Integer.MAX_VALUE;
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
-            if (rc.canRepair(r.location)) {
-                rc.repair(r.location);
+            if (r.health < leastHealth) {
+                leastHealth = r.health;
+                toHeal = r.location;
             }
         }
+        if (toHeal != null && rc.canRepair(toHeal)) rc.repair(toHeal);
     }
 
     static void setup(RobotController rc) throws GameActionException {
@@ -90,20 +92,29 @@ public class Archon {
             int numSoldiers = 0;
             for (int i = 0; i < 36; ++i) {
                 int val = rc.readSharedArray(i);
-                numEnemies += (val >> 7) & 255;
-                numSoldiers += val & 255;
+                numEnemies += (val >> 7) & 127;
+                numSoldiers += val & 127;
             }
 
-            int carryingCapacity = 10 + rc.getRoundNum() / 150 + (rc.getMapHeight() / 10) + (rc.getMapWidth() / 10);
+            int carryingCapacity = 13 + rc.getRoundNum() / 200 + (rc.getMapHeight() / 10) + (rc.getMapWidth() / 10);
             int roll = Utils.randomInt(1, carryingCapacity);
             rc.setIndicatorString(rc.readSharedArray(58) + " ");
 
-            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58) ) {
+            boolean ok = Utils.randomInt(1, rc.getArchonCount()) == 1;
+
+            if (ok && (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58))) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
-            } else {
+            } else if (ok) {
                 if (Utils.randomInt(1, rc.getArchonCount()) == 1)
-                summonUnitAnywhere(rc, RobotType.MINER);
+                    summonUnitAnywhere(rc, RobotType.MINER);
             }
+
+//            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58)) {
+//                summonUnitAnywhere(rc, RobotType.SOLDIER);
+//            } else {
+//                if (Utils.randomInt(1, rc.getArchonCount()) == 1)
+//                summonUnitAnywhere(rc, RobotType.MINER);
+//            }
         }
     }
 

@@ -2,7 +2,7 @@ package monkey2clone;
 
 import battlecode.common.Direction;
 
-class Constants {
+public class Constants {
     static final Direction[] directions = {
             Direction.NORTH,
             Direction.NORTHEAST,
@@ -20,9 +20,7 @@ class Constants {
 
     // indices
     // [0,1] stores enemy and friendly visible soldier/enemy counts
-    // [2, 17] stores quadrant information about enemies and allies
-    // [18, 33] stores lead information and ??
-    // [34, 37] stores important battles
-    // [38, 41] stores battle distance
+    // [2, 26] stores quadrant information about enemies and allies
+    // [27, 51] stores lead information and ??
     // [59, 63] stores Archon locations
 }

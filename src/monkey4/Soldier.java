@@ -45,8 +45,10 @@ class Soldier {
                 case MINER: multiplier = 4; break;
                 default: multiplier = 5;
             }
+            int k = (robotInfo.health + 2)/3 * (10 * robotInfo.getType().damage / (10 + rc.senseRubble(robotInfo.location)));
 
             int score = multiplier * 1000000 + 1000 * rc.senseRubble(robotInfo.location) + robotInfo.getHealth();
+            score = multiplier * 1000 + k;
             if (score < priority) {
                 priority = score;
                 target = robotInfo.location;
@@ -63,7 +65,7 @@ class Soldier {
 
     static void setDestination(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
-        if (sinceLastAttack > 6) readQuadrant(rc);
+        if (sinceLastAttack > 3) readQuadrant(rc);
 
         if (destination == null || destination.equals(cur)) {
             destination = new MapLocation(Utils.randomInt(3, Utils.width - 3), Utils.randomInt(3, Utils.height-3));
@@ -92,23 +94,17 @@ class Soldier {
         int best = 1;
         for (int quadrant = 0; quadrant < 36; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
-            int visAllies = temp & 255;
-            int visAttackers = (temp >> 7) & 255;
-
-//            System.out.println("CHECK0 " + (quadrant+1) + ": " + (Clock.getBytecodeNum()-bytecode));
+            int visAllies = temp & 127;
+            int visAttackers = (temp >> 7) & 127;
 
             int x = quadrant % 6 * Utils.b_width + Utils.width/12;
             int y = quadrant / 6 * Utils.b_height + Utils.height/12;
             assert x < Utils.width;
             assert y < Utils.height;
 
-//            int x = quadrant % 6 * Utils.b_width + Utils.randomInt(0, Utils.b_width);
-//            int y = quadrant * Utils.height + Utils.randomInt(0, Utils.b_height);
-
             MapLocation dest = new MapLocation(x,y);
-//            System.out.println("CHECK1 " + (quadrant+1) + ": " + (Clock.getBytecodeNum()-bytecode));
 
-            if (visAttackers > best) {
+            if (visAttackers > 1) {
                 best = visAttackers;
                 if (cur.distanceSquaredTo(dest) < dist) {
                     dist = cur.distanceSquaredTo(dest);
@@ -117,10 +113,10 @@ class Soldier {
                     destination = dest;
                 }
             }
-//            System.out.println("LOOP " + (quadrant+1) + ": " + (Clock.getBytecodeNum()-bytecode));
         }
-//        System.out.println("READ " + (Clock.getBytecodeNum()-bytecode));
-//        rc.resign();
+        int dx = Utils.randomInt(-Utils.width/12, Utils.width/12);
+        int dy = Utils.randomInt(-Utils.height/12, Utils.height/12);
+        if (destination != null) destination = new MapLocation(destination.x + dx, destination.y + dy);
     }
 
     static void macro(RobotController rc) throws GameActionException {
@@ -128,7 +124,8 @@ class Soldier {
     }
 
     static void micro(RobotController rc) throws GameActionException {
-
+        int actionCooldown = rc.getActionCooldownTurns();
+        int moveCooldown = rc.getMovementCooldownTurns();
     }
 
     static void move(RobotController rc) throws GameActionException {
@@ -137,6 +134,7 @@ class Soldier {
          int rubble = rc.senseRubble(cur);
 
          if (visibleAttackers > visibleAllies) {
+             destination = spawn;
              Pathfinder.move(rc, spawn);
          } else if (visibleAttackers > 0) {
             Direction go = Direction.CENTER;
