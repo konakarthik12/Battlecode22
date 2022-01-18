@@ -96,13 +96,13 @@ public class Archon {
                 numSoldiers += val & 127;
             }
 
-            int carryingCapacity = 13 + rc.getRoundNum() / 200 + (rc.getMapHeight() / 10) + (rc.getMapWidth() / 10);
+            int carryingCapacity = 18 + rc.getRoundNum() / 100 + (rc.getMapHeight() / 10 - 4) + (rc.getMapWidth() / 10 - 4);
             int roll = Utils.randomInt(1, carryingCapacity);
             rc.setIndicatorString(rc.readSharedArray(58) + " ");
 
             boolean ok = Utils.randomInt(1, rc.getArchonCount()) == 1;
 
-            if (ok && (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58))) {
+            if (ok && (numSoldiers < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58))) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
             } else if (ok) {
                 if (Utils.randomInt(1, rc.getArchonCount()) == 1)

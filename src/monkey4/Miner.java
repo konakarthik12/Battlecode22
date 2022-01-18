@@ -10,6 +10,7 @@ class Miner {
     static MapLocation spawn = null;
     static MapLocation previous = null;
 
+    static int lastSide = -1;
     static int near = 0;
     static int visibleEnemies = 0;
     static int visibleAllies = 0;
@@ -49,12 +50,38 @@ class Miner {
     static void setDestination(RobotController rc) throws GameActionException {
         if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
-//            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
-            if (destination != null) {
-                previous = destination;
-                int vx = previous.x;
+            if (destination == null || true) {
+                int roll = Utils.randomInt(1,4);
+                while (roll == lastSide) roll = Utils.randomInt(1,4);
+                lastSide = roll;
+                int x = 0;
+                int y = 0;
+                switch (roll) {
+                    case 1: {
+                        x = Utils.randomInt(3, Utils.width-3);
+                        y = 0;
+                        break;
+                    }
+                    case 2: {
+                        x = Utils.randomInt(3, Utils.width-3);
+                        y = Utils.height-1;
+                        break;
+                    }
+                    case 3: {
+                        y = Utils.randomInt(3, Utils.height-3);
+                        x = 0;
+                        break;
+                    }
+                    case 4: {
+                        y = Utils.randomInt(3, Utils.height-3);
+                        x = Utils.width-1;
+                        break;
+                    }
+                }
+                destination = new MapLocation(x, y);
+            } else {
+                destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
             }
-            destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
         }
 
         int x = rc.readSharedArray(58);
@@ -121,10 +148,10 @@ class Miner {
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         lead = leadLocations.length;
         if (lead > 0) turnsSearching = 0;
-        int highLead = 4;
+        int highLead = 5;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && (rc.senseLead(loc) > 1 || enemyArchon)) rc.mineLead(loc);
-            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > highLead && isMinID && Utils.randomInt(1, near) <= 1) {
+            if (rc.canSenseLocation(loc) && (rc.senseLead(loc) > highLead || enemyArchon) && isMinID && Utils.randomInt(1, near) <= 1) {
                 destination = loc;
                 highLead = rc.senseLead(loc);
             }
@@ -136,6 +163,7 @@ class Miner {
         senseEnemies(rc);
         setDestination(rc);
 
+        mine(rc);
         move(rc);
         mine(rc);
 
