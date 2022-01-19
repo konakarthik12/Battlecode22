@@ -26,6 +26,7 @@ class Miner {
     // TODO really overhaul miner running away
     // TODO make miners not clump up
     // TODO fix where the miner changes destination to lead
+    // TODO change highlead
 
     static void setup(RobotController rc) {
         spawn = rc.getLocation();
@@ -117,7 +118,7 @@ class Miner {
         lead = leadLocations.length;
         if (lead > 0) turnsSearching = 0;
         int highLead = 5;
-        // TODO change highlead
+//        isMinID = isMinID || Utils.randomInt(1, 10) == 1;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && (rc.senseLead(loc) > 1 || enemyArchon)) rc.mineLead(loc);
             if (rc.canSenseLocation(loc) && (rc.senseLead(loc) > highLead || enemyArchon) && isMinID && Utils.randomInt(1, near) <= 1) {

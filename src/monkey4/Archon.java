@@ -11,6 +11,9 @@ public class Archon {
     static int soldiersBuilt = 0;
     static int enemiesInVision = 0;
 
+    static int previousMiners = 0;
+    static int minerDeaths = 0; // make it more likely to spawn soldiers
+
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
     // TODO: store index representing which quadrant has most fighting
     // TODO: add code to heal lowest health units
@@ -96,9 +99,7 @@ public class Archon {
                 numSoldiers += val & 127;
             }
 
-            int carryingCapacity = 18 + rc.getRoundNum() / 100 + (rc.getMapHeight() / 10 - 4) + (rc.getMapWidth() / 10 - 4);
-            carryingCapacity = 8 + rc.getRoundNum() / (180 - Utils.width - Utils.height);
-//            carryingCapacity = 4 + rc.getRoundNum() / (180 - Utils.width - Utils.height) + Utils.width/10 + Utils.height/10;
+            int carryingCapacity = 10 + rc.getRoundNum() / 100 + (rc.getMapHeight() / 10) + (rc.getMapWidth() / 10);
             int roll = Utils.randomInt(1, carryingCapacity);
             rc.setIndicatorString(rc.readSharedArray(58) + " ");
 

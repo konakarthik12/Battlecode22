@@ -103,9 +103,8 @@ class Soldier {
     static void readQuadrant(RobotController rc) throws GameActionException {
         if (toLeadFarm) return;
         MapLocation cur = rc.getLocation();
-        boolean moving = false;
         int dist = Integer.MAX_VALUE;
-        int best = 1;
+        int mostAttackers = 1;
         for (int quadrant = 0; quadrant < 36; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
             int visAllies = temp & 127;
@@ -119,23 +118,23 @@ class Soldier {
 
             MapLocation dest = new MapLocation(x,y);
 
-            if (visAttackers > 1) {
-                best = visAttackers;
-                if (cur.distanceSquaredTo(dest) < dist) {
-                    dist = cur.distanceSquaredTo(dest);
-                    isBackup = true;
-                    moving = true;
-                    destination = dest;
-                }
+            if ((visAttackers-visAllies) > mostAttackers) {
+                mostAttackers = visAttackers-visAllies;
+                isBackup = true;
+                destination = dest;
             }
+
+//            if (visAttackers > 1) {
+//                if (cur.distanceSquaredTo(dest) < dist) {
+//                    dist = cur.distanceSquaredTo(dest);
+//                    isBackup = true;
+//                    destination = dest;
+//                }
+//            }
         }
         int dx = Utils.randomInt(-Utils.width/12 + 2, Utils.width/12 - 2);
         int dy = Utils.randomInt(-Utils.height/12 + 2, Utils.height/12 - 2);
-        if (destination != null && moving) destination = new MapLocation(destination.x + dx, destination.y + dy);
-    }
-
-    static void macro(RobotController rc) throws GameActionException {
-
+        if (destination != null && isBackup) destination = new MapLocation(destination.x + dx, destination.y + dy);
     }
 
     static void micro(RobotController rc) throws GameActionException {
