@@ -84,6 +84,12 @@ class Miner {
         rc.writeSharedArray(quadrant, writeValue + (1 << 15));
     }
 
+    static void readQuadrantInformation(RobotController rc) throws GameActionException {
+        for (int quadrant = 0; quadrant < 36; ++quadrant) {
+            int temp = rc.readSharedArray(quadrant);
+        }
+    }
+
     static void senseNearby(RobotController rc) {
         enemyArchon = false;
         isMinID = true;
