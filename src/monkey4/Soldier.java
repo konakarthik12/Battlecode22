@@ -6,6 +6,7 @@ class Soldier {
 
     static MapLocation destination = null;
     static MapLocation spawn = null;
+    static MapLocation enemy = null;
     static MapLocation nearestEnemy = null;
 
     static boolean toLeadFarm = false;
@@ -44,11 +45,8 @@ class Soldier {
                 case MINER: multiplier = 4; break;
                 default: multiplier = 5;
             }
-//            int k = (robotInfo.health + 2)/3 * (10 * robotInfo.getType().damage / (10 + rc.senseRubble(robotInfo.location)));
-//            int k = 1000000 / ((robotInfo.health)) / (5 + rc.senseRubble(robotInfo.location)) / (5 + rc.senseRubble(robotInfo.location));
-            int k = (robotInfo.health) * (5 + rc.senseRubble(robotInfo.location));
             int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) + 1000 * robotInfo.getHealth();
-//            score = (multiplier) * 100000000 + k;
+            score = multiplier * 1000000 + (rc.senseRubble(robotInfo.location) + 10) * (robotInfo.health + visibleAllies);
             score = (rc.senseRubble(robotInfo.location) + 10) * (robotInfo.health + visibleAllies);
             if (score < bestScore) {
                 bestScore = score;
@@ -141,23 +139,20 @@ class Soldier {
     }
 
     static void micro(RobotController rc) throws GameActionException {
-//        if (visibleAttackers > 0) {
         if (visibleEnemies > 0) {
             MicroInfo[] info = new MicroInfo[9];
-//            for (int i = 0; i < 9; ++i) info[i] = new MicroInfo(rc, rc.adjacentLocation(Direction.allDirections()[i]));
             for (int i = 0; i < 9; ++i) info[i] = new MicroInfo(rc, rc.adjacentLocation(Direction.allDirections()[i]), visibleAttackers);
 
-//            for (RobotInfo robo : rc.senseNearbyRobots(-1, Utils.opponent)) {
-            for (RobotInfo robo : rc.senseNearbyRobots(-1)) {
-                info[0].update(rc, robo);
-                info[1].update(rc, robo);
-                info[2].update(rc, robo);
-                info[3].update(rc, robo);
-                info[4].update(rc, robo);
-                info[5].update(rc, robo);
-                info[6].update(rc, robo);
-                info[7].update(rc, robo);
-                info[8].update(rc, robo);
+            for (RobotInfo robot : rc.senseNearbyRobots(-1)) {
+                info[0].update(rc, robot);
+                info[1].update(rc, robot);
+                info[2].update(rc, robot);
+                info[3].update(rc, robot);
+                info[4].update(rc, robot);
+                info[5].update(rc, robot);
+                info[6].update(rc, robot);
+                info[7].update(rc, robot);
+                info[8].update(rc, robot);
             }
 
             MicroInfo bestMicro = info[0];
@@ -174,28 +169,27 @@ class Soldier {
         attack(rc);
     }
 
-    static void move(RobotController rc) throws GameActionException {
-        MapLocation cur = rc.getLocation();
-//        int rubble = Integer.MAX_VALUE;
-         int rubble = rc.senseRubble(cur);
-
-         if (visibleAttackers > visibleAllies) {
-             destination = spawn;
-             Pathfinder.move(rc, spawn);
-         } else if (visibleAttackers > 0) {
-            Direction go = Direction.CENTER;
-            for (Direction dir : Constants.directions) {
-                if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
-                    rubble = rc.senseRubble(rc.adjacentLocation(dir));
-                    go = dir;
-                }
-            }
-            if (rc.canMove(go)) rc.move(go);
-            else Pathfinder.move(rc, destination);
-        } else {
-            Pathfinder.move(rc, destination);
-        }
-    }
+//    static void move(RobotController rc) throws GameActionException {
+//        MapLocation cur = rc.getLocation();
+//         int rubble = rc.senseRubble(cur);
+//
+//         if (visibleAttackers > visibleAllies) {
+//             destination = spawn;
+//             Pathfinder.move(rc, spawn);
+//         } else if (visibleAttackers > 0) {
+//            Direction go = Direction.CENTER;
+//            for (Direction dir : Constants.directions) {
+//                if (rc.canSenseLocation(rc.adjacentLocation(dir)) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
+//                    rubble = rc.senseRubble(rc.adjacentLocation(dir));
+//                    go = dir;
+//                }
+//            }
+//            if (rc.canMove(go)) rc.move(go);
+//            else Pathfinder.move(rc, destination);
+//        } else {
+//            Pathfinder.move(rc, destination);
+//        }
+//    }
 
     static void writeQuadrantInformation(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
@@ -215,17 +209,10 @@ class Soldier {
         if (prevValue == 0) writeValue = newValue;
         rc.writeSharedArray(quadrant, writeValue + (1 << 15));
 
-//        int lead = (rc.senseNearbyLocationsWithLead().length << 8) + visibleAttackers;
-//        int oldVal = rc.readSharedArray(18 + quadrant);
-//        writeValue = (oldVal * dist + (50-dist) * lead) / 50;
-//        if (oldVal == 0) writeValue = lead;
-//        rc.writeSharedArray(18 + quadrant, writeValue);
-
         assert quadrant < 36;
         assert dist <= 60;
     }
 
-    static MapLocation enemy = null;
 
     static void senseEnemies(RobotController rc) throws GameActionException {
         visibleEnemies = 0;
@@ -250,8 +237,6 @@ class Soldier {
         senseEnemies(rc);
         setDestination(rc);
         micro(rc);
-//        move(rc);
-//        attack(rc);
 
         writeQuadrantInformation(rc);
 

@@ -97,6 +97,8 @@ public class Archon {
             }
 
             int carryingCapacity = 18 + rc.getRoundNum() / 100 + (rc.getMapHeight() / 10 - 4) + (rc.getMapWidth() / 10 - 4);
+            carryingCapacity = 8 + rc.getRoundNum() / (180 - Utils.width - Utils.height);
+//            carryingCapacity = 4 + rc.getRoundNum() / (180 - Utils.width - Utils.height) + Utils.width/10 + Utils.height/10;
             int roll = Utils.randomInt(1, carryingCapacity);
             rc.setIndicatorString(rc.readSharedArray(58) + " ");
 
@@ -159,23 +161,6 @@ public class Archon {
     static void run(RobotController rc) throws GameActionException {
         senseLocalEnemies(rc);
         summonUnits(rc);
-
-
-        if (archonID == 1 && rc.getRoundNum() % 50 == 0) {
-            String printVal = "\n";
-            for (int i = 5; i >= 0; --i) {
-                for (int j = 0; j < 6; ++j) {
-                    int quad = (6*i + j);
-                    int val = rc.readSharedArray(quad);
-                    int allies = val & 255;
-                    int enemies = (val >> 8) & 255;
-                    printVal += enemies + " ";
-                }
-                printVal += "\n";
-            }
-//            System.out.print(printVal);
-        }
-
         heal(rc);
         reset(rc);
     }

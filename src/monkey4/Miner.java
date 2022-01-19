@@ -25,6 +25,7 @@ class Miner {
     // TODO make the miners add their count to shared array instead of pretending dead
     // TODO really overhaul miner running away
     // TODO make miners not clump up
+    // TODO fix where the miner changes destination to lead
 
     static void setup(RobotController rc) {
         spawn = rc.getLocation();
@@ -50,43 +51,15 @@ class Miner {
     static void setDestination(RobotController rc) throws GameActionException {
         if (destination == null || (rc.getLocation().equals(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
-            if (destination == null || true) {
-                int roll = Utils.randomInt(1,4);
-                while (roll == lastSide) roll = Utils.randomInt(1,4);
-                lastSide = roll;
-                int x = 0;
-                int y = 0;
-                switch (roll) {
-                    case 1: {
-                        x = Utils.randomInt(3, Utils.width-3);
-                        y = 0;
-                        break;
-                    }
-                    case 2: {
-                        x = Utils.randomInt(3, Utils.width-3);
-                        y = Utils.height-1;
-                        break;
-                    }
-                    case 3: {
-                        y = Utils.randomInt(3, Utils.height-3);
-                        x = 0;
-                        break;
-                    }
-                    case 4: {
-                        y = Utils.randomInt(3, Utils.height-3);
-                        x = Utils.width-1;
-                        break;
-                    }
-                }
-                destination = new MapLocation(x, y);
-            } else {
-                destination = new MapLocation( Utils.randomInt(2, rc.getMapWidth()-3), Utils.randomInt(2, rc.getMapHeight()-3));
-            }
+            int roll = Utils.randomInt(1,4);
+            while (roll == lastSide) roll = Utils.randomInt(1,4);
+            lastSide = roll;
+            destination = Utils.getWall(roll);
         }
 
-        int x = rc.readSharedArray(58);
+        int numMiners = rc.readSharedArray(58);
         if (!pretendingDead && rc.getHealth() < 9) {
-            rc.writeSharedArray(58, Math.max(x-1, 0));
+            rc.writeSharedArray(58, Math.max(numMiners-1, 0));
             pretendingDead = true;
         }
         rc.setIndicatorString(destination.toString());
@@ -96,7 +69,7 @@ class Miner {
     static void writeQuadrantInformation(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
         MapLocation center = new MapLocation(cur.x - cur.x % (rc.getMapWidth()/6) + rc.getMapWidth()/12,
-                cur.y - cur.y % (rc.getMapHeight()/6) + rc.getMapHeight()/12);
+                                             cur.y - cur.y % (rc.getMapHeight()/6) + rc.getMapHeight()/12);
 
         int colIndex = 6 * cur.x / rc.getMapWidth();
         int rowIndex = 6 * cur.y / rc.getMapHeight();
@@ -110,8 +83,10 @@ class Miner {
         rc.writeSharedArray(quadrant, writeValue + (1 << 15));
     }
 
-    static void senseEnemies(RobotController rc) {
+    static void senseNearby(RobotController rc) {
         enemyArchon = false;
+        isMinID = true;
+        near = 0;
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
@@ -119,6 +94,10 @@ class Miner {
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam())) {
                 if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
+                if (info.type.equals(RobotType.MINER)) {
+                    ++near;
+                    if (info.getID() < rc.getID()) isMinID = false;
+                }
             } else {
                 ++visibleEnemies;
                 switch (info.type) {
@@ -132,23 +111,13 @@ class Miner {
         }
     }
 
-    static void senseAllies(RobotController rc) {
-        isMinID = true;
-        near = 0;
-        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (info.getType().equals(RobotType.MINER)) {
-                ++near;
-                if (info.getID() < rc.getID()) isMinID = false;
-            }
-        }
-    }
-
     static void mine(RobotController rc) throws GameActionException {
         ++turnsSearching;
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         lead = leadLocations.length;
         if (lead > 0) turnsSearching = 0;
         int highLead = 5;
+        // TODO change highlead
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && (rc.senseLead(loc) > 1 || enemyArchon)) rc.mineLead(loc);
             if (rc.canSenseLocation(loc) && (rc.senseLead(loc) > highLead || enemyArchon) && isMinID && Utils.randomInt(1, near) <= 1) {
@@ -159,8 +128,7 @@ class Miner {
     }
 
     static void run(RobotController rc) throws GameActionException {
-        senseAllies(rc);
-        senseEnemies(rc);
+        senseNearby(rc);
         setDestination(rc);
 
         mine(rc);

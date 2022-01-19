@@ -36,6 +36,34 @@ class Utils {
         rng = new Random(rc.getID() + 422);
     }
 
+    static MapLocation getWall(int roll) {
+        int x = 0;
+        int y = 0;
+        switch (roll) {
+            case 1: {
+                x = Utils.randomInt(3, Utils.width-3);
+                y = 0;
+                break;
+            }
+            case 2: {
+                x = Utils.randomInt(3, Utils.width-3);
+                y = Utils.height-1;
+                break;
+            }
+            case 3: {
+                y = Utils.randomInt(3, Utils.height-3);
+                x = 0;
+                break;
+            }
+            case 4: {
+                y = Utils.randomInt(3, Utils.height-3);
+                x = Utils.width-1;
+                break;
+            }
+        }
+        return new MapLocation(x, y);
+    }
+
     static MapLocation nearestArchon(RobotController rc) throws GameActionException {
         int dist = Integer.MAX_VALUE;
         MapLocation cur = rc.getLocation();
