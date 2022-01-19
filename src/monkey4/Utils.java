@@ -9,11 +9,14 @@ import java.util.Random;
 
 class Utils {
 
+    static int numBlocks = 6;
+    static int gridSize = -1;
+
     static int width = 0;
     static int height = 0;
 
-    static int b_width = 0;
-    static int b_height = 0;
+    static int blockWidth = 0;
+    static int blockHeight = 0;
 
     static Random rng = null;
     private static RobotController rc;
@@ -29,8 +32,10 @@ class Utils {
         width = rc.getMapWidth();
         height = rc.getMapHeight();
 
-        b_height = height/6;
-        b_width = width/6;
+        blockHeight = (height + numBlocks - 1)/numBlocks;
+        blockWidth = (width + numBlocks - 1)/numBlocks;
+
+        gridSize = numBlocks * numBlocks;
 
         Utils.rc = rc;
         rng = new Random(rc.getID() + 422);

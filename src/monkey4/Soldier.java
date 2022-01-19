@@ -105,16 +105,13 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int dist = Integer.MAX_VALUE;
         int mostAttackers = 1;
-        for (int quadrant = 0; quadrant < 36; ++quadrant) {
+        for (int quadrant = 0; quadrant < Utils.gridSize; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
             int visAllies = temp & 127;
             int visAttackers = (temp >> 7) & 127;
 
-            int x = quadrant % 6 * Utils.b_width + Utils.width/12;
-            int y = quadrant / 6 * Utils.b_height + Utils.height/12;
-
-            assert x < Utils.width && 0 <= x;
-            assert y < Utils.height && 0 <= y;
+            int x = quadrant % Utils.numBlocks * Utils.blockWidth + Utils.width/12;
+            int y = quadrant / Utils.numBlocks * Utils.blockHeight + Utils.height/12;
 
             MapLocation dest = new MapLocation(x,y);
 
@@ -192,12 +189,17 @@ class Soldier {
 
     static void writeQuadrantInformation(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
-        MapLocation center = new MapLocation(cur.x - cur.x % (Utils.width/6) + Utils.width/12,
-                                             cur.y - cur.y % (Utils.height/6) + Utils.height/12);
+        MapLocation center = new MapLocation(cur.x - cur.x % (Utils.blockWidth) + Utils.blockWidth/2,
+                                             cur.y - cur.y % (Utils.blockHeight) + Utils.blockHeight/2);
 
-        int colIndex =  6 * cur.x / Utils.width;
-        int rowIndex = 6 * cur.y / Utils.height;
-        int quadrant = 6 * rowIndex + colIndex;
+        int colIndex =  cur.x / Utils.blockWidth;
+        int rowIndex = cur.y / Utils.blockHeight;
+        int quadrant = Utils.numBlocks * rowIndex + colIndex;
+        if (quadrant >= 36) {
+            System.out.println(quadrant);
+            System.out.println(rowIndex + " " + colIndex);
+            rc.resign();
+        }
 
         int dist = cur.distanceSquaredTo(center);
 
