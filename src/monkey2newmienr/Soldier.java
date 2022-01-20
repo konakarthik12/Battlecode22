@@ -1,4 +1,4 @@
-package monkey2clone;
+package monkey2newmienr;
 
 import battlecode.common.*;
 
@@ -10,8 +10,7 @@ class Soldier {
     static MapLocation destination = null;
     static MapLocation enemyLoc = null;
     static int closeAlly = 0;
-    static int allyStrength = 0;
-    static int enemyStrength = 0;
+    static boolean focusFire = false;
     static RobotInfo enemy = null;
     static MapLocation spawn = null;
 
@@ -61,9 +60,7 @@ class Soldier {
     static void setDestination(RobotController rc) throws GameActionException {
         if (toLeadFarm) {
             if (rc.getHealth() >= 44) toLeadFarm = false;
-            else {
-                destination = spawn;
-            }
+            else destination = spawn;
             return;
         }
 
@@ -126,7 +123,6 @@ class Soldier {
                 rc.disintegrate();
                 return;
             }
-            attack(rc);
             for (Direction dir : Constants.directions) {
                 if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
                     && rc.adjacentLocation(dir).distanceSquaredTo(spawn) <= 20) {
@@ -135,6 +131,7 @@ class Soldier {
                 }
             }
             if (rc.canMove(go)) rc.move(go);
+            attack(rc);
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER)) {
@@ -146,9 +143,8 @@ class Soldier {
             for (Direction dir : Constants.directions) {
                 switch((action ? 1 : 0) | (move ? 2 : 0)) {
                     case 1:
-                        if (rc.canMove(dir)) {
+                        if (rc.canSenseLocation(rc.adjacentLocation(dir)))
                             rubble = Math.min(rubble, rc.senseRubble(rc.adjacentLocation(dir)));
-                        }
                         break;
                     case 2:
                         if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
@@ -158,7 +154,7 @@ class Soldier {
                         }
                         break;
                     case 3:
-                        if (closeAlly >= visibleAttackers) {
+                        if (closeAlly >= visibleAttackers || focusFire) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
                                 && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
@@ -179,7 +175,7 @@ class Soldier {
                 }
             }
             if (!move) {
-                if (rc.getMovementCooldownTurns() < 20 && rubble + 20 <= rc.senseRubble(cur)) {
+                if (!focusFire && rc.getMovementCooldownTurns() < 20 && rubble + 20 <= rc.senseRubble(cur)) {
                     return;
                 } else attack(rc);
             }
@@ -226,15 +222,20 @@ class Soldier {
         visibleAttackers = 0;
         visibleAllies = 0;
         closeAlly = 0;
-        allyStrength = 0;
-        enemyStrength = 0;
+        focusFire = false;
         int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
+            for (int i = 52; i < 58; i++) {
+                if (rc.readSharedArray(i) == info.ID) {
+                    enemy = info;
+                    enemyLoc = info.location;
+                    priority = 0;
+                }
+            }
             if (info.team.equals(rc.getTeam().opponent())) {
                 ++visibleEnemies;
                 switch (info.type) {
                     case SOLDIER: 
-                        enemyStrength += Utils.strength(rc, info);
                     case WATCHTOWER: case SAGE:
                         ++visibleAttackers;
                 }
@@ -265,7 +266,6 @@ class Soldier {
                 if (visibleAttackers > 0) {
                     if (info.location.distanceSquaredTo(enemyLoc) <= curDist) {
                         closeAlly++;
-                        allyStrength += Utils.strength(rc, info);
                     }
                 }
             }
@@ -273,6 +273,18 @@ class Soldier {
         if (visibleEnemies == 0) {
             enemyLoc = null;
             enemy = null;
+        } else {
+            if (closeAlly * 3 >= enemy.health && rc.canAttack(enemy.location)) {
+                focusFire = true;
+                for (int i = 52; i < 58; i++) {
+                    int fromShared = rc.readSharedArray(i);
+                    if (fromShared == enemy.ID)break;
+                    else if (fromShared == 0) {
+                        fromShared = enemy.ID;
+                        break;
+                    }
+                }
+            }
         }
         if (Utils.randomInt(1, visibleAllies) == 1) {
             rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);

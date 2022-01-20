@@ -1,4 +1,4 @@
-package monkey2clone;
+package monkey2newmienr;
 
 import battlecode.common.*;
 

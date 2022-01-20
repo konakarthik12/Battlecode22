@@ -54,12 +54,19 @@ class Miner {
                 return;
             }
         }
-        /*for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            if (info.type.equals(RobotType.SOLDIER)) {
-                Pathfinder.move(rc, spawn);
-                return;
+        if (rc.canMineLead(destination)) {
+            int rubble = rc.senseRubble(rc.getLocation());
+            Direction best = Direction.CENTER;
+            for (Direction dir : Constants.directions) {
+
+                if (rc.canMove(dir) && rc.adjacentLocation(dir).isAdjacentTo(destination) 
+                    && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
+                    rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                    best = dir;
+                }
             }
-        }*/
+            if (rc.canMove(best)) rc.move(best);
+        }
         Pathfinder.move(rc, destination);
     }
 
@@ -68,6 +75,9 @@ class Miner {
             ++numReached;
 //            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
+            while (destination.x != 0 && destination.x != rc.getMapWidth() - 1 && destination.y == 0 && destination.y != rc.getMapHeight() - 1) {
+                destination = destination.add(rc.getLocation().directionTo(destination));
+            }
         }
 
         rc.setIndicatorString(destination.toString());
@@ -75,6 +85,7 @@ class Miner {
     }
 
     static void readQuadrant(RobotController rc) throws GameActionException {
+        int dist = Integer.MAX_VALUE;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
             int lead = (rc.readSharedArray(quadrant + 16) >> 8) & 127;
@@ -83,10 +94,11 @@ class Miner {
 
             int x = (quadrant - 2) / 5 * rc.getMapWidth()  / 5 + Utils.randomInt(0, rc.getMapWidth()/5);
             int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5);
-
-            if (lead > 5 && visAllies >= visEnemies) {
+            MapLocation target = new MapLocation(x, y);
+            if (lead > 5 && visAllies >= visEnemies && rc.getLocation().distanceSquaredTo(target) < dist) {
 //            if (Math.abs(visAttackers-visAllies) < 3) {
-                destination = new MapLocation(x,y);
+                dist = rc.getLocation().distanceSquaredTo(target);
+                destination = target;
             }
         }
     }
@@ -146,7 +158,7 @@ class Miner {
     static void mine(RobotController rc) throws GameActionException {
         //TODO make miners not clump up
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
-        lead = leadLocations.length;
+        lead = 0;
         int hiLead = 5;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
@@ -155,9 +167,11 @@ class Miner {
                 destination = loc;
                 hiLead = rc.senseLead(loc);
             }
+            lead += rc.senseLead(loc);
 //            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
             // maybe don't need to sense
         }
+        lead = Math.min(lead / 10, 127);
     }
 
     static void writeShared(RobotController rc) throws GameActionException {
@@ -172,5 +186,10 @@ class Miner {
         mine(rc);
 
         writeQuadrantInformation(rc);
+
+//        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+//            rc.writeSharedArray(Utils.randomInt(0, 4), (1 << 12) + (robotInfo.location.x << 6) + robotInfo.location.y);
+//            break;
+//        }
     }
 }

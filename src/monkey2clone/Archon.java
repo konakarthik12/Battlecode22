@@ -12,7 +12,7 @@ public class Archon {
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
     static int visibleMiners = 0;
-
+    static int toHeal = 0;
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
     static int[] enemyEstimates = new int[64];
 
@@ -36,12 +36,26 @@ public class Archon {
     }
 
     static void heal(RobotController rc) throws GameActionException {
-        RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
+        RobotInfo[] info = rc.senseNearbyRobots(20, rc.getTeam());
+        int lowest = 1000;
+        RobotInfo best = null;
         for (RobotInfo r : info) {
-            if (rc.canRepair(r.location) && (r.type == RobotType.SOLDIER || visibleAllies == 0)) {
-                rc.repair(r.location);
+            if (toHeal == 0) {
+                if (r.health < lowest && r.type == RobotType.SOLDIER) {
+                    lowest = r.health;
+                    best = r;
+                }
+            } else if (r.ID == toHeal) {
+                best = r;
             }
         }
+        if (best != null) {
+            if (rc.canRepair(best.location)) {
+                rc.repair(best.location);
+                if (best.health >= 44) toHeal = 0;
+                else toHeal = best.ID;
+            }
+        } else toHeal = 0;
     }
 
     static void setup(RobotController rc) throws GameActionException {
@@ -108,7 +122,7 @@ public class Archon {
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
             } else if (Utils.randomInt(1, minersBuilt + rc.getArchonCount() - 1) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
-                //rc.writeSharedArray(35, rc.readSharedArray(34) + 1);
+                //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
             } else {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
