@@ -1,6 +1,6 @@
 package monkey1;
 
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import java.util.Random;
 
@@ -14,6 +14,21 @@ class Utils {
         rng = new Random(rc.getID() + 422);
     }
 
+    static MapLocation nearestArchon(RobotController rc) throws GameActionException {
+        int dist = Integer.MAX_VALUE;
+        MapLocation cur = rc.getLocation();
+        MapLocation best = cur;
+        for (int i = 1; i <= rc.getArchonCount(); ++i) {
+            int readPos = rc.readSharedArray(64 - i);
+            MapLocation archonPos = new MapLocation((readPos >> 6) & 63, readPos & 63);
+            if (cur.distanceSquaredTo(archonPos) < dist) {
+                best = archonPos;
+                dist = cur.distanceSquaredTo(archonPos);
+            }
+        }
+        return best;
+    }
+
     /**
      * Returns random integer in range [a,b]
      *
@@ -24,5 +39,20 @@ class Utils {
     static int randomInt(int a, int b) {
         if (b < a) return -1;
         return Utils.rng.nextInt(b - a + 1) + a;
+    }
+
+    static int archonDist(MapLocation loc) throws GameActionException{
+        int dist = Integer.MAX_VALUE;
+        for (int i = 1; i <= rc.getArchonCount(); i++) {
+            int readPos = rc.readSharedArray(64 - i);
+            MapLocation archonPos = new MapLocation((readPos >> 6) & 63, readPos & 63);
+            dist = Math.min(dist, loc.distanceSquaredTo(archonPos));
+        }
+        return dist;
+    }
+
+    static int strength(RobotController rc, RobotInfo info) throws GameActionException {
+        int rubble = rc.senseRubble(info.location);
+        return info.health / (3 * (rubble / 10) + 1) + 1;
     }
 }

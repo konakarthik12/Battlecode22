@@ -1,4 +1,4 @@
-package monkey1;
+package monkey5;
 
 import battlecode.common.*;
 
@@ -12,20 +12,14 @@ public class Archon {
     static int visibleAttackers = 0;
     static int visibleMiners = 0;
     static int toHeal = 0;
-    static int sinceMove = 50;
-    // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
-    static int[] enemyEstimates = new int[64];
     static MapLocation destination = null;
-    static MapLocation lowRubble = null;
-    static boolean turret = true;
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
         Direction build = Direction.EAST;
         int rubble = 1000;
-        MapLocation center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         for (Direction dir : Constants.directions) {
             if (rc.canBuildRobot(type, dir)) {
-                int _rubble = rc.senseRubble(rc.adjacentLocation(dir))/10 + rc.adjacentLocation(dir).distanceSquaredTo(center);
+                int _rubble = rc.senseRubble(rc.adjacentLocation(dir));
                 if (_rubble < rubble) {
                     build = dir;
                     rubble = _rubble;
@@ -70,18 +64,6 @@ public class Archon {
     }
 
     static void reset(RobotController rc) throws GameActionException {
-        if (!turret && (rc.getLocation().equals(lowRubble) || (lowRubble == null && rc.getLocation().equals(destination)))) {
-            rc.writeSharedArray(58, rc.readSharedArray(58) - 1);
-            destination = null;
-            lowRubble = null;
-            turret = true;
-        }
-        if (turret && rc.getMode() != RobotMode.TURRET) {
-            if (rc.isTransformReady()) rc.transform();
-        }
-        for (int i = 2; i <= 17; ++i) {
-            enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
-        }
         if (archonID == rc.getArchonCount()) {
             for (int i = 2; i < 58; ++i) {
                 int fromShared = rc.readSharedArray(i);
@@ -90,7 +72,6 @@ public class Archon {
                 } else rc.writeSharedArray(i, 0);
             }
         }
-        rc.writeSharedArray(64 - archonID, (1 << 15) + (rc.getLocation().x << 6) + rc.getLocation().y);
     }
 
     static void summonUnits(RobotController rc) throws GameActionException {
@@ -108,18 +89,22 @@ public class Archon {
                     go = go.rotateRight().rotateRight();
                     if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 }
-                ++minersBuilt;
+
             } else {
                 summonUnitAnywhere(rc, RobotType.MINER);
             }
         }
         else {
-            // TODO don't spawn on rubble :skull:
             int lead = 0;
             for (MapLocation loc : leadLoc) {
                 lead += rc.senseLead(loc);
             }
-            if (lead > 100 && visibleMiners == 0 && visibleAllies > visibleAttackers) {
+
+            int carrying = 10 + rc.getRoundNum() / 100 + rc.getMapWidth() / 10 + rc.getMapHeight() / 10;
+            carrying = Integer.MAX_VALUE;
+            int roll = Utils.randomInt(1, carrying);
+
+            if (lead > 100 && visibleMiners == 0 && visibleAttackers == 0) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
                 if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 else {
@@ -128,21 +113,16 @@ public class Archon {
                     go = go.rotateRight().rotateRight();
                     if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 }
-                ++minersBuilt;
-            } else if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10 || visibleEnemies > 0) {
+                if (!rc.isActionReady()) rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
+            } else if (rc.readSharedArray(1) < rc.readSharedArray(0) - 10 || visibleEnemies > 0 || roll < rc.readSharedArray(58)) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
-//            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
             } else if (Utils.randomInt(1, minersBuilt + rc.getArchonCount() - 1) <= 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
-                //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
             } else {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
-            //if (rc.getRoundNum() >= 300 && rc.getRoundNum() % 20 == 0) minersBuilt--;
-//            int x = rc.readSharedArray(1);
-//            if (rc.getRoundNum() % 10 == 0) rc.writeSharedArray(1, Math.max(x-1, 0));
         }
     }
     static void senseEnemies(RobotController rc) throws GameActionException {
@@ -184,52 +164,28 @@ public class Archon {
             int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + rc.getMapWidth()/10;
             int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + rc.getMapHeight()/10;
             MapLocation target = new MapLocation(x, y);
-            if (visAttackers > 1 && visAllies > 1 && rc.getLocation().distanceSquaredTo(target) < dist) {
+            if (visAllies > 1 && visEnemies > 1 && rc.getLocation().distanceSquaredTo(target) < dist) {
                 dist = rc.getLocation().distanceSquaredTo(target);
+            } else if (visAllies > 5) {
                 destination = target;
             }
         }
-        if (dist > 50 && rc.readSharedArray(58) < rc.getArchonCount() - 1
-            && turret && destination != null && sinceMove >= 100 && visibleAllies < 2) {
-            turret = false;
-            rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
+        if (dist > Math.min(500, rc.getMapWidth() * rc.getMapHeight() / 4) && rc.readSharedArray(58) < rc.getArchonCount() - 1
+            && rc.getMode() == RobotMode.TURRET && destination != null) {
+            if (rc.canTransform()) rc.transform();
         }
     }
 
     static void move(RobotController rc) throws GameActionException {
-        if (!turret && rc.getMode() == RobotMode.TURRET) {
-            if (rc.canTransform()) rc.transform();
-        } else if (turret || rc.getMode() == RobotMode.TURRET) return;
-        MapLocation cur = rc.getLocation();
-        if ((visibleAllies > 3 || visibleAttackers > 0) && lowRubble == null) {
-            int rubble = rc.senseRubble(cur);
-            for (MapLocation poss : rc.getAllLocationsWithinRadiusSquared(cur, 8)) {
-                if (rc.senseRubble(poss) < rubble) {
-                    lowRubble = poss;
-                    rubble = rc.senseRubble(poss);
-                }
-            }
-        }
-        if (lowRubble != null) {
-            Pathfinder.move(rc, lowRubble);
-        } else {
-            Pathfinder.move(rc, destination);
-        }
+
     }
 
     static void run(RobotController rc) throws GameActionException {
         senseEnemies(rc);
         summonUnits(rc);
-        move(rc);
         heal(rc);
         readQuadrant(rc);
+        move(rc);
         reset(rc);
-        if (lowRubble != null) rc.setIndicatorLine(rc.getLocation(), lowRubble, 0, 0, 255);
-        else if (destination != null) rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
-        if (turret) {
-            sinceMove++;
-        } else {
-            sinceMove = 0;
-        }
     }
 }

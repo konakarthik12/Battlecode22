@@ -2,69 +2,100 @@ package monkey4;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 public class MicroInfo {
 
-    int incomingDamage;
-    int numAllies;
-    int minDistToEnemy;
+    double incomingDamage = 0;
+    int visibleAttackers = 0;
+    int visibleEnemies = 0;
+    int attackersInRange = 0;
+    int numAllies = 1;
+    int closeAlly = 0;
+    int minDistToEnemy = 1000000;
+    int bestScore = Integer.MAX_VALUE;
     int rubble;
-    int visibleAttackers;
-    MapLocation loc;
-    MapLocation nearestEnemy;
 
-    public MicroInfo(RobotController rc, MapLocation loc, int visibleAttackers) throws GameActionException {
-        this.loc = loc;
-        if (rc.canSenseLocation(loc)) this.rubble = rc.senseRubble(loc);
-        else this.rubble = 100000;
-        this.incomingDamage = 0;
-        this.numAllies = 0;
-        this.minDistToEnemy = 100000;
-        this.visibleAttackers = visibleAttackers;
-    }
+    RobotInfo target = null;
+
+    MapLocation nearestEnemy = null;
+    MapLocation loc;
+
+    int enemyArchon = 0;
+    int allyArchon = 0;
+    boolean action;
+    boolean move;
 
     public MicroInfo(RobotController rc, MapLocation loc) throws GameActionException {
+        this.rubble = (rc.canSenseLocation(loc)) ? rc.senseRubble(loc) : 1000000;
         this.loc = loc;
-        if (rc.canSenseLocation(loc)) this.rubble = rc.senseRubble(loc);
-        else this.rubble = 100000;
-        this.incomingDamage = 0;
-        this.numAllies = 1;
-        this.minDistToEnemy = 100000;
-    }
+        this.action = rc.isActionReady();
+        this.move = rc.isMovementReady();
 
-    void update(RobotController rc, RobotInfo info) throws GameActionException {
-        if (info.team.equals(Utils.opponent)) {
-            int dist = loc.distanceSquaredTo(info.location);
-            if (dist <= minDistToEnemy) {
-                if (info.type != RobotType.ARCHON) {
+        MapLocation cur = rc.getLocation();
+
+        for (RobotInfo info : rc.senseNearbyRobots(-1)) {
+            if (info.team == Utils.team) {
+                ++visibleEnemies;
+                int dist = loc.distanceSquaredTo(info.location);
+                if (dist <= minDistToEnemy) {
+                    switch (info.type) {
+                        case SOLDIER: case WATCHTOWER: case SAGE:
+                            ++visibleAttackers;
+                            break;
+                        case ARCHON:
+                            enemyArchon = 1;
+                    }
                     nearestEnemy = info.location;
                     minDistToEnemy = dist;
                 }
+
+                if (dist <= 13) {
+                    ++attackersInRange;
+                    int multiplier;
+                    switch (info.type) {
+                        case SAGE: multiplier = 0; break;
+                        case SOLDIER: multiplier = 1; break;
+                        case BUILDER: multiplier = 2; break;
+                        case WATCHTOWER: multiplier = 3; break;
+                        case MINER: multiplier = 4; break;
+                        default: multiplier = 5;
+                    }
+                    int score = multiplier * 10000 + 25 * info.health + rubble;
+                    if (bestScore > score) {
+                        bestScore = score;
+                        target = info;
+                    }
+                    incomingDamage += info.getType().damage;
+                }
+            } else {
+                switch (info.type) {
+                    case SOLDIER:
+                        if (target != null && info.location.distanceSquaredTo(target.location) <= 5) ++closeAlly;
+                        ++numAllies;
+                        break;
+                    case ARCHON:
+                        allyArchon = 1;
+                }
             }
-            if (dist <= RobotType.SOLDIER.actionRadiusSquared)
-                incomingDamage += (10 * info.getType().damage) / (10 + rc.senseRubble(info.location));
-        } else {
-            if (info.type == RobotType.SOLDIER) ++numAllies;
         }
     }
 
     boolean isBetter(RobotController rc, MicroInfo o) {
-        // return if this is better than o
-        int attackCooldown = (rc.getActionCooldownTurns() + 9) / 10;
-        int moveCooldown = (rc.getMovementCooldownTurns() + 9) / 10;
-        if (attackCooldown > moveCooldown && this.incomingDamage > 0) {
-            if (nearestEnemy != null && this.loc.distanceSquaredTo(nearestEnemy) < minDistToEnemy)
-                return false;
-            return this.rubble < o.rubble;
-        } else {
-            if (this.incomingDamage == 0) {
-                return this.minDistToEnemy + this.rubble < o.minDistToEnemy + o.rubble;
-            }
-            if (4 * visibleAttackers > 3*numAllies+3) return -this.rubble + 10 * this.minDistToEnemy > 10 * o.minDistToEnemy - o.rubble;
-            else if (4 * numAllies > 3 * visibleAttackers+3) return 10 * this.minDistToEnemy + this.rubble < 10 * o.minDistToEnemy + o.rubble;
-            if (this.incomingDamage < o.incomingDamage) return true;
-            if (this.rubble < o.rubble - 10) return true;
+        if (visibleAttackers == 0) {
+            return this.minDistToEnemy + this.rubble < o.minDistToEnemy + o.rubble;
+        } else if (attackersInRange == 1) {
+            if (this.minDistToEnemy > 13) return true;
         }
 
-        return false;
+        if (action) {
+            if (closeAlly > visibleAttackers) {
+                return 10 * this.minDistToEnemy + this.rubble < 10 * o.minDistToEnemy + this.rubble;
+            }
+        } else {
+            return 10 * this.minDistToEnemy - this.rubble > 10 * o.minDistToEnemy - this.rubble;
+        }
+
+        return true;
     }
 }

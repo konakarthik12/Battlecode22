@@ -1,10 +1,6 @@
-package monkey1;
+package turtle;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 public class Pathfinder {
 
@@ -17,7 +13,7 @@ public class Pathfinder {
         int curDist = cur.distanceSquaredTo(destination);
         int score = Integer.MAX_VALUE;
 //        int rubble = (rc.isLocationOccupied(cur) && !cur.equals(rc.getLocation())) ? 10000 : rc.senseRubble(cur);
-        int rubble = rc.senseRubble(cur);
+        int rubble = (rc.getType() == RobotType.MINER ? 2 : 1) * rc.senseRubble(cur);
 
         if (depth == 3) return (10 + rubble) + curDist;
 
@@ -58,7 +54,7 @@ public class Pathfinder {
         return score;
     }
 
-    static void move(RobotController rc, MapLocation _destination) throws GameActionException {
+    public static void move(RobotController rc, MapLocation _destination) throws GameActionException {
         MapLocation cur = rc.getLocation();
         destination = _destination;
 

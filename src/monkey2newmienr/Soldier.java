@@ -6,7 +6,7 @@ import java.awt.*;
 
 
 class Soldier {
-    static Direction previousStep = Direction.CENTER;
+    static MapLocation prev = null;
     static MapLocation destination = null;
     static MapLocation enemyLoc = null;
     static int closeAlly = 0;
@@ -18,12 +18,15 @@ class Soldier {
     static boolean isBackup = false;
 
     static int sinceLastAttack = 0;
+    static int sinceLastMove = 0;
+
     static int visibleEnemies = 0;
     static int visibleAttackers = 0;
     static int visibleAllies = 0;
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
+        prev = spawn;
     }
 
     static void attack(RobotController rc) throws GameActionException{
@@ -59,12 +62,15 @@ class Soldier {
 
     static void setDestination(RobotController rc) throws GameActionException {
         if (toLeadFarm) {
-            if (rc.getHealth() >= 44) toLeadFarm = false;
+            if (rc.getHealth() >= 44) {
+                toLeadFarm = false;
+                isBackup = false;
+            }
             else destination = spawn;
             return;
         }
 
-        if (sinceLastAttack > 5 && !isBackup) {
+        if (sinceLastAttack > 5 && !isBackup || sinceLastMove > 20) {
             readQuadrant(rc);
         }
         if(destination == null) {
@@ -189,7 +195,7 @@ class Soldier {
                     if (rc.canMove(go)) rc.move(go);
                     else Pathfinder.move(rc, spawn);
                 }
-            } else if (rc.canMove(go)){
+            } else if (rc.canMove(go)) {
                 rc.move(go);
             }
         } else if (visibleAttackers > visibleAllies) {
@@ -224,7 +230,7 @@ class Soldier {
         closeAlly = 0;
         focusFire = false;
         int priority = Integer.MAX_VALUE;
-        for (RobotInfo info : rc.senseNearbyRobots(-1)) {
+        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             for (int i = 52; i < 58; i++) {
                 if (rc.readSharedArray(i) == info.ID) {
                     enemy = info;
@@ -232,28 +238,26 @@ class Soldier {
                     priority = 0;
                 }
             }
-            if (info.team.equals(rc.getTeam().opponent())) {
-                ++visibleEnemies;
-                switch (info.type) {
-                    case SOLDIER: 
-                    case WATCHTOWER: case SAGE:
-                        ++visibleAttackers;
-                }
-                int multiplier;
-                switch (info.getType()) {
-                    case SAGE: multiplier = 0; break;
-                    case SOLDIER: multiplier = 1; break;
-                    case BUILDER: multiplier = 2; break;
-                    case WATCHTOWER: multiplier = 3; break;
-                    case MINER: multiplier = 4; break;
-                    default: multiplier = 5;
-                }
-                int score = multiplier * 1000000 + 1000 * rc.senseRubble(info.location) + info.getHealth() + rc.getLocation().distanceSquaredTo(info.location);
-                if (score < priority) {
-                    enemyLoc = info.location;
-                    enemy = info;
-                    priority = score;
-                }
+            ++visibleEnemies;
+            switch (info.type) {
+                case SOLDIER: 
+                case WATCHTOWER: case SAGE:
+                    ++visibleAttackers;
+            }
+            int multiplier;
+            switch (info.getType()) {
+                case SAGE: multiplier = 0; break;
+                case SOLDIER: multiplier = 1; break;
+                case BUILDER: multiplier = 2; break;
+                case WATCHTOWER: multiplier = 3; break;
+                case MINER: multiplier = 4; break;
+                default: multiplier = 5;
+            }
+            int score = multiplier * 1000000 + 1000 * rc.senseRubble(info.location) + info.getHealth() + rc.getLocation().distanceSquaredTo(info.location);
+            if (score < priority) {
+                enemyLoc = info.location;
+                enemy = info;
+                priority = score;
             }
         }
         int curDist = 0;
@@ -304,5 +308,11 @@ class Soldier {
         }
         writeQuadrantInformation(rc);
         spawn = Utils.nearestArchon(rc);
+        if (rc.getLocation().equals(prev)) {
+            sinceLastMove++;
+        } else {
+            sinceLastMove = 0;
+            prev = rc.getLocation();
+        }
     }
 }

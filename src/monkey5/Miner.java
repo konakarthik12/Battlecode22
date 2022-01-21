@@ -1,11 +1,9 @@
-package monkey1;
+package monkey5;
 
 import battlecode.common.*;
 
 class Miner {
 
-    static int numReached = 0;
-    static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
     static int near = 0;
@@ -16,7 +14,6 @@ class Miner {
     static int lead = 0;
     static boolean pretendingDead = false;
     static int turnsSearching = 0;
-    static boolean isSearching = true;
     static boolean isMinID = true;
 
     static void setup(RobotController rc) throws GameActionException {
@@ -54,10 +51,11 @@ class Miner {
                 return;
             }
         }
-        if (rc.getLocation().isAdjacentTo(destination)) {
+        if (rc.canMineLead(destination)) {
             int rubble = rc.senseRubble(rc.getLocation());
             Direction best = Direction.CENTER;
             for (Direction dir : Constants.directions) {
+
                 if (rc.canMove(dir) && rc.adjacentLocation(dir).isAdjacentTo(destination) 
                     && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
                     rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -69,14 +67,19 @@ class Miner {
         Pathfinder.move(rc, destination);
     }
 
+
     static void setDestination(RobotController rc) throws GameActionException {
         if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 5) {
-            ++numReached;
-//            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
             while (destination.x != 0 && destination.x != rc.getMapWidth() - 1 && destination.y != 0 && destination.y != rc.getMapHeight() - 1) {
                 destination = destination.add(rc.getLocation().directionTo(destination));
             }
+        }
+
+        if (!pretendingDead && rc.getHealth() < 10) {
+            pretendingDead = true;
+            int minerEstimate = rc.readSharedArray(58);
+            rc.writeSharedArray(58, Math.max(minerEstimate-1, 0));
         }
 
         rc.setIndicatorString(destination.toString());
