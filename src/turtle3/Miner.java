@@ -5,7 +5,6 @@ import battlecode.common.*;
 class Miner {
 
     static int numReached = 0;
-    static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
     static int near = 0;
@@ -14,8 +13,6 @@ class Miner {
     static int visibleAttackers = 0;
     static int lead = 0;
 
-    static int turnsSearching = 0;
-    static boolean isSearching = true;
     static boolean isMinID = true;
 
     static void setup(RobotController rc) throws GameActionException {
@@ -23,7 +20,6 @@ class Miner {
     }
 
     static void move(RobotController rc) throws GameActionException {
-        // experiment with returning to spawn and with running directly opposite to soldiers
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
             if (info.type.equals(RobotType.SOLDIER)) {
                 Pathfinder.move(rc, spawn);

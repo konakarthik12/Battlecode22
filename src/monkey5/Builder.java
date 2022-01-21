@@ -1,6 +1,9 @@
-package monkey2newmienr;
+package monkey5;
 
-import battlecode.common.*;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
 
 
 class Builder {

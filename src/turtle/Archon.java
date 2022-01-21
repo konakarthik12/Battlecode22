@@ -1,4 +1,4 @@
-package monkey4;
+package turtle;
 
 import battlecode.common.*;
 
@@ -36,32 +36,22 @@ public class Archon {
                 rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
                 ++minersBuilt;
             } else if (type.equals(RobotType.SOLDIER)) {
-                rc.writeSharedArray(57, rc.readSharedArray(57) + 1);
                 ++soldiersBuilt;
             }
         }
     }
 
     static void heal(RobotController rc) throws GameActionException {
-        RobotInfo toHeal = null;
+        MapLocation toHeal = null;
         int leastHealth = Integer.MAX_VALUE;
-        int bestScore = Integer.MAX_VALUE;
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
-            int multiplier = (r.type == RobotType.SOLDIER) ? 0 : 1;
-            int score = 1000 * multiplier + r.health;
-            if (score < bestScore) {
-                bestScore = score;
-                toHeal = r;
+            if (r.health < leastHealth) {
                 leastHealth = r.health;
+                toHeal = r.location;
             }
-//            if (r.health < leastHealth) {
-//                leastHealth = r.health;
-//                toHeal = r;
-//            }
         }
-        if (toHeal != null)
-        if (leastHealth != toHeal.type.health && rc.canRepair(toHeal.location)) rc.repair(toHeal.location);
+        if (toHeal != null && rc.canRepair(toHeal)) rc.repair(toHeal);
     }
 
     static void setup(RobotController rc) throws GameActionException {
@@ -74,7 +64,7 @@ public class Archon {
     static void reset(RobotController rc) throws GameActionException {
         enemiesInVision = 0;
         if (archonID == rc.getArchonCount()) {
-            for (int i = 0; i < 50; ++i) {
+            for (int i = 0; i < 36; ++i) {
                 int k = rc.readSharedArray(i);
                 if (((k >> 15) & 1) == 1) rc.writeSharedArray(i, k - (1 << 15));
                 else rc.writeSharedArray(i, 0);
@@ -103,7 +93,7 @@ public class Archon {
             // prioritize soldiers where needed
             int numEnemies = 0;
             int numSoldiers = 0;
-            for (int i = 0; i < Utils.gridSize; ++i) {
+            for (int i = 0; i < 36; ++i) {
                 int val = rc.readSharedArray(i);
                 numEnemies += (val >> 7) & 127;
                 numSoldiers += val & 127;
@@ -115,7 +105,9 @@ public class Archon {
 
             boolean ok = Utils.randomInt(1, rc.getArchonCount()) == 1;
 
-            if ((numSoldiers < numEnemies) || enemiesInVision > 0 || roll < rc.readSharedArray(58)) {
+            if (ok && (numSoldiers < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58))) {
+//                if (Utils.randomInt(1, 10) == 1) summonUnitAnywhere(rc, RobotType.BUILDER);
+                if (rc.getTeamLeadAmount(Utils.team) > 300 && Utils.randomInt(1, 3)== 1) summonUnitAnywhere(rc, RobotType.BUILDER);
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
             } else if (ok) {
                 if (Utils.randomInt(1, rc.getArchonCount()) == 1)
