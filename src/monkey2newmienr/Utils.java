@@ -55,4 +55,13 @@ class Utils {
         int rubble = rc.senseRubble(info.location);
         return info.health / (3 * (rubble / 10) + 1) + 1;
     }
+
+    static int wallDist(RobotController rc, MapLocation loc) throws GameActionException {
+        int ret = 1000;
+        if (loc.x < ret) ret = loc.x;
+        if (loc.y < ret) ret = loc.y;
+        if (rc.getMapWidth() - loc.x < ret) ret = (rc.getMapWidth() - loc.x);
+        if (rc.getMapHeight() - loc.y < ret) ret = (rc.getMapHeight() - loc.y);
+        return ret;
+    }
 }

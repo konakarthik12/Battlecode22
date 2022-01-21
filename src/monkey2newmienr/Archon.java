@@ -12,9 +12,12 @@ public class Archon {
     static int visibleAttackers = 0;
     static int visibleMiners = 0;
     static int toHeal = 0;
+    static int sinceMove = 50;
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
     static int[] enemyEstimates = new int[64];
     static MapLocation destination = null;
+    static MapLocation lowRubble = null;
+    static boolean turret = true;
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
         Direction build = Direction.EAST;
@@ -66,6 +69,15 @@ public class Archon {
     }
 
     static void reset(RobotController rc) throws GameActionException {
+        if (!turret && (rc.getLocation().equals(lowRubble) || (lowRubble == null && rc.getLocation().equals(destination)))) {
+            rc.writeSharedArray(58, rc.readSharedArray(58) - 1);
+            destination = null;
+            lowRubble = null;
+            turret = true;
+        }
+        if (turret && rc.getMode() != RobotMode.TURRET) {
+            if (rc.isTransformReady()) rc.transform();
+        }
         for (int i = 2; i <= 17; ++i) {
             enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
         }
@@ -77,6 +89,7 @@ public class Archon {
                 } else rc.writeSharedArray(i, 0);
             }
         }
+        rc.writeSharedArray(64 - archonID, (1 << 15) + (rc.getLocation().x << 6) + rc.getLocation().y);
     }
 
     static void summonUnits(RobotController rc) throws GameActionException {
@@ -105,7 +118,7 @@ public class Archon {
             for (MapLocation loc : leadLoc) {
                 lead += rc.senseLead(loc);
             }
-            if (lead > 100 && visibleMiners == 0 && visibleAttackers == 0) {
+            if (lead > 100 && visibleMiners == 0 && visibleAllies > visibleAttackers) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
                 if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 else {
@@ -160,7 +173,7 @@ public class Archon {
 //        }
     }
 
-    static void readQuadrant(RobotController rc) throws GameActionsException {
+    static void readQuadrant(RobotController rc) throws GameActionException {
         int dist = Integer.MAX_VALUE;
         int ddist = Integer.MAX_VALUE;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
@@ -170,28 +183,55 @@ public class Archon {
             int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + rc.getMapWidth()/10;
             int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + rc.getMapHeight()/10;
             MapLocation target = new MapLocation(x, y);
-            if (visAllies > 1 && visEnemies > 1 && rc.getLocation().distanceSquaredTo(target) < dist) {
+            if (visAttackers > 1 && visAllies > 1 && rc.getLocation().distanceSquaredTo(target) < dist) {
                 dist = rc.getLocation().distanceSquaredTo(target);
-            } else if (visAllies > 5) {
                 destination = target;
+            } else if (visAllies > 5 && rc.getLocation().distanceSquaredTo(target) < ddist) {
+                destination = target;
+                ddist = rc.getLocation().distanceSquaredTo(target);
             }
         }
-        if (dist > Math.min(500, rc.getMapWidth() * rc.getMapHeight() / 4) && rc.readSharedArray(58) < rc.getArchonCount() - 1
-            && rc.getMode() == RobotMode.TURRET && destination != null) {
-            if (rc.canTransform()) rc.transform();
+        if (dist > 50 && rc.readSharedArray(58) < rc.getArchonCount() - 1
+            && turret && destination != null && sinceMove >= 100 && visibleAllies < 2) {
+            turret = false;
+            rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
         }
     }
 
     static void move(RobotController rc) throws GameActionException {
-
+        if (!turret && rc.getMode() == RobotMode.TURRET) {
+            if (rc.canTransform()) rc.transform();
+        } else if (turret || rc.getMode() == RobotMode.TURRET) return;
+        MapLocation cur = rc.getLocation();
+        if ((visibleAllies > 3 || visibleAttackers > 0) && lowRubble == null) {
+            int rubble = rc.senseRubble(cur);
+            for (MapLocation poss : rc.getAllLocationsWithinRadiusSquared(cur, 8)) {
+                if (rc.senseRubble(poss) < rubble) {
+                    lowRubble = poss;
+                    rubble = rc.senseRubble(poss);
+                }
+            }
+        }
+        if (lowRubble != null) {
+            Pathfinder.move(rc, lowRubble);
+        } else {
+            Pathfinder.move(rc, destination);
+        }
     }
 
     static void run(RobotController rc) throws GameActionException {
         senseEnemies(rc);
         summonUnits(rc);
+        move(rc);
         heal(rc);
         readQuadrant(rc);
-        move(rc);
         reset(rc);
+        if (lowRubble != null) rc.setIndicatorLine(rc.getLocation(), lowRubble, 0, 0, 255);
+        else if (destination != null) rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
+        if (turret) {
+            sinceMove++;
+        } else {
+            sinceMove = 0;
+        }
     }
 }

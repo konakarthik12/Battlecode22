@@ -19,11 +19,11 @@ class Builder {
     }
 
     static void act(RobotController rc) throws GameActionException {
-        
+
     }
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
         act(rc);
-        if (rc.getLocation().equals(destination)) buildWatchTowerCardinal(rc);
+        //if (rc.getLocation().equals(destination)) buildWatchTowerCardinal(rc);
     }
 }

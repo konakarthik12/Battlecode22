@@ -1,8 +1,6 @@
 package monkey2;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import java.util.Random;
 
@@ -17,11 +15,16 @@ class Utils {
     }
 
     static MapLocation nearestArchon(RobotController rc) throws GameActionException {
-        int bestDist = Integer.MAX_VALUE;
+        int dist = Integer.MAX_VALUE;
         MapLocation cur = rc.getLocation();
         MapLocation best = cur;
-        for (int i = 0; i < rc.getArchonCount(); ++i) {
-
+        for (int i = 1; i <= rc.getArchonCount(); ++i) {
+            int readPos = rc.readSharedArray(64 - i);
+            MapLocation archonPos = new MapLocation((readPos >> 6) & 63, readPos & 63);
+            if (cur.distanceSquaredTo(archonPos) < dist) {
+                best = archonPos;
+                dist = cur.distanceSquaredTo(archonPos);
+            }
         }
         return best;
     }
@@ -46,5 +49,10 @@ class Utils {
             dist = Math.min(dist, loc.distanceSquaredTo(archonPos));
         }
         return dist;
+    }
+
+    static int strength(RobotController rc, RobotInfo info) throws GameActionException {
+        int rubble = rc.senseRubble(info.location);
+        return info.health / (3 * (rubble / 10) + 1) + 1;
     }
 }

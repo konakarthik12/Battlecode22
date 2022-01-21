@@ -2,7 +2,7 @@ package monkey1;
 
 import battlecode.common.Direction;
 
-class Constants {
+public class Constants {
     static final Direction[] directions = {
             Direction.NORTH,
             Direction.NORTHEAST,
@@ -13,9 +13,16 @@ class Constants {
             Direction.WEST,
             Direction.NORTHWEST
     };
-    // elements [0-4] in array store soldier enemies
     static final int earlyMinerCap = 10; // all archon's combined
     static final double minerSoldierRatio = 2.5;
     static final int minLeadForGold = 2000;
     static final int soldierPatience = 20;
+
+    // indices
+    // [0,1] stores enemy and friendly visible soldier/enemy counts
+    // [2, 26] stores quadrant information about enemies and allies
+    // [27, 51] stores lead information and ??
+    // [52 - 57] is focus fire!
+    // 58 is moving archons
+    // [59, 63] stores Archon locations
 }
