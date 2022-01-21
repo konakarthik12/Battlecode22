@@ -80,7 +80,7 @@ class Builder {
     }
     static void repair(RobotController rc) throws GameActionException {
         for (RobotInfo info : rc.senseNearbyRobots()) {
-            if (rc.canRepair(info.location) && info.health != info.type.health)rc.repair(info.location);
+            if (rc.canRepair(info.location) && info.getHealth() < info.getType().getMaxHealth(info.getLevel()))rc.repair(info.location);
         }
     }
     static void run(RobotController rc) throws GameActionException {
