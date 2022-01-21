@@ -160,7 +160,7 @@ public class Archon {
 //        }
     }
 
-    static void readQuadrant(RobotController rc) throws GameActionsException {
+    static void readQuadrant(RobotController rc) throws GameActionException {
         int dist = Integer.MAX_VALUE;
         int ddist = Integer.MAX_VALUE;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
