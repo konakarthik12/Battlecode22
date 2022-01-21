@@ -29,6 +29,23 @@ class Utils {
         return best;
     }
 
+    static int nearestArchonID(RobotController rc) throws GameActionException {
+        int dist = Integer.MAX_VALUE;
+        MapLocation cur = rc.getLocation();
+        MapLocation best = cur;
+        int ret = 0;
+        for (int i = 1; i <= rc.getArchonCount(); ++i) {
+            int readPos = rc.readSharedArray(64 - i);
+            MapLocation archonPos = new MapLocation((readPos >> 6) & 63, readPos & 63);
+            if (cur.distanceSquaredTo(archonPos) < dist) {
+                best = archonPos;
+                dist = cur.distanceSquaredTo(archonPos);
+                ret = i;
+            }
+        }
+        return ret;
+    }
+
     /**
      * Returns random integer in range [a,b]
      *
@@ -48,6 +65,19 @@ class Utils {
             MapLocation archonPos = new MapLocation((readPos >> 6) & 63, readPos & 63);
             dist = Math.min(dist, loc.distanceSquaredTo(archonPos));
         }
+        return dist;
+    }
+
+    static int cornerDist(RobotController rc, MapLocation loc) throws GameActionException{
+        int dist = Integer.MAX_VALUE;
+        MapLocation corner = new MapLocation(0, 0);
+        dist = Math.min(dist, loc.distanceSquaredTo(corner));
+        corner = new MapLocation(0, rc.getMapHeight() - 1);
+        dist = Math.min(dist, loc.distanceSquaredTo(corner));
+        corner = new MapLocation(rc.getMapWidth() - 1, 0);
+        dist = Math.min(dist, loc.distanceSquaredTo(corner));
+        corner = new MapLocation(rc.getMapWidth() - 1, rc.getMapHeight() - 1);
+        dist = Math.min(dist, loc.distanceSquaredTo(corner));
         return dist;
     }
 

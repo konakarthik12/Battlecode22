@@ -65,8 +65,7 @@ class Miner {
                 }
             }
             if (rc.canMove(best)) rc.move(best);
-        }
-        Pathfinder.move(rc, destination);
+        } else Pathfinder.move(rc, destination);
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
@@ -87,14 +86,14 @@ class Miner {
         int dist = Integer.MAX_VALUE;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
             int temp = rc.readSharedArray(quadrant);
-            int lead = (rc.readSharedArray(quadrant + 16) >> 8) & 127;
-            int visAllies = temp & 127;
-            int visEnemies = (temp >> 8) & 127;
+            int lead = (temp >> 10) & 15;
+            int visAllies = (temp >> 5) & 31;
+            int visAttackers = temp & 31;
 
             int x = (quadrant - 2) / 5 * rc.getMapWidth()  / 5 + Utils.randomInt(0, rc.getMapWidth()/5);
             int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5);
             MapLocation target = new MapLocation(x, y);
-            if (lead > 5 && visAllies >= visEnemies && rc.getLocation().distanceSquaredTo(target) < dist) {
+            if (lead > 5 && visAllies >= visAttackers && rc.getLocation().distanceSquaredTo(target) < dist) {
 //            if (Math.abs(visAttackers-visAllies) < 3) {
                 dist = rc.getLocation().distanceSquaredTo(target);
                 destination = target;
@@ -106,12 +105,12 @@ class Miner {
         MapLocation cur = rc.getLocation();
         int quadrant = 5 * (5 * cur.x / rc.getMapWidth()) + (5 * cur.y / rc.getMapHeight());
         // indices 2 - 17 are quadrant information for enemies and allies
-        int writeValue = (visibleEnemies << 8) + visibleAllies + (1<<15);
-        rc.writeSharedArray(2 + quadrant, writeValue);
-
-        writeValue = (lead << 8) + visibleAttackers + (1<<15);
-        rc.writeSharedArray(27 + quadrant, writeValue);
-
+        if (visibleEnemies > 0) visibleEnemies = 1;
+        if (lead > 15) lead = 15;
+        if (visibleAllies > 31) visibleAllies = 31;
+        if (visibleAttackers > 31) visibleAttackers = 31;
+        int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
+            rc.writeSharedArray(2 + quadrant, writeValue);
         assert(quadrant < 27);
     }
 
@@ -130,17 +129,16 @@ class Miner {
             } else {
                 ++visibleEnemies;
                 switch (info.type) {
-                    case SOLDIER:
-                    case WATCHTOWER:
                     case SAGE:
                         ++visibleAttackers;
-                        break;
+                    case SOLDIER: 
+                    case WATCHTOWER: 
+                        ++visibleAttackers;
                     case ARCHON:
                         enemyArchon = true;
                 }
             }
         }
-        rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
     }
 
     static void senseAllies(RobotController rc) throws  GameActionException {
@@ -156,6 +154,12 @@ class Miner {
 
     static void mine(RobotController rc) throws GameActionException {
         //TODO make miners not clump up
+        MapLocation[] goldLocations = rc.senseNearbyLocationsWithGold();
+        for (MapLocation loc : goldLocations) {
+            while (rc.canMineGold(loc)) rc.mineGold(loc);
+//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
+            // maybe don't need to sense
+        }
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         lead = 0;
         int hiLead = 5;

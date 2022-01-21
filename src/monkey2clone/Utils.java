@@ -8,9 +8,15 @@ class Utils {
 
     static Random rng = null;
     private static RobotController rc;
+    static int width = 0;
+    static int height = 0;
 
     static void setup(RobotController rc) {
         Utils.rc = rc;
+        
+        width = rc.getMapWidth();
+        height = rc.getMapHeight();
+
         rng = new Random(rc.getID() + 422);
     }
 
@@ -51,8 +57,31 @@ class Utils {
         return dist;
     }
 
-    static int strength(RobotController rc, RobotInfo info) throws GameActionException {
-        int rubble = rc.senseRubble(info.location);
-        return info.health / (3 * (rubble / 10) + 1) + 1;
+    static MapLocation getWall(int roll) {
+        int x = 0;
+        int y = 0;
+        switch (roll) {
+            case 1: {
+                x = Utils.randomInt(3, Utils.width-3);
+                y = 0;
+                break;
+            }
+            case 2: {
+                x = Utils.randomInt(3, Utils.width-3);
+                y = Utils.height-1;
+                break;
+            }
+            case 3: {
+                y = Utils.randomInt(3, Utils.height-3);
+                x = 0;
+                break;
+            }
+            case 4: {
+                y = Utils.randomInt(3, Utils.height-3);
+                x = Utils.width-1;
+                break;
+            }
+        }
+        return new MapLocation(x, y);
     }
 }

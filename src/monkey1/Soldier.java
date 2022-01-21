@@ -97,8 +97,8 @@ class Soldier {
         MapLocation mLoc = null;
         MapLocation sLoc = null;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
-            int visAttackers = rc.readSharedArray(quadrant + 25) & 127;
-            int visEnemies = (rc.readSharedArray(quadrant) >> 8) & 127;
+            int visAttackers = rc.readSharedArray(quadrant) & 31;
+            int visEnemies = (rc.readSharedArray(quadrant) >> 14) & 1;
             int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + Utils.randomInt(0, rc.getMapWidth()/5 - 1);
             int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5 - 1);
             MapLocation target = new MapLocation(x, y);
@@ -118,6 +118,7 @@ class Soldier {
             destination = sLoc;
         }
     }
+
 
     static void act(RobotController rc) throws GameActionException {
         MapLocation cur = rc.getLocation();
@@ -215,12 +216,12 @@ class Soldier {
         MapLocation cur = rc.getLocation();
         int quadrant = 5 * (5 * cur.x / rc.getMapWidth()) + (5 * cur.y / rc.getMapHeight());
         // indices 2 - 17 are quadrant information for enemies and allies
-        int writeValue = (visibleEnemies << 8) + visibleAllies + (1<<15);
+        if (visibleEnemies > 0) visibleEnemies = 1;
+        if (lead > 15) lead = 15;
+        if (visibleAllies > 31) visibleAllies = 31;
+        if (visibleAttackers > 31) visibleAttackers = 31;
+        int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
             rc.writeSharedArray(2 + quadrant, writeValue);
-
-        writeValue = (lead << 8) + visibleAttackers + (1<<15);
-            rc.writeSharedArray(27 + quadrant, writeValue);
-
         assert(quadrant < 27);
     }
 
@@ -232,7 +233,7 @@ class Soldier {
         focusFire = false;
         int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            for (int i = 52; i < 58; i++) {
+            for (int i = 27; i < 34; i++) {
                 if (rc.readSharedArray(i) == info.ID) {
                     enemy = info;
                     enemyLoc = info.location;
@@ -241,8 +242,10 @@ class Soldier {
             }
             ++visibleEnemies;
             switch (info.type) {
+                case SAGE:
+                    ++visibleAttackers;
                 case SOLDIER: 
-                case WATCHTOWER: case SAGE:
+                case WATCHTOWER: 
                     ++visibleAttackers;
             }
             int multiplier;
@@ -281,7 +284,7 @@ class Soldier {
         } else {
             if (closeAlly * 3 >= enemy.health && rc.canAttack(enemy.location)) {
                 focusFire = true;
-                for (int i = 52; i < 58; i++) {
+                for (int i = 27; i < 34; i++) {
                     int fromShared = rc.readSharedArray(i);
                     if (fromShared == enemy.ID)break;
                     else if (fromShared == 0) {
@@ -292,7 +295,7 @@ class Soldier {
             }
         }
         if (Utils.randomInt(1, visibleAllies) == 1) {
-            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
+            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
         }
     }
 
