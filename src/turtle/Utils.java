@@ -1,4 +1,4 @@
-package monkey4;
+package turtle;
 
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -9,7 +9,7 @@ import java.util.Random;
 
 class Utils {
 
-    static int numBlocks = 5;
+    static int numBlocks = 6;
     static int gridSize = -1;
 
     static int width = 0;
