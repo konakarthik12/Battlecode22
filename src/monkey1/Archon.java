@@ -49,7 +49,7 @@ public class Archon {
             }
         }
         if (type == RobotType.SOLDIER) {
-            if (rc.getTeamGoldAmount(rc.getTeam()) >= 20 || (sagesBuilt == 0 && soldiersBuilt > 0)) {
+            if (rc.getTeamGoldAmount(rc.getTeam()) >= 20 || (sagesBuilt == 0 && soldiersBuilt > 0 && rc.getTeamLeadAmount(rc.getTeam()) < 200)) {
                 type = RobotType.SAGE;
             }
         }
@@ -79,7 +79,9 @@ public class Archon {
         if (best != null) {
             if (rc.canRepair(best.location)) {
                 rc.repair(best.location);
-                if (best.health >= 44) toHeal = 0;
+                if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
+                if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
+
                 else toHeal = best.ID;
             }
         } else toHeal = 0;
@@ -139,7 +141,7 @@ public class Archon {
             }
         }
         else {
-            if (buildersBuilt == 0 && myTurn) {
+            if (buildersBuilt == 0 && myTurn && archonID <= 2) {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             // TODO don't spawn on rubble :skull:

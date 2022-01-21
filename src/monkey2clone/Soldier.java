@@ -141,7 +141,7 @@ class Soldier {
             attack(rc);
         }
         if (visibleEnemies > 0) {
-            if (!(enemy.type == RobotType.SOLDIER)) {
+            if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
                 Pathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
