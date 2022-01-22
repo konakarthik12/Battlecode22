@@ -20,10 +20,9 @@ class Constants {
 
     // indices
     // [0,1] stores enemy and friendly visible soldier/enemy counts
-    // [2, 17] stores quadrant information about enemies and allies
-    // [18, 33] stores lead information and ??
-    // [34, 37] stores important battles
-    // [38, 41] stores battle distance
-    // [42] is miners
+    // [2, 26] stores quadrant information about enemies and allies and lead and att
+    // [27, 33] is focus fire
+    // [34, 40] is calling allies
+    // 58 is moving archons
     // [59, 63] stores Archon locations
 }
