@@ -20,7 +20,8 @@ public class Archon {
 
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
         Direction build = Direction.EAST;
-        int rubble = 1000;
+        int rubble = 10000;
+
         for (Direction dir : Constants.directions) {
             if (rc.canBuildRobot(type, dir)) {
                 int _rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -46,8 +47,16 @@ public class Archon {
         int leastHealth = Integer.MAX_VALUE;
         RobotInfo[] info = rc.senseNearbyRobots(-1, rc.getTeam());
         for (RobotInfo r : info) {
-            if (r.health < leastHealth) {
-                leastHealth = r.health;
+            int mult;
+            switch (r.type) {
+                case SAGE: mult = 0; break;
+                case SOLDIER: mult = 1; break;
+                case BUILDER: mult = 2; break;
+                case MINER: mult = 3; break;
+                default: mult = 5;
+            }
+            if (r.health + mult * 10000 < leastHealth) {
+                leastHealth = r.health + mult * 10000;
                 toHeal = r.location;
             }
         }
@@ -77,7 +86,7 @@ public class Archon {
         if (rc.getRoundNum() <= 4) {
             if (enemiesInVision > 0) summonUnitAnywhere(rc, RobotType.SOLDIER);
             MapLocation[] leadLoc = rc.senseNearbyLocationsWithLead();
-            if (leadLoc.length > 0) {
+            if (leadLoc.length > 0 && false) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
                 if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 else {
@@ -105,13 +114,15 @@ public class Archon {
 
             boolean ok = Utils.randomInt(1, rc.getArchonCount()) == 1;
 
-            if (ok && (numSoldiers < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58))) {
+            if ((ok && numSoldiers < numEnemies) || enemiesInVision > 0 || roll < rc.readSharedArray(58)) {
 //                if (Utils.randomInt(1, 10) == 1) summonUnitAnywhere(rc, RobotType.BUILDER);
-                if (rc.getTeamLeadAmount(Utils.team) > 300 && Utils.randomInt(1, 3)== 1) summonUnitAnywhere(rc, RobotType.BUILDER);
+                if (rc.getTeamLeadAmount(Utils.team) > 200 && Utils.randomInt(1, 3) == 1) summonUnitAnywhere(rc, RobotType.BUILDER);
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
             } else if (ok) {
-                if (Utils.randomInt(1, rc.getArchonCount()) == 1)
+                if (Utils.randomInt(1, rc.getArchonCount()) == 1) {
+                    if (rc.getTeamLeadAmount(Utils.team) > 200 && Utils.randomInt(1, 3) == 1) summonUnitAnywhere(rc, RobotType.BUILDER);
                     summonUnitAnywhere(rc, RobotType.MINER);
+                }
             }
 
 //            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58)) {
@@ -129,6 +140,7 @@ public class Archon {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
+        if (destination != null) return;
         int score = Integer.MAX_VALUE;
 
         for (int i = 63; i > 63 - rc.getArchonCount(); --i) {
@@ -155,13 +167,17 @@ public class Archon {
 
     static void move(RobotController rc) throws GameActionException {
         if (stillMoving) Pathfinder.move(rc, destination);
-        if (rc.getLocation().distanceSquaredTo(destination) <= 20) {
+        if (rc.canSenseLocation(destination)) {
             stillMoving = false;
             if (rc.canTransform() && rc.getMode().equals(RobotMode.PORTABLE)) rc.transform();
         }
     }
 
     static void run(RobotController rc) throws GameActionException {
+        if (rc.getRoundNum() >= 40) {
+            setDestination(rc);
+            move(rc);
+        }
         senseLocalEnemies(rc);
         summonUnits(rc);
         heal(rc);

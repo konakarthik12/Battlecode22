@@ -14,7 +14,8 @@ class Lab {
         int lead = rc.getTeamLeadAmount(rc.getTeam());
         int opponentLead = rc.getTeamLeadAmount(rc.getTeam().opponent());
         //transmute if nearest archons tell us to
-            if (rc.canTransmute()) rc.transmute();
+        if (rc.canMutate(rc.getLocation())) rc.mutate(rc.getLocation());
+        if (rc.canTransmute()) rc.transmute();
         if (rc.getHealth() < 13 && !dead) {
             dead = true;
             rc.writeSharedArray(56, rc.readSharedArray(56) - 1);
