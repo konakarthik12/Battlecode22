@@ -88,6 +88,7 @@ class Sage {
 
         if (rc.getHealth() < 19) {
             destination = spawn;
+//            destination = Utils.nearestArchon(rc).translate(Utils.randomInt(-3,3), Utils.randomInt(-3, 3));
             // TODO change to closest archon
             toLeadFarm = true;
             int sages = rc.readSharedArray(57) - 1;

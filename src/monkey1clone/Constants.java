@@ -25,4 +25,6 @@ public class Constants {
     // 57 is sages
     // 58 is moving archons
     // [59, 63] stores Archon locations
+
+    // 48 is miners count
 }

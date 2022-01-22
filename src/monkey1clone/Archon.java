@@ -18,8 +18,6 @@ public class Archon {
     static int sinceMove = 50;
 
     static boolean myTurn = true;
-    // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
-    static int[] enemyEstimates = new int[64];
     static MapLocation destination = null;
     static MapLocation lowRubble = null;
     static boolean turret = true;
@@ -31,6 +29,7 @@ public class Archon {
         for (Direction dir : Constants.directions) {
             if (rc.canBuildRobot(type, dir)) {
                 int _rubble = rc.senseRubble(rc.adjacentLocation(dir))/10 + rc.adjacentLocation(dir).distanceSquaredTo(center);
+//                _rubble = rc.senseRubble(rc.adjacentLocation(dir)) + rc.adjacentLocation(dir).distanceSquaredTo(center);
                 if (_rubble < rubble) {
                     build = dir;
                     rubble = _rubble;
@@ -58,6 +57,7 @@ public class Archon {
             rc.buildRobot(type, build);
             if (type == RobotType.MINER) {
                 rc.writeSharedArray(56, 0);
+                rc.writeSharedArray(48, rc.readSharedArray(48)+ 1);
                 ++minersBuilt;
             }
             if (type == RobotType.SOLDIER) {
@@ -103,13 +103,13 @@ public class Archon {
         }
         if (best != null && rc.canRepair(best.location)) rc.repair(best.location);
 //        if (best != null) {
-//            if (rc.canRepair(best.location)) {
-//                rc.repair(best.location);
+////            if (rc.canRepair(best.location)) {
+////                rc.repair(best.location);
 //                if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
 //                if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
 //
 //                else toHeal = best.ID;
-//            }
+////            }
 //        } else toHeal = 0;
     }
 
@@ -131,9 +131,6 @@ public class Archon {
         }
         if (turret && rc.getMode() != RobotMode.TURRET) {
             if (rc.isTransformReady()) rc.transform();
-        }
-        for (int i = 2; i <= 17; ++i) {
-            enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
         }
         if (archonID == rc.getArchonCount()) {
             for (int i = 2; i < 35; ++i) {
@@ -178,6 +175,7 @@ public class Archon {
         }
         else {
             if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2) {
+//            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 && visibleEnemies == 0 && rc.getRoundNum() > 10) {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             // TODO don't spawn on rubble :skull:
@@ -231,7 +229,7 @@ public class Archon {
         }
 
 //        if (Utils.randomInt(1, allies) <= 3) {
-        rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
+        rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
 //        }
     }
 

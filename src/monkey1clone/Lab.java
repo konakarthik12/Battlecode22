@@ -12,7 +12,7 @@ class Lab {
     }
     static void run(RobotController rc) throws GameActionException {
         int lead = rc.getTeamLeadAmount(rc.getTeam());
-        if (lead > 300 && rc.canMutate(rc.getLocation())) rc.mutate(rc.getLocation());
+        if (lead > 150 && rc.canMutate(rc.getLocation()) && rc.getMapHeight() + rc.getMapWidth() < 100) rc.mutate(rc.getLocation());
         int opponentLead = rc.getTeamLeadAmount(rc.getTeam().opponent());
         //transmute if nearest archons tell us to
         if (rc.canTransmute() && ((rc.readSharedArray(56) & 1) == 0)) rc.transmute();

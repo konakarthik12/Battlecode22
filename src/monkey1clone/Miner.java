@@ -5,7 +5,6 @@ import battlecode.common.*;
 class Miner {
 
     static int numReached = 0;
-    static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
     static int near = 0;
@@ -15,8 +14,6 @@ class Miner {
     static boolean enemyArchon = false;
     static int lead = 0;
     static boolean pretendingDead = false;
-    static int turnsSearching = 0;
-    static boolean isSearching = true;
     static boolean isMinID = true;
 
     static void setup(RobotController rc) throws GameActionException {
@@ -78,6 +75,12 @@ class Miner {
             }
         }
 
+        if (rc.getHealth() < 10 && !pretendingDead) {
+            pretendingDead = true;
+            int minerEst = rc.readSharedArray(48);
+            rc.writeSharedArray(48, Math.max(minerEst-1, 0));
+        }
+
         rc.setIndicatorString(destination.toString());
         rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
     }
@@ -135,6 +138,7 @@ class Miner {
                         ++visibleAttackers;
                         break;
                     case ARCHON:
+                    case LABORATORY:
                         enemyArchon = true;
                 }
             }
@@ -178,10 +182,6 @@ class Miner {
             // maybe don't need to sense
         }
         lead = Math.min(lead / 10, 127);
-    }
-
-    static void writeShared(RobotController rc) throws GameActionException {
-
     }
 
     static void run(RobotController rc) throws GameActionException {
