@@ -6,84 +6,90 @@ import battlecode.common.*;
 class Builder {
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
+    static MapLocation toPlace = null;
+    static MapLocation wall = null;
     static MapLocation spawn;
 
-    static int nextMove(RobotController rc, MapLocation cur, int depth, Direction lastDir) throws GameActionException {
-        int curDist = cur.distanceSquaredTo(destination);
-        int score = Integer.MAX_VALUE;
-        int rubble = rc.senseRubble(cur);
-        if (rc.isLocationOccupied(cur) && cur != rc.getLocation()) rubble = 1000;
-        Direction nextDirection = Direction.CENTER;
-
-        if (cur.equals(destination)) {
-            return 0;
-        } else if (depth == 3) {
-            return (20 + rubble) + curDist;
-        }
-
-        int toDest = cur.directionTo(destination).ordinal();
-
-        for (int i = (7 + toDest); i < (10 + toDest); ++i) {
-            Direction dir = Constants.directions[i % 8];
-            if (dir.equals(lastDir.opposite())) continue;
-            MapLocation next = cur.add(dir);
-            if (rc.canSenseLocation(next)) {
-                int nextScore = 20 + rubble + nextMove(rc, next, depth + 1, dir);
-                if (score > nextScore) {
-                    score = nextScore;
-                    nextDirection = dir;
-                }
-            }
-        }
-
-
-        if (depth == 0) {
-            if (rc.canMove(nextDirection)) {
-                previousStep = nextDirection;
-                rc.move(nextDirection);
-            } else {
-                for (Direction dir : Constants.directions) {
-                    MapLocation next = cur.add(dir);
-                    if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
-                        if (rc.canMove(dir)) rc.move(dir);
-                    }
-                }
-            }
-        }
-
-        return score;
-    }
-
-    static void buildWatchTowerCardinal(RobotController rc) throws GameActionException {
-        if (rc.getLocation().equals(destination)) {
-            boolean arePrototypes = false;
-            for (Direction dir : Direction.cardinalDirections()) {
-                MapLocation dirLoc = rc.getLocation().add(dir);
-                if (rc.onTheMap(dirLoc)) {
-                    RobotInfo watchTower = rc.senseRobotAtLocation(dirLoc);
-                    if (watchTower != null && watchTower.team.isPlayer() && watchTower.mode == RobotMode.PROTOTYPE && rc.canRepair(dirLoc)) {
-                        rc.repair(dirLoc);
-                    } else if (rc.canBuildRobot(RobotType.WATCHTOWER, dir)) {
-                        rc.buildRobot(RobotType.WATCHTOWER, dir);
-                    }
-                }
-            }
-        }
-    }
+    static int close = 0;
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
+        int best = 1000;
+        if (spawn.distanceSquaredTo(new MapLocation(0, spawn.y)) < best) {
+            wall = new MapLocation(0, spawn.y);
+            best = spawn.distanceSquaredTo(new MapLocation(0, spawn.y));
+        } 
+        if (spawn.distanceSquaredTo(new MapLocation(rc.getMapWidth() - 1, spawn.y)) < best) {
+            wall = new MapLocation(rc.getMapWidth() - 1, spawn.y);
+            best = spawn.distanceSquaredTo(new MapLocation(rc.getMapWidth() - 1, spawn.y));
+        } 
+        if (spawn.distanceSquaredTo(new MapLocation(spawn.x, 0)) < best) {
+            wall = new MapLocation(spawn.x, 0);
+            best = spawn.distanceSquaredTo(new MapLocation(spawn.x, 0));
+        } 
+        if (spawn.distanceSquaredTo(new MapLocation(spawn.x, rc.getMapHeight() - 1)) < best) {
+            wall = new MapLocation(spawn.x, rc.getMapHeight() - 1);
+            best = spawn.distanceSquaredTo(new MapLocation(spawn.x, rc.getMapHeight() - 1));
+        } 
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (destination == null) {
-            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 3) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 3) + 3));
+        if (wall != null && rc.getLocation().isAdjacentTo(wall)) {
+            int cDist = Integer.MAX_VALUE;
+            int aDist = Utils.archonDist(wall);
+            int rubble = rc.senseRubble(rc.getLocation());
+            MapLocation best = wall;
+            for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(wall, 12)) {
+                if (!rc.canSenseLocation(loc))continue;
+                int rubble_ = rc.senseRubble(loc);
+                if (rubble_ < rubble && Utils.archonDist(loc) >= aDist) {
+                    best = loc;
+                    rubble = rubble_;
+                    aDist = Utils.archonDist(loc);
+                    cDist = Utils.cornerDist(rc, loc);
+                } else if (rubble_ == rubble && Utils.archonDist(loc) >= aDist 
+                && Utils.cornerDist(rc, loc) >= cDist) {
+                    best = loc;
+                    rubble = rubble_;
+                    aDist = Utils.archonDist(loc);
+                    cDist = Utils.cornerDist(rc, loc);
+                }
+            }
+            toPlace = best;
+            rubble = Integer.MAX_VALUE;
+            for (Direction dir : Constants.directions) {
+                if (rc.canSenseLocation(toPlace.add(dir)) && rc.senseRubble(toPlace.add(dir)) < rubble) {
+                    destination = toPlace.add(dir);
+                    rubble = rc.senseRubble(toPlace.add(dir));
+                }
+            }
+            wall = null;
         }
     }
-
+    static void act(RobotController rc) throws GameActionException {
+        if (rc.getLocation().equals(destination)) {
+            Direction dir = null;
+            for (Direction o : Constants.directions) {
+                if (destination.add(o).equals(toPlace)) dir = o;
+            }
+            if (rc.canBuildRobot(RobotType.LABORATORY, dir))rc.buildRobot(RobotType.LABORATORY, dir);
+        } else {
+            if (destination == null) Pathfinder.move(rc, wall);
+            else Pathfinder.move(rc, destination);
+        }
+    }
+    static void repair(RobotController rc) throws GameActionException {
+        for (RobotInfo info : rc.senseNearbyRobots()) {
+            if (rc.canRepair(info.location) && info.getHealth() < info.getType().getMaxHealth(info.getLevel()))rc.repair(info.location);
+        }
+    }
     static void run(RobotController rc) throws GameActionException {
         setDestination(rc);
-        nextMove(rc, rc.getLocation(), 0, previousStep);
-        if (rc.getLocation().equals(destination)) buildWatchTowerCardinal(rc);
+        act(rc);
+        repair(rc);
+        if (destination != null) {
+            rc.setIndicatorString(destination.toString());
+            rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
+        }
     }
 }

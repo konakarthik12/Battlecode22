@@ -74,7 +74,7 @@ public class Archon {
             }
         }
         temp = rc.readSharedArray(56);
-        if (temp / 2 > rc.readSharedArray(34) + 1) {
+        if (temp / 2 > rc.readSharedArray(34) && visibleEnemies == 0) {
             rc.writeSharedArray(56, temp | 1);
         }
     }
@@ -95,11 +95,10 @@ public class Archon {
         }
         if (best != null) {
             if (rc.canRepair(best.location)) {
+                toHeal = best.ID;
                 rc.repair(best.location);
                 if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
                 if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
-
-                else toHeal = best.ID;
             }
         } else toHeal = 0;
     }
@@ -138,6 +137,8 @@ public class Archon {
     }
 
     static void summonUnits(RobotController rc) throws GameActionException {
+        int xtra = 0;
+        if (rc.getMapWidth() + rc.getMapHeight() > (rc.getArchonCount() + 1)*25) xtra = 1;
         MapLocation[] leadLoc = rc.senseNearbyLocationsWithLead();
         if (minersBuilt <= 1) {
             if (visibleEnemies > 0) {
@@ -145,20 +146,30 @@ public class Archon {
             }
             if (leadLoc.length > 0) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
-                if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+
+                if (rc.canBuildRobot(RobotType.MINER, go)) {
+                    rc.buildRobot(RobotType.MINER, go);
+                    ++minersBuilt;
+                }
                 else {
                     go = go.rotateLeft();
-                    if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+                    if (rc.canBuildRobot(RobotType.MINER, go)) {
+                        rc.buildRobot(RobotType.MINER, go);
+                        ++minersBuilt;
+                    }
                     go = go.rotateRight().rotateRight();
-                    if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+                    if (rc.canBuildRobot(RobotType.MINER, go)) {
+                        rc.buildRobot(RobotType.MINER, go);
+                        ++minersBuilt;
+                    }
                 }
-                ++minersBuilt;
+                if (go == Direction.CENTER) summonUnitAnywhere(rc, RobotType.MINER);
             } else {
                 summonUnitAnywhere(rc, RobotType.MINER);
             }
         }
         else {
-            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2) {
+            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 + xtra) {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             // TODO don't spawn on rubble :skull:
@@ -168,14 +179,24 @@ public class Archon {
             }
             if (lead > 100 && visibleMiners == 0 && visibleAllies > visibleAttackers) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
-                if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+
+                if (rc.canBuildRobot(RobotType.MINER, go)) {
+                    rc.buildRobot(RobotType.MINER, go);
+                    ++minersBuilt;
+                }
                 else {
                     go = go.rotateLeft();
-                    if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+                    if (rc.canBuildRobot(RobotType.MINER, go)) {
+                        rc.buildRobot(RobotType.MINER, go);
+                        ++minersBuilt;
+                    }
                     go = go.rotateRight().rotateRight();
-                    if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+                    if (rc.canBuildRobot(RobotType.MINER, go)) {
+                        rc.buildRobot(RobotType.MINER, go);
+                        ++minersBuilt;
+                    }
                 }
-                ++minersBuilt;
+                if (go == Direction.CENTER) summonUnitAnywhere(rc, RobotType.MINER);
             } else if (visibleEnemies > 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 150) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
