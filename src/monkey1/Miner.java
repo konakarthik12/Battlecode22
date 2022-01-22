@@ -154,11 +154,14 @@ class Miner {
 
     static void mine(RobotController rc) throws GameActionException {
         //TODO make miners not clump up
+        boolean gold = false;
         MapLocation[] goldLocations = rc.senseNearbyLocationsWithGold();
         for (MapLocation loc : goldLocations) {
             while (rc.canMineGold(loc)) rc.mineGold(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
-            // maybe don't need to sense
+            if (rc.canSenseLocation(loc) && rc.senseGold(loc) > 0 && isMinID) {
+                destination = loc;
+                gold = true;
+            }
         }
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         lead = 0;
@@ -166,7 +169,7 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
-            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID && Utils.randomInt(1, near) <= 1) {
+            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID && Utils.randomInt(1, near) <= 1) {
                 destination = loc;
                 hiLead = rc.senseLead(loc);
             }
@@ -187,7 +190,7 @@ class Miner {
         setDestination(rc);
         move(rc);
         mine(rc);
-
+        rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
         writeQuadrantInformation(rc);
 
 //        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {

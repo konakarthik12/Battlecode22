@@ -49,16 +49,33 @@ public class Archon {
             }
         }
         if (type == RobotType.SOLDIER) {
-            if (rc.getTeamGoldAmount(rc.getTeam()) >= 20 || (sagesBuilt == 0 && soldiersBuilt > 0)) {
+            if (rc.getTeamGoldAmount(rc.getTeam()) >= 20 || (sagesBuilt == 0 && soldiersBuilt > 0 && rc.getTeamLeadAmount(rc.getTeam()) < 200)) {
                 type = RobotType.SAGE;
             }
         }
+        int temp = rc.readSharedArray(56);
         if (rc.canBuildRobot(type, build)) {
             rc.buildRobot(type, build);
-            if (type == RobotType.MINER) ++minersBuilt;
-            if (type == RobotType.SOLDIER) ++soldiersBuilt;
-            if (type == RobotType.BUILDER) ++buildersBuilt;
-            if (type == RobotType.SAGE) ++sagesBuilt;
+            if (type == RobotType.MINER) {
+                rc.writeSharedArray(56, 0);
+                ++minersBuilt;
+            }
+            if (type == RobotType.SOLDIER) {
+                rc.writeSharedArray(56, temp + 2);
+                ++soldiersBuilt;
+            }
+            if (type == RobotType.BUILDER) {
+                rc.writeSharedArray(56, temp + 2);
+                ++buildersBuilt;
+            }
+            if (type == RobotType.SAGE) {
+                rc.writeSharedArray(56, temp + 2);
+                ++sagesBuilt;
+            }
+        }
+        temp = rc.readSharedArray(56);
+        if (temp / 2 > rc.readSharedArray(34) + 1) {
+            rc.writeSharedArray(56, temp | 1);
         }
     }
 
@@ -68,9 +85,9 @@ public class Archon {
         RobotInfo best = null;
         for (RobotInfo r : info) {
             if (toHeal == 0) {
-                if (r.health < lowest && (r.type == RobotType.SOLDIER || r.type == RobotType.SAGE)) {
-                    lowest = r.health;
+                if ((r.type == RobotType.SOLDIER || r.type == RobotType.SAGE) && r.health < lowest) {
                     best = r;
+                    lowest = r.health;
                 }
             } else if (r.ID == toHeal) {
                 best = r;
@@ -79,7 +96,9 @@ public class Archon {
         if (best != null) {
             if (rc.canRepair(best.location)) {
                 rc.repair(best.location);
-                if (best.health >= 44) toHeal = 0;
+                if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
+                if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
+
                 else toHeal = best.ID;
             }
         } else toHeal = 0;
@@ -108,7 +127,7 @@ public class Archon {
             enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
         }
         if (archonID == rc.getArchonCount()) {
-            for (int i = 2; i < 34; ++i) {
+            for (int i = 2; i < 35; ++i) {
                 int fromShared = rc.readSharedArray(i);
                 if ((fromShared >> 15) == 1) {
                     rc.writeSharedArray(i, fromShared - (1 << 15));
@@ -139,7 +158,7 @@ public class Archon {
             }
         }
         else {
-            if (buildersBuilt == 0 && myTurn) {
+            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2) {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             // TODO don't spawn on rubble :skull:
@@ -159,11 +178,11 @@ public class Archon {
                     if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 }
                 ++minersBuilt;
-            } else if (myTurn && (rc.readSharedArray(1) < rc.readSharedArray(0) - 10) || visibleEnemies > 0) {
+            } else if (visibleEnemies > 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 150) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
-            } else if (myTurn && Utils.randomInt(1, minersBuilt + rc.getArchonCount() - 1) <= 1) {
+            } else if (myTurn && (rc.readSharedArray(56) & 1) == 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
                 //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
             } else if (myTurn) {

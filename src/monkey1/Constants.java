@@ -21,6 +21,7 @@ public class Constants {
     // [0,1] stores enemy and friendly visible soldier/enemy counts
     // [2, 26] stores quadrant information about enemies and allies and lead and att
     // [27, 33] is focus fire
+    // 56 is lab/archon comm
     // 57 is sages
     // 58 is moving archons
     // [59, 63] stores Archon locations
