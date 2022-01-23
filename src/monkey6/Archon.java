@@ -1,4 +1,4 @@
-package monkey2clone;
+package monkey6;
 
 import battlecode.common.*;
 
@@ -95,7 +95,6 @@ public class Archon {
         if (rc.getRoundNum() <= 4) {
             if (visibleEnemies > 0) summonUnitAnywhere(rc, RobotType.SOLDIER);
             if (leadLoc.length > 0) {
-                System.out.println(leadLoc.length + " ?? " + rc.getRoundNum());
                 int lowRubble = Integer.MAX_VALUE;
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
                 Direction build = go;
@@ -121,7 +120,6 @@ public class Archon {
                     ++minersBuilt;
                 }
             } else {
-                System.out.println("HI???");
                 summonUnitAnywhere(rc, RobotType.MINER);
             }
         }

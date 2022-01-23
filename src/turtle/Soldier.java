@@ -82,6 +82,7 @@ class Soldier {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
+        averageSoldier = 250 + 2 * (Utils.width + Utils.height) + rc.getRoundNum()/50;
         MapLocation cur = rc.getLocation();
         if (sinceLastAttack > 3) readQuadrant(rc);
 

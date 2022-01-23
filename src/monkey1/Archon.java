@@ -168,6 +168,8 @@ public class Archon {
             }
             if (lead > 100 && visibleMiners == 0 && visibleAllies > visibleAttackers) {
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
+                Direction left = go.rotateLeft();
+                Direction right = go.rotateRight();
                 if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
                 else {
                     go = go.rotateLeft();
