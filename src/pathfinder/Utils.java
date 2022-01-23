@@ -1,7 +1,10 @@
 package pathfinder;
 
+import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 class Utils {
@@ -23,5 +26,14 @@ class Utils {
      */
     static int randomInt(int a, int b) {
         return Utils.rng.nextInt(b - a + 1) + a;
+    }
+
+
+    public static void main(String[] args) {
+        ArrayList<List<MapLocation>> paths;
+    }
+
+    static void search(MapLocation cur) {
+
     }
 }

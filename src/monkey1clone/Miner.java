@@ -183,9 +183,7 @@ class Miner {
         rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
         writeQuadrantInformation(rc);
 
-//        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-//            rc.writeSharedArray(Utils.randomInt(0, 4), (1 << 12) + (robotInfo.location.x << 6) + robotInfo.location.y);
-//            break;
-//        }
+//        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
+
     }
 }

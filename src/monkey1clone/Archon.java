@@ -146,6 +146,7 @@ public class Archon {
             }
         }
         rc.writeSharedArray(64 - archonID, (1 << 15) + (rc.getLocation().x << 6) + rc.getLocation().y);
+//        rc.writeSharedArray(48, 0);
     }
 
     static void summonUnits(RobotController rc) throws GameActionException {
@@ -179,28 +180,32 @@ public class Archon {
             }
         }
         else {
-//            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2) {
             if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 && rc.getRoundNum() > 10) {
-//            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 && visibleEnemies == 0 && rc.getRoundNum() > 10) {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
-            // TODO don't spawn on rubble :skull:
             int lead = 0;
             for (MapLocation loc : leadLoc) {
                 lead += rc.senseLead(loc);
             }
             if (lead > 100 && visibleMiners == 0 && visibleAllies > visibleAttackers) {
+//                Direction go = rc.getLocation().directionTo(leadLoc[0]);
                 Direction go = rc.getLocation().directionTo(leadLoc[0]);
-                Direction left = go.rotateLeft();
-                Direction right = go.rotateRight();
-                if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
-                else {
-                    go = go.rotateLeft();
-                    if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
-                    go = go.rotateRight().rotateRight();
-                    if (rc.canBuildRobot(RobotType.MINER, go)) rc.buildRobot(RobotType.MINER, go);
+                if (rc.canBuildRobot(RobotType.MINER, go)) {
+                    rc.buildRobot(RobotType.MINER, go);
+                    ++minersBuilt;
                 }
-                ++minersBuilt;
+                go = go.rotateLeft();
+                if (rc.canBuildRobot(RobotType.MINER, go)) {
+                    rc.buildRobot(RobotType.MINER, go);
+                    ++minersBuilt;
+                }
+                go = go.rotateRight().rotateRight();
+                if (rc.canBuildRobot(RobotType.MINER, go)) {
+                    rc.buildRobot(RobotType.MINER, go);
+                    ++minersBuilt;
+                }
+
+//                summonUnitAnywhere(rc, RobotType.MINER);
             } else if (visibleEnemies > 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 150) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
