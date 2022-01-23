@@ -66,19 +66,13 @@ class Miner {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
+        // TODO pick walls
         if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
-//            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
             while (destination.x != 0 && destination.x != rc.getMapWidth() - 1 && destination.y != 0 && destination.y != rc.getMapHeight() - 1) {
                 destination = destination.add(rc.getLocation().directionTo(destination));
             }
-        }
-
-        if (rc.getHealth() < 10 && !pretendingDead) {
-            pretendingDead = true;
-            int minerEst = rc.readSharedArray(48);
-            rc.writeSharedArray(48, Math.max(minerEst-1, 0));
         }
 
         rc.setIndicatorString(destination.toString());
@@ -115,10 +109,6 @@ class Miner {
         int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
             rc.writeSharedArray(2 + quadrant, writeValue);
         assert(quadrant < 27);
-    }
-
-    static void readSharedArray(RobotController rc) throws GameActionException {
-
     }
 
     static void senseEnemies(RobotController rc) throws GameActionException {

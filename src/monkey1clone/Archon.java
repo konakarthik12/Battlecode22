@@ -22,13 +22,18 @@ public class Archon {
     static MapLocation lowRubble = null;
     static boolean turret = true;
 
+    static int manhattan(MapLocation a, MapLocation b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
     static void summonUnitAnywhere(RobotController rc, RobotType type) throws GameActionException {
         Direction build = Direction.EAST;
-        int rubble = 1000;
+        int rubble = 100000;
         MapLocation center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         for (Direction dir : Constants.directions) {
             if (rc.canBuildRobot(type, dir)) {
                 int _rubble = rc.senseRubble(rc.adjacentLocation(dir))/10 + rc.adjacentLocation(dir).distanceSquaredTo(center);
+//                _rubble = rc.senseRubble(rc.adjacentLocation(dir)) + manhattan(rc.adjacentLocation(dir), center);
 //                _rubble = rc.senseRubble(rc.adjacentLocation(dir)) + rc.adjacentLocation(dir).distanceSquaredTo(center);
                 if (_rubble < rubble) {
                     build = dir;
@@ -174,7 +179,8 @@ public class Archon {
             }
         }
         else {
-            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2) {
+//            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2) {
+            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 && rc.getRoundNum() > 10) {
 //            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 && visibleEnemies == 0 && rc.getRoundNum() > 10) {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
