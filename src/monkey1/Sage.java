@@ -298,7 +298,7 @@ class Sage {
         setDestination(rc);
         act(rc);
 
-        rc.setIndicatorString(destination.toString());
+        //rc.setIndicatorString(destination.toString());
         if (enemyLoc != null) {
             rc.setIndicatorLine(rc.getLocation(), enemyLoc, 255, 0, 0);
         } else {

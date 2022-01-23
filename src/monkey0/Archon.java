@@ -1,9 +1,9 @@
-package monkey1;
+package monkey0;
 
 import battlecode.common.*;
 
 public class Archon {
-
+    static int archonCount = 0;
     static int archonID = 0;
     static MapLocation old = null;
     static int minersBuilt = 0;
@@ -19,7 +19,6 @@ public class Archon {
 
     static boolean myTurn = true;
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
-    static int[] enemyEstimates = new int[64];
     static MapLocation destination = null;
     static MapLocation lowRubble = null;
     static boolean turret = true;
@@ -55,12 +54,12 @@ public class Archon {
         }
         int temp = rc.readSharedArray(56);
         if (rc.canBuildRobot(type, build)) {
-            rc.buildRobot(type, build);
             if (type == RobotType.MINER) {
                 rc.writeSharedArray(56, 0);
                 ++minersBuilt;
             }
             if (type == RobotType.SOLDIER) {
+                if (rc.readSharedArray(55) > 0) return;
                 rc.writeSharedArray(56, temp + 2);
                 ++soldiersBuilt;
             }
@@ -72,9 +71,11 @@ public class Archon {
                 rc.writeSharedArray(56, temp + 2);
                 ++sagesBuilt;
             }
+            rc.buildRobot(type, build);
         }
         temp = rc.readSharedArray(56);
-        if (temp / 2 > rc.readSharedArray(34) && visibleEnemies == 0) {
+        if (temp / 2 > rc.readSharedArray(34) / 2) {
+            if (rc.getRoundNum() > 1500) System.out.println("YEP");
             rc.writeSharedArray(56, temp | 1);
         }
     }
@@ -85,9 +86,12 @@ public class Archon {
         RobotInfo best = null;
         for (RobotInfo r : info) {
             if (toHeal == 0) {
-                if ((r.type == RobotType.SOLDIER || r.type == RobotType.SAGE) && r.health < lowest) {
+                if (r.type == RobotType.SOLDIER && r.health < lowest) {
                     best = r;
                     lowest = r.health;
+                } else if (r.type == RobotType.SAGE && (r.health+1)/2 < lowest) {
+                    best = r;
+                    lowest = (r.health+1)/2;
                 }
             } else if (r.ID == toHeal) {
                 best = r;
@@ -97,13 +101,14 @@ public class Archon {
             if (rc.canRepair(best.location)) {
                 toHeal = best.ID;
                 rc.repair(best.location);
-                if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
-                if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
+                if (best.type == RobotType.SOLDIER && best.health >= 44) toHeal = 0;
+                if (best.type == RobotType.SAGE && best.health >= 94) toHeal = 0;
             }
         } else toHeal = 0;
     }
 
     static void setup(RobotController rc) throws GameActionException {
+        archonCount = rc.getArchonCount();
         old = rc.getLocation();
         int ind = 63;
         while (rc.readSharedArray(ind) != 0) --ind;
@@ -122,8 +127,17 @@ public class Archon {
         if (turret && rc.getMode() != RobotMode.TURRET) {
             if (rc.isTransformReady()) rc.transform();
         }
-        for (int i = 2; i <= 17; ++i) {
-            enemyEstimates[i] = (enemyEstimates[i]*4 + rc.readSharedArray(i))/5;
+        if (rc.getArchonCount() < archonCount) {
+            if (rc.readSharedArray(64 - archonCount) != 0) {
+                for (int i = 63; i > 59; i--) {
+                    rc.writeSharedArray(i, 0);
+                }
+            }
+            archonCount = rc.getArchonCount();
+            int ind = 63;
+            while (rc.readSharedArray(ind) != 0) --ind;
+            archonID = 64 - ind;
+            rc.writeSharedArray(ind, (1 << 15) + (rc.getLocation().x << 6) + rc.getLocation().y);
         }
         if (archonID == rc.getArchonCount()) {
             for (int i = 2; i < 35; ++i) {
@@ -197,14 +211,15 @@ public class Archon {
                     }
                 }
                 if (go == Direction.CENTER) summonUnitAnywhere(rc, RobotType.MINER);
-            } else if (visibleEnemies > 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 150) {
+            } else if (rc.getTeamLeadAmount(rc.getTeam()) >= 150 || rc.getTeamGoldAmount(rc.getTeam()) >= 40) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
 //            } else if (Utils.randomInt(1, rc.getArchonCount() * 2) <= 1) {
             } else if (myTurn && (rc.readSharedArray(56) & 1) == 1) {
                 summonUnitAnywhere(rc, RobotType.MINER);
                 //rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
-            } else if (myTurn) {
+            } else if (myTurn && (rc.getTeamGoldAmount(rc.getTeam()) >= 20 || rc.getRoundNum()%2 == 0
+            || rc.getMapWidth() + rc.getMapHeight() >= 50)) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             }
@@ -262,7 +277,7 @@ public class Archon {
             //System.out.println("HI?");
             turret = false;
             rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
-        } else if (rc.senseRubble(rc.getLocation()) >= 30 && turret && rc.readSharedArray(58) < rc.getArchonCount() - 1) {
+        } else if ((rc.senseRubble(rc.getLocation()) >= 30 && turret && rc.readSharedArray(58) < rc.getArchonCount() - 1)) {
             MapLocation cur = rc.getLocation();
             int rubble = rc.senseRubble(cur);
             dist = Integer.MAX_VALUE;
@@ -321,8 +336,9 @@ public class Archon {
     }
 
     static void run(RobotController rc) throws GameActionException {
-
         myTurn = (rc.getRoundNum() % (rc.getArchonCount()) + 1) == archonID;
+        if (rc.getTeamGoldAmount(rc.getTeam()) >= 40 
+        || rc.getTeamLeadAmount(rc.getTeam()) >= 200) myTurn = true;
         senseEnemies(rc);
         summonUnits(rc);
         move(rc);
@@ -338,3 +354,5 @@ public class Archon {
         }
     }
 }
+
+

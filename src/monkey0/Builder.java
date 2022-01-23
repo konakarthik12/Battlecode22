@@ -1,4 +1,4 @@
-package monkey2;
+package monkey0;
 
 import battlecode.common.*;
 
@@ -72,7 +72,10 @@ class Builder {
             for (Direction o : Constants.directions) {
                 if (destination.add(o).equals(toPlace)) dir = o;
             }
-            if (rc.canBuildRobot(RobotType.LABORATORY, dir))rc.buildRobot(RobotType.LABORATORY, dir);
+            if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
+                rc.writeSharedArray(55, 0);
+                rc.buildRobot(RobotType.LABORATORY, dir);
+            }
         } else {
             if (destination == null) Pathfinder.move(rc, wall);
             else Pathfinder.move(rc, destination);
@@ -84,6 +87,10 @@ class Builder {
         }
     }
     static void run(RobotController rc) throws GameActionException {
+        if (rc.getRoundNum() == 400) {
+            wall = rc.getLocation();
+            rc.writeSharedArray(55, 1);
+        }
         setDestination(rc);
         act(rc);
         repair(rc);
