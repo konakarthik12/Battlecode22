@@ -30,7 +30,7 @@ class Pathfinder {
                 int dy = mapLocation.y - rcCur.y;
                 builder.append(rc.getLocation().directionTo(dest)+":"+"[" + dx + "," + dy + "]");
             }
-            System.out.println(builder);
+//            System.out.println(builder);
         } else {
             long rubble = smartRubble(cur);
             Pair bestMove = null;
