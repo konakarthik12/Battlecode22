@@ -1,8 +1,6 @@
-package monkey2clone;
+package monkey6;
 
 import battlecode.common.*;
-
-import java.awt.*;
 
 
 class Soldier {
@@ -141,7 +139,7 @@ class Soldier {
             attack(rc);
         }
         if (visibleEnemies > 0) {
-            if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
+            if (!(enemy.type == RobotType.SOLDIER)) {
                 Pathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
@@ -302,7 +300,6 @@ class Soldier {
         act(rc);
 
         rc.setIndicatorString(destination.toString());
-        rc.setIndicatorLine(rc.getLocation(), destination, 0, 200, 200);
         if (enemyLoc != null) {
             rc.setIndicatorLine(rc.getLocation(), enemyLoc, 255, 0, 0);
         } else {
