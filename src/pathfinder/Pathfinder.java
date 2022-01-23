@@ -12,21 +12,25 @@ class Pathfinder {
     private static RobotController rc;
     static MapLocation rcCur, dest;
     private static HashMap<MapLocation, Pair> memoize;
+    private static final HashSet<MapLocation> set = new HashSet<>();
 
     static Pair recurse(List<MapLocation> path) throws GameActionException {
+        count++;
         MapLocation cur = path.get(path.size() - 1);
-        if (memoize.containsKey(cur)) return memoize.get(cur);
+        if(memoize.containsKey(cur)) return memoize.get(cur);
         List<MapLocation> bestPath = new ArrayList<>();
         long finalScore;
-//        if (cur.equals(dest)) finalScore = 0;
-//        else if (!inBounds(cur)) finalScore = 100000;
-////        else if (!rc.canSenseLocation(cur)) finalScore = manhattan(cur, dest) * (2 * RUBBLE_ESTIMATE + 20);
-//        else if (!rc.canSenseLocation(cur)) finalScore = manhattan(cur) * (2 * RUBBLE_ESTIMATE + 20);
-////        else if (!rc.canSenseLocation(cur)) finalScore =rc.getLocation().distanceSquaredTo(dest);
-//        else if (occupied(cur)) finalScore = 100000;
-        if (!rc.canSenseLocation(cur)) {
-//            finalScore = (manhattan(cur) + chevyChev(cur, dest)) / 2 * (2 * RUBBLE_ESTIMATE + 20);
-            finalScore = cur.distanceSquaredTo(dest);
+
+        int distFromRc = rc.getLocation().distanceSquaredTo(cur);
+        if (distFromRc > 20) {
+            finalScore = manChevy(cur) * (2 * RUBBLE_ESTIMATE + 20);
+            StringBuilder builder = new StringBuilder();
+            for (MapLocation mapLocation : path) {
+                int dx = mapLocation.x - rcCur.x;
+                int dy = mapLocation.y - rcCur.y;
+                builder.append(rc.getLocation().directionTo(dest)+":"+"[" + dx + "," + dy + "]");
+            }
+            System.out.println(builder);
         } else {
             long rubble = smartRubble(cur);
             Pair bestMove = null;
@@ -42,14 +46,19 @@ class Pathfinder {
                 List<MapLocation> newPath = new ArrayList<>(path);
                 newPath.add(newLoc);
                 if (path.contains(newLoc)) continue;
+//                if (set.contains(newLoc)) continue;
 
                 Pair newMove = recurse(newPath);
-
+                if (newMove == null) continue;
                 if (bestMove == null || newMove.score < bestMove.score) {
                     bestMove = newMove;
                 }
             }
-            assert bestMove != null;
+
+            if (bestMove == null) {
+                return null;
+            }
+//            assert bestMove != null;
             bestPath.addAll(bestMove.list);
 
             finalScore = rubble + bestMove.score;
@@ -63,13 +72,17 @@ class Pathfinder {
         return pair;
     }
 
+    static int count = 0;
 
     public static Direction pathfind() throws GameActionException {
-
         if (rcCur.equals(dest)) return Direction.CENTER;
         if (rcCur.isAdjacentTo(dest)) return rcCur.directionTo(dest);
         memoize = new HashMap<>();
+        count = 0;
         Pair bestRecurse = recurse(Collections.singletonList(rcCur));
+//        assert count == 18 || count == 19;
+//        System.out.println(count);
+//        System.exit(0);
         assert bestRecurse != null;
         List<MapLocation> bestPath = bestRecurse.list;
 
@@ -142,12 +155,16 @@ class Pathfinder {
         return 2 * rubble(loc) + 20;
     }
 
-    static int chevyChev(MapLocation a, MapLocation b) {
-        return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+    static int chevyChev(MapLocation a) {
+        return Math.max(Math.abs(a.x - dest.x), Math.abs(a.y - dest.y));
     }
 
     static long manhattan(MapLocation a) {
         return Math.abs(a.x - dest.x) + Math.abs(a.y - dest.y);
+    }
+
+    static long manChevy(MapLocation a) {
+        return (chevyChev(a) + manhattan(a)) / 2;
     }
 
     static long smartRubble(MapLocation cur) throws GameActionException {
@@ -170,6 +187,24 @@ class Pathfinder {
         public Pair(Long a, List<MapLocation> list) {
             this.score = a;
             this.list = list;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Pair pair = (Pair) o;
+            return score.equals(pair.score) && list.equals(pair.list);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(score, list);
+        }
+
+        @Override
+        public String toString() {
+            return score + " " + list;
         }
     }
 
