@@ -75,7 +75,6 @@ public class Archon {
         }
         temp = rc.readSharedArray(56);
         if (temp / 2 > rc.readSharedArray(34) / 2) {
-            if (rc.getRoundNum() > 1500) System.out.println("YEP");
             rc.writeSharedArray(56, temp | 1);
         }
     }
@@ -183,8 +182,16 @@ public class Archon {
             }
         }
         else {
-            if (buildersBuilt == 0 && myTurn && archonID <= (rc.getArchonCount() + 1) / 2 + xtra) {
-                summonUnitAnywhere(rc, RobotType.BUILDER);
+            if (rc.getRoundNum() < 50 && buildersBuilt == 0 && myTurn) {
+                int nid = 0;
+                int myDist = Utils.cornerDist(rc, rc.getLocation());
+
+                for (int i = 1; i <= rc.getArchonCount(); i++) {
+                    MapLocation loc = new MapLocation((rc.readSharedArray(64 - i) >> 6) & 63, rc.readSharedArray(64 - i) & 63);
+                    int oDist = Utils.cornerDist(rc, loc);
+                    if (myDist > oDist || (myDist == oDist && archonID >= i))nid++;
+                }
+                if (nid <= (rc.getArchonCount() + 1) / 2 + xtra) summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             // TODO don't spawn on rubble :skull:
             int lead = 0;

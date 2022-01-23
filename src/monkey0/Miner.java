@@ -118,7 +118,7 @@ class Miner {
         enemyArchon = false;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam())) {
-                if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
+                if (info.type.equals(RobotType.SOLDIER) || info.type.equals(RobotType.SAGE)) ++visibleAllies;
             } else {
                 ++visibleEnemies;
                 switch (info.type) {
@@ -168,8 +168,6 @@ class Miner {
                 hiLead = rc.senseLead(loc);
             }
             lead += rc.senseLead(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
-            // maybe don't need to sense
         }
         lead = Math.min(lead / 10, 127);
     }
