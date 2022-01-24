@@ -88,30 +88,32 @@ class Miner {
 
         int curDist = curLoc.distanceSquaredTo(destination);
 
-        int startCount = Clock.getBytecodeNum();
-        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
+        UnrolledPathfinder.move(rc, destination);
+
+//        int startCount = Clock.getBytecodeNum();
 //        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
-
-        if (rc.canMove(nextDirection)) {
-            previousStep = nextDirection;
-            rc.move(nextDirection);
-        } else if (curDist > 2) {
-            for (Direction dir : Constants.directions) {
-                MapLocation next = curLoc.add(dir);
-                if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
-                    if (rc.canMove(dir)) rc.move(dir);
-                }
-            }
-        }
-
-
-        if (rc.getRoundNum() >= 1998) {
-            System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
-            int x = rc.readSharedArray(20);
-            rc.writeSharedArray(20, x + numReached);
-            rc.disintegrate();
-        }
-
+////        Direction nextDirection = UnrolledPathfinder.pathfind(rc, destination);
+//
+//        if (rc.canMove(nextDirection)) {
+//            previousStep = nextDirection;
+//            rc.move(nextDirection);
+//        } else if (curDist > 2) {
+//            for (Direction dir : Constants.directions) {
+//                MapLocation next = curLoc.add(dir);
+//                if (rc.canSenseLocation(next) && next.distanceSquaredTo(destination) <= curDist) {
+//                    if (rc.canMove(dir)) rc.move(dir);
+//                }
+//            }
+//        }
+//
+//
+//        if (rc.getRoundNum() >= 1998) {
+//            System.out.println(rc.getID() + " Reached " + numReached + " Locations " + called);
+//            int x = rc.readSharedArray(20);
+//            rc.writeSharedArray(20, x + numReached);
+//            rc.disintegrate();
+//        }
+//
 
     }
 }

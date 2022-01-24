@@ -155,7 +155,7 @@ class Sage {
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
-                Pathfinder.move(rc, enemyLoc);
+                UnrolledPathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
             }
@@ -216,18 +216,18 @@ class Sage {
                 } else {
                     attack(rc);
                     if (rc.canMove(go)) rc.move(go);
-                    else Pathfinder.move(rc, spawn);
+                    else UnrolledPathfinder.move(rc, spawn);
                 }
             } else if (rc.canMove(go)) {
                 rc.move(go);
             } else {
-                Pathfinder.move(rc, spawn);
+                UnrolledPathfinder.move(rc, spawn);
             }
         } else if (visibleAttackers > visibleAllies) {
             attack(rc);
-            Pathfinder.move(rc, spawn);
+            UnrolledPathfinder.move(rc, spawn);
         } else {
-            Pathfinder.move(rc, destination);
+            UnrolledPathfinder.move(rc, destination);
             attack(rc);
         }
     }

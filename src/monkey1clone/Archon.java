@@ -22,6 +22,22 @@ public class Archon {
     static MapLocation lowRubble = null;
     static boolean turret = true;
 
+    static void writeQuadrantInformation(RobotController rc) throws GameActionException {
+        // TODO test no random as well
+        MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
+        int lead = leadLocations.length;
+        MapLocation cur = rc.getLocation();
+        int quadrant = 5 * (5 * cur.x / rc.getMapWidth()) + (5 * cur.y / rc.getMapHeight());
+        // indices 2 - 17 are quadrant information for enemies and allies
+        if (visibleEnemies > 0) visibleEnemies = 1;
+        if (lead > 15) lead = 15;
+        if (visibleAllies > 31) visibleAllies = 31;
+        if (visibleAttackers > 31) visibleAttackers = 31;
+        int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
+        rc.writeSharedArray(2 + quadrant, writeValue);
+        assert(quadrant < 27);
+    }
+
     static int manhattan(MapLocation a, MapLocation b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
@@ -89,6 +105,8 @@ public class Archon {
         int lowest = 1000;
         int score = Integer.MAX_VALUE;
         RobotInfo best = null;
+        toHeal = 0;
+        // heal units below 45 life
         for (RobotInfo r : info) {
             int multiplier = 1;
             if (r.type == RobotType.SOLDIER || r.type == RobotType.SAGE) multiplier = 0;
@@ -183,6 +201,8 @@ public class Archon {
                 summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             int lead = 0;
+            int miners = rc.readSharedArray(48);
+            int carrying = 20 + rc.getRoundNum() / (200 - Utils.width - Utils.height);
             for (MapLocation loc : leadLoc) {
                 lead += rc.senseLead(loc);
             }
@@ -205,7 +225,9 @@ public class Archon {
                 }
 
 //                summonUnitAnywhere(rc, RobotType.MINER);
-            } else if (visibleEnemies > 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 150) {
+//            } else if (visibleEnemies > 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 200) {
+//            } else if (myTurn && (visibleEnemies > 0 || visibleAttackers > visibleAllies || Utils.randomInt(1, 2 * carrying) < miners)) {
+            } else if (myTurn && (visibleEnemies > 0 || Utils.randomInt(1, 2*carrying) < miners)) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
                 rc.writeSharedArray(1, rc.readSharedArray(1) + 1);
             } else if (myTurn && (rc.readSharedArray(56) & 1) == 1) {
@@ -243,12 +265,18 @@ public class Archon {
 //        }
     }
 
+    static int totalAttackers = 0;
+    static int totalAllies = 0;
+
     static void readQuadrant(RobotController rc) throws GameActionException {
         int dist = Integer.MAX_VALUE;
-        int ddist = Integer.MAX_VALUE;
+        totalAllies = 0;
+        totalAttackers = 0;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
             int visAttackers = rc.readSharedArray(quadrant) & 31;
             int visAllies = (rc.readSharedArray(quadrant) >> 5) & 31;
+            totalAllies += visAllies;
+            totalAttackers += visibleAttackers;
             int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + rc.getMapWidth()/10;
             int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + rc.getMapHeight()/10;
             MapLocation target = new MapLocation(x, y);
@@ -322,7 +350,7 @@ public class Archon {
     }
 
     static void run(RobotController rc) throws GameActionException {
-        if (rc.getTeamLeadAmount(rc.getTeam()) > 300 && rc.canMutate(rc.getLocation())) rc.mutate(rc.getLocation());
+//        if (rc.getTeamLeadAmount(rc.getTeam()) > 300 && rc.canMutate(rc.getLocation())) rc.mutate(rc.getLocation());
 
         myTurn = (rc.getRoundNum() % (rc.getArchonCount()) + 1) == archonID;
         senseEnemies(rc);
@@ -338,5 +366,6 @@ public class Archon {
         } else {
             sinceMove = 0;
         }
+        writeQuadrantInformation(rc);
     }
 }

@@ -1,6 +1,8 @@
-package monkey0;
+package monkey0clone2;
 
 import battlecode.common.*;
+
+
 
 
 class Builder {
@@ -64,8 +66,8 @@ class Builder {
                 close++;
             }
         } else {
-            if (destination == null) UnrolledPathfinder.move(rc, wall);
-            else UnrolledPathfinder.move(rc, destination);
+            if (destination == null) Pathfinder.move(rc, wall);
+            else Pathfinder.move(rc, destination);
         }
     }
     static void repair(RobotController rc) throws GameActionException {
@@ -78,10 +80,6 @@ class Builder {
             wall = rc.getLocation();
             rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
             cntr *= 2;
-        } else if (rc.readSharedArray(54) > 0) {
-            wall = rc.getLocation();
-            rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
-            rc.writeSharedArray(54, 0);
         }
         setDestination(rc);
         act(rc);

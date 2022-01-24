@@ -11,9 +11,6 @@ public class Archon {
     static int soldiersBuilt = 0;
     static int enemiesInVision = 0;
 
-    static int previousMiners = 0;
-    static int minerDeaths = 0; // make it more likely to spawn soldiers
-
     // TODO: test adding ceil(enemies/(visible allies)) or other averaging schemes
     // TODO: store index representing which quadrant has most fighting
     // TODO: add code to heal lowest health units
@@ -115,8 +112,6 @@ public class Archon {
             boolean ok = Utils.randomInt(1, rc.getArchonCount()) == 1;
 
             if ((ok && numSoldiers < numEnemies) || enemiesInVision > 0 || roll < rc.readSharedArray(58)) {
-//                if (Utils.randomInt(1, 10) == 1) summonUnitAnywhere(rc, RobotType.BUILDER);
-                if (rc.getTeamLeadAmount(Utils.team) > 200 && Utils.randomInt(1, 3) == 1) summonUnitAnywhere(rc, RobotType.BUILDER);
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
             } else if (ok) {
                 if (Utils.randomInt(1, rc.getArchonCount()) == 1) {
@@ -124,13 +119,6 @@ public class Archon {
                     summonUnitAnywhere(rc, RobotType.MINER);
                 }
             }
-
-//            if (numSoldiers-3 < numEnemies || enemiesInVision > 0 || roll < rc.readSharedArray(58)) {
-//                summonUnitAnywhere(rc, RobotType.SOLDIER);
-//            } else {
-//                if (Utils.randomInt(1, rc.getArchonCount()) == 1)
-//                summonUnitAnywhere(rc, RobotType.MINER);
-//            }
         }
     }
 

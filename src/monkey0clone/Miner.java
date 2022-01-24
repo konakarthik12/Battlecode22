@@ -1,4 +1,4 @@
-package monkey1clone;
+package monkey0clone;
 
 import battlecode.common.*;
 
@@ -13,7 +13,6 @@ class Miner {
     static int visibleAttackers = 0;
     static boolean enemyArchon = false;
     static int lead = 0;
-    static int lastSide = 0;
     static boolean pretendingDead = false;
     static boolean isMinID = true;
 
@@ -65,6 +64,8 @@ class Miner {
             if (rc.canMove(best)) rc.move(best);
         } else Pathfinder.move(rc, destination);
     }
+
+    static int lastSide = -1;
 
     static void setDestination(RobotController rc) throws GameActionException {
         // TODO pick walls
@@ -174,8 +175,6 @@ class Miner {
                 hiLead = rc.senseLead(loc);
             }
             lead += rc.senseLead(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
-            // maybe don't need to sense
         }
         lead = Math.min(lead / 10, 127);
     }
@@ -188,8 +187,5 @@ class Miner {
         mine(rc);
         rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
         writeQuadrantInformation(rc);
-
-//        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
-
     }
 }

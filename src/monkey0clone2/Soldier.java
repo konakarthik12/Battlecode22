@@ -1,6 +1,11 @@
-package monkey1clone;
+package monkey0clone2;
 
 import battlecode.common.*;
+
+
+
+
+import java.awt.*;
 
 
 class Soldier {
@@ -65,8 +70,7 @@ class Soldier {
                 toLeadFarm = false;
                 isBackup = false;
             }
-//            else destination = spawn;
-            else destination = Utils.nearestArchon(rc).translate(Utils.randomInt(-3,3), Utils.randomInt(-3, 3));
+            else destination = spawn;
             return;
         }
 
@@ -81,12 +85,10 @@ class Soldier {
             readQuadrant(rc);
         }
 
-        if (rc.getHealth() < 20) {
+        if (rc.getHealth() < 10) {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
-            int soldiers = rc.readSharedArray(1) - 1;
-            rc.writeSharedArray(1, Math.max(soldiers, 0));
         }
     }
 
@@ -126,7 +128,7 @@ class Soldier {
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
         if (rc.canSenseLocation(spawn) && toLeadFarm) {
-            if (visibleAllies > 0 && rc.senseLead(rc.getLocation()) == 0) {
+            if (visibleAllies > 10 && rc.senseLead(rc.getLocation()) == 0) {
                 rc.disintegrate();
                 return;
             }
@@ -161,7 +163,7 @@ class Soldier {
                         }
                         break;
                     case 3:
-                        if ((closeAlly >= visibleAttackers && lastHP - rc.getHealth() < 9) || focusFire) {
+                        if ((closeAlly >= visibleAttackers && lastHP - rc.getHealth() < 9) || focusFire || enemy.type == RobotType.SAGE) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
                                 && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
@@ -199,7 +201,7 @@ class Soldier {
             } else if (rc.canMove(go)) {
                 rc.move(go);
             }
-        } else if (visibleAttackers-1 > visibleAllies) {
+        } else if (visibleAttackers > visibleAllies) {
             attack(rc);
             Pathfinder.move(rc, spawn);
         } else {
@@ -228,7 +230,7 @@ class Soldier {
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
-        closeAlly = 1;
+        closeAlly = 0;
         focusFire = false;
         int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
@@ -242,7 +244,7 @@ class Soldier {
             ++visibleEnemies;
             switch (info.type) {
                 case SAGE:
-                case SOLDIER:
+                case SOLDIER: 
                 case WATCHTOWER: 
                     ++visibleAttackers;
             }
@@ -291,9 +293,6 @@ class Soldier {
                     }
                 }
             }
-        }
-        if (Utils.randomInt(1, visibleAllies) == 1) {
-            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
         }
     }
 

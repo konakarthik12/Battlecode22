@@ -91,5 +91,11 @@ class Builder {
             rc.setIndicatorString(destination.toString());
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }
+
+        for (Direction dir : Constants.directions) {
+            if (rc.canSenseLocation(rc.adjacentLocation(dir))) {
+                if (rc.canMutate(rc.adjacentLocation(dir)) && rc.senseNearbyRobots(-1).length > 4) rc.mutate(rc.adjacentLocation(dir));
+            }
+        }
     }
 }

@@ -49,7 +49,7 @@ class Miner {
                     }
                 }
                 if (best == null || !rc.canMove(best)) {
-                    Pathfinder.move(rc, spawn);
+                    UnrolledPathfinder.move(rc, spawn);
                 } else rc.move(best);
                 return;
             }
@@ -65,7 +65,7 @@ class Miner {
                 }
             }
             if (rc.canMove(best)) rc.move(best);
-        } else Pathfinder.move(rc, destination);
+        } else UnrolledPathfinder.move(rc, destination);
     }
 
     static void setDestination(RobotController rc) throws GameActionException {

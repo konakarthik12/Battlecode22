@@ -1,8 +1,6 @@
-package monkey1clone;
+package monkey0clone2;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 class Lab {
     static MapLocation spawn = null;
@@ -12,10 +10,8 @@ class Lab {
     }
     static void run(RobotController rc) throws GameActionException {
         int lead = rc.getTeamLeadAmount(rc.getTeam());
-        if (lead > 150 && rc.canMutate(rc.getLocation()) && rc.getMapHeight() + rc.getMapWidth() < 100) rc.mutate(rc.getLocation());
         int opponentLead = rc.getTeamLeadAmount(rc.getTeam().opponent());
         //transmute if nearest archons tell us to
-
-        if (rc.canTransmute() && ((rc.readSharedArray(56) & 1) == 0)) rc.transmute();
+        if (rc.canTransmute() && (lead >= 200 || (rc.readSharedArray(56) & 1) == 0)) rc.transmute();
     }
 }
