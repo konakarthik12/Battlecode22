@@ -1,4 +1,4 @@
-package monkey1clone;
+package monkey0clone;
 
 import battlecode.common.*;
 
@@ -47,7 +47,7 @@ class Builder {
                     rubble = rubble_;
                     aDist = Utils.archonDist(loc);
                     cDist = Utils.cornerDist(rc, loc);
-                } else if (rubble_ == rubble && Utils.archonDist(loc) >= aDist 
+                } else if (rubble_ == rubble && Utils.archonDist(loc) >= aDist
                 && Utils.cornerDist(rc, loc) >= cDist) {
                     best = loc;
                     rubble = rubble_;
@@ -66,13 +66,17 @@ class Builder {
             wall = null;
         }
     }
+
     static void act(RobotController rc) throws GameActionException {
         if (rc.getLocation().equals(destination)) {
             Direction dir = null;
             for (Direction o : Constants.directions) {
                 if (destination.add(o).equals(toPlace)) dir = o;
             }
-            if (rc.canBuildRobot(RobotType.LABORATORY, dir))rc.buildRobot(RobotType.LABORATORY, dir);
+            if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
+                rc.writeSharedArray(55, 0);
+                rc.buildRobot(RobotType.LABORATORY, dir);
+            }
         } else {
             if (destination == null) Pathfinder.move(rc, wall);
             else Pathfinder.move(rc, destination);
@@ -84,18 +88,16 @@ class Builder {
         }
     }
     static void run(RobotController rc) throws GameActionException {
+        if (rc.getRoundNum() == 400) {
+            wall = rc.getLocation();
+            rc.writeSharedArray(55, 1);
+        }
         setDestination(rc);
         act(rc);
         repair(rc);
         if (destination != null) {
             rc.setIndicatorString(destination.toString());
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
-        }
-
-        for (Direction dir : Constants.directions) {
-            if (rc.canSenseLocation(rc.adjacentLocation(dir))) {
-                if (rc.canMutate(rc.adjacentLocation(dir)) && rc.senseNearbyRobots(-1).length > 4) rc.mutate(rc.adjacentLocation(dir));
-            }
         }
     }
 }

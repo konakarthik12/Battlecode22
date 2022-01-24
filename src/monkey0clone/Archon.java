@@ -1,4 +1,4 @@
-package monkey0;
+package monkey0clone;
 
 import battlecode.common.*;
 

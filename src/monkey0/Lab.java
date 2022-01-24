@@ -13,7 +13,7 @@ class Lab {
         int opponentLead = rc.getTeamLeadAmount(rc.getTeam().opponent());
         //transmute if nearest archons tell us to
         if (rc.getRoundNum() > 1500) {
-            System.out.println((rc.readSharedArray(56) & 1));
+//            System.out.println((rc.readSharedArray(56) & 1));
         }
         if (rc.canTransmute() && (lead >= 100 || (rc.readSharedArray(56) & 1) == 0)) rc.transmute();
     }

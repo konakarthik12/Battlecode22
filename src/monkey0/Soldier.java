@@ -52,7 +52,7 @@ class Soldier {
             }
         }
 
-        if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
+//        if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
         if (rc.canAttack(target))  {
             rc.attack(target);
             sinceLastAttack = 0;

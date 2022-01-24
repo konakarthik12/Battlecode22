@@ -22,6 +22,7 @@ class Sage {
     static int visibleEnemies = 0;
     static int visibleAttackers = 0;
     static int visibleAllies = 0;
+    static int allySages = 0;
 
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
@@ -31,8 +32,10 @@ class Sage {
     static void attack(RobotController rc) throws GameActionException{
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
+        int priority2 = Integer.MIN_VALUE;
         int units = 0;
         RobotInfo target = null;
+        RobotInfo otherTarget = null;
         for (RobotInfo robotInfo : rc.senseNearbyRobots(25, rc.getTeam().opponent())) {
             int multiplier;
             units++;
@@ -45,15 +48,22 @@ class Sage {
                 default: multiplier = 5;
             }
 
-            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health;
+//            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health;
+            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) + Math.abs(45 - robotInfo.health);
+//            int score2 = (5 - multiplier) * 1000000 + robotInfo.health;
+//            if (robotInfo.health <= 45 && priority2 < score2 && robotInfo.type == RobotType.SAGE) {
+//                priority2 = score2;
+//                otherTarget = robotInfo;
+//            }
             if (score < priority) {
                 priority = score;
                 target = robotInfo;
             }
         }
 
-        if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
-        if (target != null && (units > 4 || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+//        if (otherTarget != null && rc.canAttack(otherTarget.location)) rc.attack(otherTarget.location);
+//        if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
+        if (target != null && allySages > 3 && (units > 4 || target.health * 50 <= 11 * target.type.health) && rc.canEnvision(AnomalyType.CHARGE)) {
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -86,10 +96,9 @@ class Sage {
             readQuadrant(rc);
         }
 
-        if (rc.getHealth() < 19) {
+        if (rc.getHealth() <= 45) {
+//            destination = Utils.nearestArchon(rc);
             destination = spawn;
-//            destination = Utils.nearestArchon(rc).translate(Utils.randomInt(-3,3), Utils.randomInt(-3, 3));
-            // TODO change to closest archon
             toLeadFarm = true;
             int sages = rc.readSharedArray(57) - 1;
             rc.writeSharedArray(57, Math.max(sages, 0));
@@ -232,7 +241,8 @@ class Sage {
         visibleEnemies = 0;
         visibleAttackers = 0;
         visibleAllies = 0;
-        closeAlly = 0;
+        closeAlly = 1;
+        allySages = 0;
         focusFire = false;
         int priority = Integer.MAX_VALUE;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
@@ -275,6 +285,7 @@ class Sage {
                     }
                     break;
                 case SAGE:
+                    ++allySages;
                     visibleAllies++;
                     if (visibleAttackers > 0) {
                         if (info.location.distanceSquaredTo(enemyLoc) <= Math.min(25, curDist)) {
