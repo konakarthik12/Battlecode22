@@ -46,8 +46,9 @@ class Sage {
                 case MINER: multiplier = 4; break;
                 default: multiplier = 5;
             }
-
-            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health;
+            int score = 0;
+            if (robotInfo.health <= 45) score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health - 100;
+            else score = multiplier * 1000000 + 10 * rc.senseRubble(robotInfo.location) + robotInfo.health;
             if (score < priority) {
                 priority = score;
                 target = robotInfo;
@@ -55,7 +56,7 @@ class Sage {
         }
 
         if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
-        if (target != null && (units > 4 || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+        if (target != null && !target.getType().isBuilding() && ((units > 4 && visibleAllies >= visibleAttackers) || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -91,8 +92,6 @@ class Sage {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
-            int sages = rc.readSharedArray(57) - 1;
-            rc.writeSharedArray(57, Math.max(sages, 0));
         }
     }
 
@@ -131,16 +130,16 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
-        if (rc.canSenseLocation(spawn) && toLeadFarm) {
+        if (rc.getLocation().distanceSquaredTo(spawn) <= 13 && toLeadFarm) {
             for (Direction dir : Constants.directions) {
-                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
-                    && rc.adjacentLocation(dir).distanceSquaredTo(spawn) <= 20) {
+                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble) {
                     go = dir;
                     rubble = rc.senseRubble(rc.adjacentLocation(dir));
                 }
             }
             if (rc.canMove(go)) rc.move(go);
             attack(rc);
+            return;
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
@@ -163,7 +162,7 @@ class Sage {
                         }
                         break;
                     case 3:
-                        if (visibleAllies >= visibleAttackers * 2) {
+                        if (visibleAllies >= visibleAttackers + 5) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble 
                             && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
@@ -245,7 +244,6 @@ class Sage {
             ++visibleEnemies;
             switch (info.type) {
                 case SAGE:
-                    ++visibleAttackers;
                 case SOLDIER: 
                 case WATCHTOWER: 
                     ++visibleAttackers;
@@ -293,9 +291,6 @@ class Sage {
         if (visibleEnemies == 0) {
             enemyLoc = null;
             enemy = null;
-        }
-        if (Utils.randomInt(1, visibleAllies) == 1) {
-            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
         }
     }
 

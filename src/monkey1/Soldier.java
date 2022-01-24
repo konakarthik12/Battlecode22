@@ -127,7 +127,7 @@ class Soldier {
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
         if (rc.canSenseLocation(spawn) && toLeadFarm) {
-            if (visibleAllies > 7 && rc.senseLead(rc.getLocation()) == 0) {
+            if (visibleAllies > 10 && rc.senseLead(rc.getLocation()) == 0) {
                 rc.disintegrate();
                 return;
             }
@@ -162,7 +162,7 @@ class Soldier {
                         }
                         break;
                     case 3:
-                        if ((closeAlly >= visibleAttackers && lastHP - rc.getHealth() < 9) || focusFire) {
+                        if ((closeAlly >= visibleAttackers && lastHP - rc.getHealth() < 9) || focusFire || enemy.type == RobotType.SAGE) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
                                 && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
@@ -243,7 +243,6 @@ class Soldier {
             ++visibleEnemies;
             switch (info.type) {
                 case SAGE:
-                    ++visibleAttackers;
                 case SOLDIER: 
                 case WATCHTOWER: 
                     ++visibleAttackers;
@@ -293,9 +292,6 @@ class Soldier {
                     }
                 }
             }
-        }
-        if (Utils.randomInt(1, visibleAllies) == 1) {
-            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
         }
     }
 

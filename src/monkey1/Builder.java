@@ -11,7 +11,7 @@ class Builder {
     static MapLocation spawn;
 
     static int close = 0;
-
+    static int cntr = 200;
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         int best = 1000;
@@ -72,7 +72,10 @@ class Builder {
             for (Direction o : Constants.directions) {
                 if (destination.add(o).equals(toPlace)) dir = o;
             }
-            if (rc.canBuildRobot(RobotType.LABORATORY, dir))rc.buildRobot(RobotType.LABORATORY, dir);
+            if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
+                rc.writeSharedArray(55, 0);
+                rc.buildRobot(RobotType.LABORATORY, dir);
+            }
         } else {
             if (destination == null) Pathfinder.move(rc, wall);
             else Pathfinder.move(rc, destination);
@@ -84,6 +87,11 @@ class Builder {
         }
     }
     static void run(RobotController rc) throws GameActionException {
+        if (rc.getRoundNum() == cntr) {
+            wall = rc.getLocation();
+            rc.writeSharedArray(55, 1);
+            cntr *= 3;
+        }
         setDestination(rc);
         act(rc);
         repair(rc);

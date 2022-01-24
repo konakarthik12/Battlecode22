@@ -86,8 +86,6 @@ class Soldier {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
-            int soldiers = rc.readSharedArray(1) - 1;
-            rc.writeSharedArray(1, Math.max(soldiers, 0));
         }
     }
 
@@ -127,7 +125,7 @@ class Soldier {
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
         if (rc.canSenseLocation(spawn) && toLeadFarm) {
-            if (visibleAllies > 7 && rc.senseLead(rc.getLocation()) == 0) {
+            if (visibleAllies > 10 && rc.senseLead(rc.getLocation()) == 0) {
                 rc.disintegrate();
                 return;
             }
@@ -268,7 +266,7 @@ class Soldier {
             curDist = rc.getLocation().distanceSquaredTo(enemyLoc);
         }
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (info.type == RobotType.SOLDIER) {
+            if (info.type == RobotType.SOLDIER || info.type == RobotType.SAGE) {
                 visibleAllies++;
                 if (visibleAttackers > 0) {
                     if (info.location.distanceSquaredTo(enemyLoc) <= curDist) {

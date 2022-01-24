@@ -5,7 +5,6 @@ import battlecode.common.*;
 class Miner {
 
     static int numReached = 0;
-    static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
     static MapLocation spawn = null;
     static int near = 0;
@@ -15,8 +14,6 @@ class Miner {
     static boolean enemyArchon = false;
     static int lead = 0;
     static boolean pretendingDead = false;
-    static int turnsSearching = 0;
-    static boolean isSearching = true;
     static boolean isMinID = true;
 
     static void setup(RobotController rc) throws GameActionException {
@@ -69,9 +66,9 @@ class Miner {
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
+        // TODO pick walls
         if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
-//            destination = new MapLocation((Utils.rng.nextInt(rc.getMapWidth()) - 6) + 3, (Utils.rng.nextInt(rc.getMapHeight() - 6) + 3));
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
             while (destination.x != 0 && destination.x != rc.getMapWidth() - 1 && destination.y != 0 && destination.y != rc.getMapHeight() - 1) {
                 destination = destination.add(rc.getLocation().directionTo(destination));
@@ -114,10 +111,6 @@ class Miner {
         assert(quadrant < 27);
     }
 
-    static void readSharedArray(RobotController rc) throws GameActionException {
-
-    }
-
     static void senseEnemies(RobotController rc) throws GameActionException {
         visibleEnemies = 0;
         visibleAttackers = 0;
@@ -125,7 +118,7 @@ class Miner {
         enemyArchon = false;
         for (RobotInfo info : rc.senseNearbyRobots(-1)) {
             if (info.team.equals(rc.getTeam())) {
-                if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
+                if (info.type.equals(RobotType.SOLDIER) || info.type.equals(RobotType.SAGE)) ++visibleAllies;
             } else {
                 ++visibleEnemies;
                 switch (info.type) {
@@ -135,6 +128,7 @@ class Miner {
                         ++visibleAttackers;
                         break;
                     case ARCHON:
+                    case LABORATORY:
                         enemyArchon = true;
                 }
             }
@@ -169,19 +163,13 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
-            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID && Utils.randomInt(1, near) <= 1) {
+            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID) {
                 destination = loc;
                 hiLead = rc.senseLead(loc);
             }
             lead += rc.senseLead(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
-            // maybe don't need to sense
         }
         lead = Math.min(lead / 10, 127);
-    }
-
-    static void writeShared(RobotController rc) throws GameActionException {
-
     }
 
     static void run(RobotController rc) throws GameActionException {
@@ -193,9 +181,7 @@ class Miner {
         rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
         writeQuadrantInformation(rc);
 
-//        for (RobotInfo robotInfo : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-//            rc.writeSharedArray(Utils.randomInt(0, 4), (1 << 12) + (robotInfo.location.x << 6) + robotInfo.location.y);
-//            break;
-//        }
+//        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
+
     }
 }

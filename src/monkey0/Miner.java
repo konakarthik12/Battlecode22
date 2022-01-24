@@ -11,6 +11,8 @@ class Miner {
     static int visibleEnemies = 0;
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
+    static int closeAlly = 0;
+    static MapLocation closeEnemy = null;
     static boolean enemyArchon = false;
     static int lead = 0;
     static boolean pretendingDead = false;
@@ -34,6 +36,7 @@ class Miner {
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+            if (closeAlly > 0)break;
             if (info.type.equals(RobotType.SOLDIER)) {
                 int dist = rc.getLocation().distanceSquaredTo(info.location);
                 int curr = rc.senseRubble(rc.getLocation());
@@ -116,21 +119,23 @@ class Miner {
         visibleAttackers = 0;
         visibleAllies = 0;
         enemyArchon = false;
-        for (RobotInfo info : rc.senseNearbyRobots(-1)) {
-            if (info.team.equals(rc.getTeam())) {
-                if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
-            } else {
-                ++visibleEnemies;
-                switch (info.type) {
-                    case SAGE:
-                    case SOLDIER:
-                    case WATCHTOWER: 
-                        ++visibleAttackers;
-                        break;
-                    case ARCHON:
-                    case LABORATORY:
-                        enemyArchon = true;
-                }
+        closeEnemy = null;
+        int dist = 100000;
+        for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+            ++visibleEnemies;
+            switch (info.type) {
+                case SAGE:
+                case SOLDIER:
+                case WATCHTOWER:
+                    if (rc.getLocation().distanceSquaredTo(info.location) < dist) {
+                        closeEnemy = info.location;
+                        dist = rc.getLocation().distanceSquaredTo(info.location);
+                    } 
+                    ++visibleAttackers;
+                    break;
+                case ARCHON:
+                case LABORATORY:
+                    enemyArchon = true;
             }
         }
     }
@@ -138,10 +143,15 @@ class Miner {
     static void senseAllies(RobotController rc) throws  GameActionException {
         isMinID = true;
         near = 0;
+        closeAlly = 0;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
             if (info.getType().equals(RobotType.MINER)) {
                 ++near;
                 if (info.getID() < rc.getID()) isMinID = false;
+            }
+            if (info.getType().equals(RobotType.SOLDIER) || info.getType().equals(RobotType.SAGE)) {
+                ++visibleAllies;
+                if (closeEnemy != null && rc.getLocation().distanceSquaredTo(closeEnemy) >= info.location.distanceSquaredTo(closeEnemy))closeAlly++;
             }
         }
     }
@@ -163,13 +173,11 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
-            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID && Utils.randomInt(1, near) <= 1) {
+            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead) {
                 destination = loc;
                 hiLead = rc.senseLead(loc);
             }
             lead += rc.senseLead(loc);
-//            if (rc.canSenseLocation(loc) && rc.senseLead(loc) > 5 && isMinID) destination = loc;
-            // maybe don't need to sense
         }
         lead = Math.min(lead / 10, 127);
     }
@@ -180,7 +188,6 @@ class Miner {
         setDestination(rc);
         move(rc);
         mine(rc);
-        rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
         writeQuadrantInformation(rc);
 
 //        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
