@@ -1,7 +1,5 @@
 from utils import *
 
-RUBBLE_EST = 15
-
 def adj(a, b):
     return cheby(a, origin) == cheby(b, origin) and manh(a,b) == 1
 
@@ -54,8 +52,8 @@ def generate_cardinal(direction, rot):
     for cheb in order:
         for v in cheb:
             ternary = f'(rc.canSenseLocation({loc_var_name(v)}) && !rc.isLocationOccupied({loc_var_name(v)}))? 20 + 2 * rc.senseRubble({loc_var_name(v)}) : 100000'
+            # ternary = f'rc.canSenseLocation({loc_var_name(v)}) ? 20 + rc.senseRubble({loc_var_name(v)}) : 100000'
             ret += declare_init(rubble_name(v), 'int', ternary) + '\n'
-            ret += f'if ({loc_var_name(v)}.equals(destination)) {{ {var_loc(v, "rubble")} = -0; }}'
 
     for cheb in order:
         for v in cheb:
@@ -63,11 +61,15 @@ def generate_cardinal(direction, rot):
 
     for v in order[0]:
         # estimate the distances
-        ret += f'{var_loc(v, "score")} = man({var_loc(v, "loc")}, destination) * (20 + {RUBBLE_EST}) + {var_loc(v, "rubble")};' + '\n'
+        # ret += f'{var_loc(v, "score")} = {var_loc(v, "loc")}.distanceSquaredTo(destination) + {var_loc(v, "rubble")};' + '\n'
+        ret += f'{var_loc(v, "score")} = man({var_loc(v, "loc")}, destination) * (20 + 1000) + {var_loc(v, "rubble")};' + '\n'
 
     for relaxation in delta:
         a, b = relaxation
-        ret += f'{var_loc(a, "score")} = Math.min({var_loc(a, "score")}, {var_loc(b, "score")} + {var_loc(a, "rubble")});' + '\n'
+        x = a
+        if cheby(a, origin) != cheby(b, origin):
+            x = a
+        ret += f'{var_loc(a, "score")} = Math.min({var_loc(a, "score")}, {var_loc(b, "score")} + {var_loc(x, "rubble")});' + '\n'
 
     ret += 'Direction go = Direction.CENTER;' + '\n'
     ret += 'int best = Integer.MAX_VALUE;' + '\n'
@@ -77,8 +79,7 @@ def generate_cardinal(direction, rot):
         ret += f'go = cur.directionTo({var_loc(v, "loc")});' + '\n'
         ret += '}' + '\n'
 
-    ret += 'if (rc.canMove(go)) rc.move(go);' + '\n'
-    ret += "if (cur.equals(new MapLocation(27, 25))) { "
+    ret += "if (cur.equals(new MapLocation(15, 31))) { "
     for i in order:
         s = ''
         for j in i:
@@ -87,6 +88,8 @@ def generate_cardinal(direction, rot):
         # ret += f'System.out.println({s})\n'
         ret += '\n'
     ret += "}\n"
+
+    ret += 'if (rc.canMove(go)) rc.move(go);' + '\n'
     ret += closer()
     return ret
 
@@ -108,13 +111,9 @@ def generate_ordinal(direction, rot):
 
     for cheb in order:
         for v in cheb:
-            ternary = -1
-            if v[0] ** 2 + v[1] ** 2 <= 2:
-                ternary = f'rc.canSenseLocation({loc_var_name(v)}) && !rc.isLocationOccupied({loc_var_name(v)}) ? 20 + 2 * rc.senseRubble({loc_var_name(v)}) : 100000'
-            else:
-                ternary = f'rc.canSenseLocation({loc_var_name(v)}) ? 20 + 2 * rc.senseRubble({loc_var_name(v)}) : 100000'
+            # ternary = f'rc.canSenseLocation({loc_var_name(v)}) ? 20 + rc.senseRubble({loc_var_name(v)}) : 100000'
+            ternary = f'rc.canSenseLocation({loc_var_name(v)}) && !rc.isLocationOccupied({loc_var_name(v)}) ? 20 + 2 * rc.senseRubble({loc_var_name(v)}) : 100000'
             ret += declare_init(rubble_name(v), 'int', ternary) + '\n'
-            ret += f'if ({loc_var_name(v)}.equals(destination)) {{ {var_loc(v, "rubble")} = -0; }}'
 
     for cheb in order:
         for v in cheb:
@@ -127,11 +126,15 @@ def generate_ordinal(direction, rot):
 
     for v in order[0]:
         # estimate the distances
-        ret += f'{var_loc(v, "score")} = man({var_loc(v, "loc")}, destination) * (20 + {RUBBLE_EST}) + {var_loc(v, "rubble")};' + '\n'
+        # ret += f'{var_loc(v, "score")} = {var_loc(v, "loc")}.distanceSquaredTo(destination) + {var_loc(v, "rubble")};' + '\n'
+        ret += f'{var_loc(v, "score")} = man({var_loc(v, "loc")}, destination) * (20 + 1000) + {var_loc(v, "rubble")};' + '\n'
 
     for relaxation in delta:
         a, b = relaxation
-        ret += f'{var_loc(a, "score")} = Math.min({var_loc(a, "score")}, {var_loc(b, "score")} + {var_loc(a, "rubble")});' + '\n'
+        x = a
+        if cheby(a, origin) != cheby(b, origin):
+            x = a
+        ret += f'{var_loc(a, "score")} = Math.min({var_loc(a, "score")}, {var_loc(b, "score")} + {var_loc(x, "rubble")});' + '\n'
 
     ret += 'Direction go = Direction.CENTER;' + '\n'
     ret += 'int best = Integer.MAX_VALUE;' + '\n'
@@ -144,7 +147,7 @@ def generate_ordinal(direction, rot):
 
     ret += 'if (rc.canMove(go)) rc.move(go);' + '\n'
 
-    ret += "if (cur.equals(new MapLocation(27, 25))) { "
+    ret += "if (cur.equals(new MapLocation(15, 31))) { "
     for i in order:
         s = ''
         for j in i:
@@ -156,6 +159,7 @@ def generate_ordinal(direction, rot):
 
     ret += closer()
     return ret
+    pass
 
 def main():
 

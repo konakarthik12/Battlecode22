@@ -1,4 +1,4 @@
-package monkey0;
+package monkey0clone2;
 
 import battlecode.common.*;
 
@@ -323,9 +323,9 @@ public class Archon {
                     }
                 }
             }
-            UnrolledPathfinder.move(rc, lowRubble);
+            Pathfinder.move(rc, lowRubble);
         } else {
-            UnrolledPathfinder.move(rc, destination);
+            Pathfinder.move(rc, destination);
         }
     }
 

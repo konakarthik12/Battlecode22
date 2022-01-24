@@ -1,7 +1,7 @@
 from utils import *
 from function import *
 
-def imports(pack='monkey0'):
+def imports(pack='pathfinder'):
     ret = ''
     ret += f'package {pack};' + '\n'
     ret += 'import battlecode.common.*;' + '\n'
@@ -27,7 +27,7 @@ def move():
     ret = ''
     ret += 'static void move(RobotController rc, MapLocation destination) throws GameActionException {' + '\n'
     ret += 'Direction go = rc.getLocation().directionTo(destination);' + '\n'
-    # ret += 'if (rc.canSenseLocation(destination)) Pathfinder.move(rc, destination);\n'
+    ret += 'if (rc.canSenseLocation(destination) Pathfinder.move(rc, destination);\n'
     ret += 'switch (go) {' + '\n'
     ret += 'case EAST: EAST(rc, destination); break;' + '\n'
     ret += 'case NORTH: NORTH(rc, destination); break;' + '\n'
@@ -49,8 +49,8 @@ def main():
     program += move() + '\n'
     program += "static int man(MapLocation a, MapLocation b) { return Math.abs(a.x - b.x) + Math.abs(a.y-b.y); }"
     program += '}' + '\n'
-    f = open('../../Pathfinder/UnrolledPathfinder.java', 'w')
-    # f = open('../UnrolledPathfinder.java', 'w')
+    # f = open('../../Pathfinder/UnrolledPathfinder.java', 'w')
+    f = open('../UnrolledPathfinder.java', 'w')
     f.write(program)
     f.close()
 #     print(program)

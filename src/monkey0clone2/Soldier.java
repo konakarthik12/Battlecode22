@@ -1,6 +1,9 @@
-package monkey0;
+package monkey0clone2;
 
 import battlecode.common.*;
+
+
+
 
 import java.awt.*;
 
@@ -141,7 +144,7 @@ class Soldier {
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
-                UnrolledPathfinder.move(rc, enemyLoc);
+                Pathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
             }
@@ -193,16 +196,16 @@ class Soldier {
                 } else {
                     attack(rc);
                     if (rc.canMove(go)) rc.move(go);
-                    else UnrolledPathfinder.move(rc, spawn);
+                    else Pathfinder.move(rc, spawn);
                 }
             } else if (rc.canMove(go)) {
                 rc.move(go);
             }
         } else if (visibleAttackers > visibleAllies) {
             attack(rc);
-            UnrolledPathfinder.move(rc, spawn);
+            Pathfinder.move(rc, spawn);
         } else {
-            UnrolledPathfinder.move(rc, destination);
+            Pathfinder.move(rc, destination);
             attack(rc);
         }
     }

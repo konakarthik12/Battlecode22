@@ -1,6 +1,9 @@
-package monkey0;
+package monkey0clone2;
 
 import battlecode.common.*;
+
+
+
 
 class Miner {
 
@@ -49,7 +52,7 @@ class Miner {
                     }
                 }
                 if (best == null || !rc.canMove(best)) {
-                    UnrolledPathfinder.move(rc, spawn);
+                    Pathfinder.move(rc, spawn);
                 } else rc.move(best);
                 return;
             }
@@ -65,7 +68,7 @@ class Miner {
                 }
             }
             if (rc.canMove(best)) rc.move(best);
-        } else UnrolledPathfinder.move(rc, destination);
+        } else Pathfinder.move(rc, destination);
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
