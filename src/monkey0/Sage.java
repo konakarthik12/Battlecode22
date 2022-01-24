@@ -56,7 +56,7 @@ class Sage {
         }
 
         if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
-        if (target != null && (units > 4 || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+        if (target != null && !target.getType().isBuilding() && ((units > 4 && visibleAllies >= visibleAttackers) || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -92,8 +92,6 @@ class Sage {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
-            int sages = rc.readSharedArray(57) - 1;
-            rc.writeSharedArray(57, Math.max(sages, 0));
         }
     }
 
@@ -132,9 +130,9 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
-        if (rc.getLocation().distanceSquaredTo(spawn) <= 15 && toLeadFarm) {
+        if (rc.getLocation().distanceSquaredTo(spawn) <= 13 && toLeadFarm) {
             for (Direction dir : Constants.directions) {
-                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
+                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble) {
                     go = dir;
                     rubble = rc.senseRubble(rc.adjacentLocation(dir));
                 }
@@ -293,9 +291,6 @@ class Sage {
         if (visibleEnemies == 0) {
             enemyLoc = null;
             enemy = null;
-        }
-        if (Utils.randomInt(1, visibleAllies) == 1) {
-            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
         }
     }
 

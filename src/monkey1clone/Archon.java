@@ -106,16 +106,15 @@ public class Archon {
                 best = r;
             }
         }
-        if (best != null && rc.canRepair(best.location)) rc.repair(best.location);
-//        if (best != null) {
-////            if (rc.canRepair(best.location)) {
-////                rc.repair(best.location);
-//                if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
-//                if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
-//
-//                else toHeal = best.ID;
-////            }
-//        } else toHeal = 0;
+        if (best != null) {
+            if (rc.canRepair(best.location)) {
+                rc.repair(best.location);
+                if (best.type == RobotType.SOLDIER && rc.getHealth() >= 44) toHeal = 0;
+                if (best.type == RobotType.SAGE && rc.getHealth() >= 94) toHeal = 0;
+
+                else toHeal = best.ID;
+            }
+        } else toHeal = 0;
     }
 
     static void setup(RobotController rc) throws GameActionException {

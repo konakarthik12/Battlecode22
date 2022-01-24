@@ -46,8 +46,9 @@ class Sage {
                 case MINER: multiplier = 4; break;
                 default: multiplier = 5;
             }
-
-            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health;
+            int score = 0;
+            if (robotInfo.health <= 45) score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health - 100;
+            else score = multiplier * 1000000 + 10 * rc.senseRubble(robotInfo.location) + robotInfo.health;
             if (score < priority) {
                 priority = score;
                 target = robotInfo;
@@ -55,7 +56,7 @@ class Sage {
         }
 
         if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
-        if (target != null && (units > 4 || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+        if (target != null && ((units > 4 && visibleAllies >= visibleAttackers) || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -131,16 +132,16 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
-        if (rc.canSenseLocation(spawn) && toLeadFarm) {
+        if (rc.getLocation().distanceSquaredTo(spawn) <= 15 && toLeadFarm) {
             for (Direction dir : Constants.directions) {
-                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
-                    && rc.adjacentLocation(dir).distanceSquaredTo(spawn) <= 20) {
+                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
                     go = dir;
                     rubble = rc.senseRubble(rc.adjacentLocation(dir));
                 }
             }
             if (rc.canMove(go)) rc.move(go);
             attack(rc);
+            return;
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
@@ -163,16 +164,22 @@ class Sage {
                         }
                         break;
                     case 3:
-                        if ((closeAlly >= visibleAttackers && lastHP - rc.getHealth() < 9)) {
-                            if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
-                                && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
+                        if (visibleAllies >= visibleAttackers + 5) {
+                            if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble 
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
+                                go = dir;
+                                rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                                dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
+                            }
+                        } else if ((closeAlly >= visibleAttackers || lastHP - rc.getHealth() >= 45)) {
+                            if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
                                 dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
                             }
                         } else {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
-                                && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
                                 dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
@@ -184,7 +191,7 @@ class Sage {
                 }
             }
             if (!move) {
-                if (rc.getMovementCooldownTurns() < 20 && rubble + 20 <= rc.senseRubble(cur)) {
+                if (rc.getMovementCooldownTurns() < 20 && rubble + 10 <= rc.senseRubble(cur)) {
                     return;
                 } else attack(rc);
             }
@@ -239,7 +246,6 @@ class Sage {
             ++visibleEnemies;
             switch (info.type) {
                 case SAGE:
-                    ++visibleAttackers;
                 case SOLDIER: 
                 case WATCHTOWER: 
                     ++visibleAttackers;
