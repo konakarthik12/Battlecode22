@@ -1,7 +1,7 @@
 from utils import *
 from function import *
 
-def imports(pack='monkey0'):
+def imports(pack='pathfinder'):
     ret = ''
     ret += f'package {pack};' + '\n'
     ret += 'import battlecode.common.*;' + '\n'

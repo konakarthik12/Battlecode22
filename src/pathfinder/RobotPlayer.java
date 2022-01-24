@@ -9,7 +9,6 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
 //        Constants.rng = new Random(rc.getID() + 1);
         Utils.setup(rc);
-        UnrollFinder.setup(rc);
         switch (rc.getType()) {
 //                case ARCHON: Archon.setup(rc); break;
             case MINER:

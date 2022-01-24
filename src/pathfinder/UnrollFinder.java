@@ -21,7 +21,7 @@ public class UnrollFinder {
     static ArrayList<List<MapLocation>> SOUTHWEST = new ArrayList<>();
 
     public static void setup(RobotController rc) throws GameActionException {
-        Utils.main(new String[]{});
+//        Utils.main(new String[]{});
         EAST = Utils.EAST;
         WEST = Utils.WEST;
         NORTHEAST = Utils.NORTHEAST;
