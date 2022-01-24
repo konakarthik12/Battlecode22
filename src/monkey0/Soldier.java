@@ -28,6 +28,7 @@ class Soldier {
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         prev = spawn;
+        readQuadrant(rc);
     }
 
     static void attack(RobotController rc) throws GameActionException{
@@ -63,7 +64,7 @@ class Soldier {
 
     static void setDestination(RobotController rc) throws GameActionException {
         if (toLeadFarm) {
-            if (rc.getHealth() >= 44) {
+            if (rc.getHealth() > 45) {
                 toLeadFarm = false;
                 isBackup = false;
             }
@@ -138,6 +139,7 @@ class Soldier {
             }
             if (rc.canMove(go)) rc.move(go);
             attack(rc);
+            return;
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {

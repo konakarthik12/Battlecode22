@@ -1,4 +1,4 @@
-package monkey0;
+package monkey0clone;
 
 import battlecode.common.*;
 
@@ -78,10 +78,6 @@ class Builder {
             wall = rc.getLocation();
             rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
             cntr *= 2;
-        } else if (rc.readSharedArray(54) > 0) {
-            wall = rc.getLocation();
-            rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
-            rc.writeSharedArray(54, 0);
         }
         setDestination(rc);
         act(rc);
