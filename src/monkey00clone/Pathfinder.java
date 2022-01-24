@@ -1,10 +1,14 @@
-package monkey0clone;
+package monkey00clone;
 
+<<<<<<< HEAD
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+=======
+import battlecode.common.*;
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
 
 public class Pathfinder {
 

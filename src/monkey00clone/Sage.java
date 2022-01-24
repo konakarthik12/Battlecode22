@@ -1,4 +1,4 @@
-package monkey0clone;
+package monkey00clone;
 
 import battlecode.common.*;
 
@@ -31,10 +31,18 @@ class Sage {
     }
 
     static void attack(RobotController rc) throws GameActionException{
+<<<<<<< HEAD
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         int units = 0;
         RobotInfo target = null;
+=======
+        int priority = Integer.MAX_VALUE;
+        int units = 0;
+        RobotInfo target = null;
+        RobotInfo sageTarget = null;
+        int sageScore = Integer.MIN_VALUE;
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         for (RobotInfo robotInfo : rc.senseNearbyRobots(25, rc.getTeam().opponent())) {
             int multiplier;
             units++;
@@ -46,17 +54,34 @@ class Sage {
                 case MINER: multiplier = 4; break;
                 default: multiplier = 5;
             }
+<<<<<<< HEAD
             int score = 0;
             if (robotInfo.health <= 45) score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health - 100;
             else score = multiplier * 1000000 + 10 * rc.senseRubble(robotInfo.location) + robotInfo.health;
+=======
+
+//            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health;
+            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) + Math.abs(45 - robotInfo.health);
+            int score2 = rc.getHealth();
+            if (score2 > sageScore && score2 <= 45 && robotInfo.type == RobotType.SAGE) {
+                sageScore = score2;
+                sageTarget = robotInfo;
+            }
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
             if (score < priority) {
                 priority = score;
                 target = robotInfo;
             }
         }
 
+<<<<<<< HEAD
         if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
         if (target != null && !target.getType().isBuilding() && ((units > 4 && visibleAllies >= visibleAttackers) || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+=======
+//        if (sageTarget != null && rc.canAttack(sageTarget.location)) rc.attack(sageTarget.location);
+        if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
+        if (target != null && (units > 4 || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -92,6 +117,11 @@ class Sage {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
+<<<<<<< HEAD
+=======
+            int sages = rc.readSharedArray(57) - 1;
+            rc.writeSharedArray(57, Math.max(sages, 0));
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         }
     }
 
@@ -130,16 +160,26 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
+<<<<<<< HEAD
         if (rc.getLocation().distanceSquaredTo(spawn) <= 13 && toLeadFarm) {
             for (Direction dir : Constants.directions) {
                 if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble) {
+=======
+        if (rc.canSenseLocation(spawn) && toLeadFarm) {
+            for (Direction dir : Constants.directions) {
+                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
+                    && rc.adjacentLocation(dir).distanceSquaredTo(spawn) <= 20) {
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
                     go = dir;
                     rubble = rc.senseRubble(rc.adjacentLocation(dir));
                 }
             }
             if (rc.canMove(go)) rc.move(go);
             attack(rc);
+<<<<<<< HEAD
             return;
+=======
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
@@ -162,7 +202,11 @@ class Sage {
                         }
                         break;
                     case 3:
+<<<<<<< HEAD
                         if (visibleAllies >= visibleAttackers + 5) {
+=======
+                        if (visibleAllies >= visibleAttackers * 2) {
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble 
                             && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
@@ -229,7 +273,12 @@ class Sage {
         if (visibleAllies > 31) visibleAllies = 31;
         if (visibleAttackers > 31) visibleAttackers = 31;
         int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
+<<<<<<< HEAD
             rc.writeSharedArray(2 + quadrant, writeValue);
+=======
+
+        rc.writeSharedArray(2 + quadrant, writeValue);
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         assert(quadrant < 27);
     }
 
@@ -244,7 +293,11 @@ class Sage {
             ++visibleEnemies;
             switch (info.type) {
                 case SAGE:
+<<<<<<< HEAD
                 case SOLDIER: 
+=======
+                case SOLDIER:
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
                 case WATCHTOWER: 
                     ++visibleAttackers;
             }
@@ -292,6 +345,12 @@ class Sage {
             enemyLoc = null;
             enemy = null;
         }
+<<<<<<< HEAD
+=======
+        if (Utils.randomInt(1, visibleAllies) == 1) {
+            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
+        }
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
     }
 
     static void run(RobotController rc) throws GameActionException {

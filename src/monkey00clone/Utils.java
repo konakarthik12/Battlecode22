@@ -1,4 +1,4 @@
-package monkey0clone;
+package monkey00clone;
 
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -10,13 +10,54 @@ import java.util.Random;
 class Utils {
 
     static Random rng = null;
+<<<<<<< HEAD
     private static RobotController rc;
 
     static void setup(RobotController rc) {
+=======
+    static int height;
+    static int width;
+    private static RobotController rc;
+
+    static void setup(RobotController rc) {
+        height = rc.getMapHeight();
+        width = rc.getMapWidth();
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         Utils.rc = rc;
         rng = new Random(rc.getID() + 422);
     }
 
+<<<<<<< HEAD
+=======
+    static MapLocation getWall(int roll) {
+        int x = 0;
+        int y = 0;
+        switch (roll) {
+            case 1: {
+                x = Utils.randomInt(3, Utils.width-3);
+                y = 2;
+                break;
+            }
+            case 2: {
+                x = Utils.randomInt(3, Utils.width-3);
+                y = Utils.height-3;
+                break;
+            }
+            case 3: {
+                y = Utils.randomInt(3, Utils.height-3);
+                x = 2;
+                break;
+            }
+            case 4: {
+                y = Utils.randomInt(3, Utils.height-3);
+                x = Utils.width-3;
+                break;
+            }
+        }
+        return new MapLocation(x, y);
+    }
+
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
     static MapLocation nearestArchon(RobotController rc) throws GameActionException {
         int dist = Integer.MAX_VALUE;
         MapLocation cur = rc.getLocation();

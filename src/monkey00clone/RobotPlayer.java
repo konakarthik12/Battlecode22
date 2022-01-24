@@ -1,4 +1,4 @@
-package monkey0clone;
+package monkey00clone;
 
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;

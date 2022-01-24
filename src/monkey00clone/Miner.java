@@ -1,4 +1,4 @@
-package monkey0clone;
+package monkey00clone;
 
 import battlecode.common.*;
 
@@ -11,8 +11,11 @@ class Miner {
     static int visibleEnemies = 0;
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
+<<<<<<< HEAD
     static int closeAlly = 0;
     static MapLocation closeEnemy = null;
+=======
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
     static boolean enemyArchon = false;
     static int lead = 0;
     static boolean pretendingDead = false;
@@ -36,7 +39,10 @@ class Miner {
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
+<<<<<<< HEAD
             if (closeAlly > 0)break;
+=======
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
             if (info.type.equals(RobotType.SOLDIER)) {
                 int dist = rc.getLocation().distanceSquaredTo(info.location);
                 int curr = rc.senseRubble(rc.getLocation());
@@ -68,14 +74,31 @@ class Miner {
         } else Pathfinder.move(rc, destination);
     }
 
+<<<<<<< HEAD
+=======
+    static int lastSide = -1;
+
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
     static void setDestination(RobotController rc) throws GameActionException {
         // TODO pick walls
         if (destination == null || (rc.canSenseLocation(destination)) && rc.senseLead(destination) <= 5) {
             ++numReached;
+<<<<<<< HEAD
             destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
             while (destination.x != 0 && destination.x != rc.getMapWidth() - 1 && destination.y != 0 && destination.y != rc.getMapHeight() - 1) {
                 destination = destination.add(rc.getLocation().directionTo(destination));
             }
+=======
+            int roll = Utils.randomInt(1,4);
+            int rep = 0;
+            while (roll == lastSide && ++rep < 10) roll = Utils.randomInt(1,4);
+            lastSide = roll;
+            destination = Utils.getWall(roll);
+//            destination = new MapLocation(Utils.randomInt(0, rc.getMapWidth()-1), Utils.randomInt(0, rc.getMapHeight()-1));
+//            while (destination.x != 0 && destination.x != rc.getMapWidth() - 1 && destination.y != 0 && destination.y != rc.getMapHeight() - 1) {
+//                destination = destination.add(rc.getLocation().directionTo(destination));
+//            }
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         }
 
         rc.setIndicatorString(destination.toString());
@@ -119,6 +142,7 @@ class Miner {
         visibleAttackers = 0;
         visibleAllies = 0;
         enemyArchon = false;
+<<<<<<< HEAD
         closeEnemy = null;
         int dist = 100000;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
@@ -136,6 +160,23 @@ class Miner {
                 case ARCHON:
                 case LABORATORY:
                     enemyArchon = true;
+=======
+        for (RobotInfo info : rc.senseNearbyRobots(-1)) {
+            if (info.team.equals(rc.getTeam())) {
+                if (info.type.equals(RobotType.SOLDIER)) ++visibleAllies;
+            } else {
+                ++visibleEnemies;
+                switch (info.type) {
+                    case SAGE:
+                    case SOLDIER:
+                    case WATCHTOWER: 
+                        ++visibleAttackers;
+                        break;
+                    case ARCHON:
+                    case LABORATORY:
+                        enemyArchon = true;
+                }
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
             }
         }
     }
@@ -143,16 +184,22 @@ class Miner {
     static void senseAllies(RobotController rc) throws  GameActionException {
         isMinID = true;
         near = 0;
+<<<<<<< HEAD
         closeAlly = 0;
+=======
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
             if (info.getType().equals(RobotType.MINER)) {
                 ++near;
                 if (info.getID() < rc.getID()) isMinID = false;
             }
+<<<<<<< HEAD
             if (info.getType().equals(RobotType.SOLDIER) || info.getType().equals(RobotType.SAGE)) {
                 ++visibleAllies;
                 if (closeEnemy != null && rc.getLocation().distanceSquaredTo(closeEnemy) >= info.location.distanceSquaredTo(closeEnemy))closeAlly++;
             }
+=======
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         }
     }
 
@@ -173,7 +220,11 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
+<<<<<<< HEAD
             if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead) {
+=======
+            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && isMinID && Utils.randomInt(1, near) <= 1) {
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
                 destination = loc;
                 hiLead = rc.senseLead(loc);
             }
@@ -188,9 +239,14 @@ class Miner {
         setDestination(rc);
         move(rc);
         mine(rc);
+<<<<<<< HEAD
         writeQuadrantInformation(rc);
 
 //        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
 
+=======
+        rc.writeSharedArray(34, rc.readSharedArray(34) + 1);
+        writeQuadrantInformation(rc);
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
     }
 }

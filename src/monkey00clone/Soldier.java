@@ -1,9 +1,12 @@
-package monkey0clone;
+package monkey00clone;
 
 import battlecode.common.*;
 
+<<<<<<< HEAD
 import java.awt.*;
 
+=======
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
 
 class Soldier {
     static MapLocation prev = null;
@@ -52,7 +55,11 @@ class Soldier {
             }
         }
 
+<<<<<<< HEAD
         if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
+=======
+//        if (!rc.getLocation().equals(target)) rc.writeSharedArray(0, (target.x << 6) + target.y);
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         if (rc.canAttack(target))  {
             rc.attack(target);
             sinceLastAttack = 0;
@@ -86,6 +93,11 @@ class Soldier {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
+<<<<<<< HEAD
+=======
+            int soldiers = rc.readSharedArray(1) - 1;
+            rc.writeSharedArray(1, Math.max(soldiers, 0));
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
         }
     }
 
@@ -125,7 +137,11 @@ class Soldier {
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
         if (rc.canSenseLocation(spawn) && toLeadFarm) {
+<<<<<<< HEAD
             if (visibleAllies > 10 && rc.senseLead(rc.getLocation()) == 0) {
+=======
+            if (visibleAllies > 7 && rc.senseLead(rc.getLocation()) == 0) {
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
                 rc.disintegrate();
                 return;
             }
@@ -266,7 +282,11 @@ class Soldier {
             curDist = rc.getLocation().distanceSquaredTo(enemyLoc);
         }
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
+<<<<<<< HEAD
             if (info.type == RobotType.SOLDIER || info.type == RobotType.SAGE) {
+=======
+            if (info.type == RobotType.SOLDIER) {
+>>>>>>> fc089691009a21324fdc4f206be78c1fe51ea6e7
                 visibleAllies++;
                 if (visibleAttackers > 0) {
                     if (info.location.distanceSquaredTo(enemyLoc) <= curDist) {
