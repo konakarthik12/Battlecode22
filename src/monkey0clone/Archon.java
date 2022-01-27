@@ -277,7 +277,10 @@ public class Archon {
         boolean special = false;
         //System.out.println(dist + " " + buildersBuilt + " " + rc.getArchonCount());
         if (dist == Integer.MAX_VALUE && buildersBuilt > 0 && rc.getRoundNum() < 100 && rc.readSharedArray(35) >= 4 && nid <= 1) {
-            destination = new MapLocation(cur.x + (mid.x - cur.x) / 2, cur.y + (mid.y - cur.y) / 2);
+            MapLocation ok = new MapLocation(cur.x + (mid.x - cur.x) / 2, cur.y + (mid.y - cur.y) / 2);
+            if (!rc.canSenseLocation(ok) || rc.senseRubble(ok) < 40) {
+                destination = new MapLocation(cur.x + (mid.x - cur.x) / 2, cur.y + (mid.y - cur.y) / 2);
+            }
         }
         if (dist == Integer.MAX_VALUE && buildersBuilt == 1 && rc.getRoundNum() < 100 && rc.getArchonCount() == 1) {
             buildersBuilt++;

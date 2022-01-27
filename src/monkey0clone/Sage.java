@@ -195,7 +195,15 @@ class Sage {
             } else if (rc.canMove(go)) {
                 rc.move(go);
             } else {
-                UnrolledPathfinder.move(rc, spawn);
+                rubble = 70;
+                for (Direction dir : Constants.directions) {
+                    if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble
+                        && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > dist) {
+                        go = dir;
+                        rubble = rc.senseRubble(rc.adjacentLocation(dir));
+                    }
+                }
+                if (rc.canMove(go))rc.move(go);
             }
         } else if (visibleAttackers > visibleAllies) {
             attack(rc);
