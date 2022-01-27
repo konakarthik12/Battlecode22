@@ -2,8 +2,6 @@ package monkey0;
 
 import battlecode.common.*;
 
-import java.awt.*;
-
 
 class Sage {
     static MapLocation prev = null;
@@ -28,27 +26,19 @@ class Sage {
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         prev = spawn;
-        readQuadrant(rc);
     }
 
     static void attack(RobotController rc) throws GameActionException{
         // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         int units = 0;
-        boolean low = false;
         RobotInfo target = null;
         for (RobotInfo robotInfo : rc.senseNearbyRobots(25, rc.getTeam().opponent())) {
             int multiplier;
             units++;
             switch (robotInfo.getType()) {
-                case SAGE: 
-                    multiplier = 0; 
-                    if (robotInfo.health <= 22) low = true;
-                    break;
-                case SOLDIER: 
-                    multiplier = 1; 
-                    if (robotInfo.health <= 11) low = true;
-                    break;
+                case SAGE: multiplier = 0; break;
+                case SOLDIER: multiplier = 1; break;
                 case BUILDER: multiplier = 2; break;
                 case WATCHTOWER: multiplier = 3; break;
                 case MINER: multiplier = 4; break;
@@ -62,8 +52,9 @@ class Sage {
                 target = robotInfo;
             }
         }
+
         if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
-        if ((low || (units > 4 && visibleAllies >= visibleAttackers)) && rc.canEnvision(AnomalyType.CHARGE)) {
+        if (target != null && !target.getType().isBuilding() && ((units > 4 && visibleAllies >= visibleAttackers) || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -76,7 +67,7 @@ class Sage {
 
     static void setDestination(RobotController rc) throws GameActionException {
         if (toLeadFarm) {
-            if (rc.getHealth() >= 90) {
+            if (rc.getHealth() >= 94) {
                 toLeadFarm = false;
                 isBackup = false;
             }
@@ -107,16 +98,11 @@ class Sage {
         int sDist = Integer.MAX_VALUE;
         MapLocation mLoc = null;
         MapLocation sLoc = null;
-        int fak = 2;
-        MapLocation fake = null;
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
-            int temp = rc.readSharedArray(quadrant);
-            int visAttackers = temp & 31;
-            int visEnemies = (temp >> 14) & 1;
-            int visAllies = (temp >> 5) & 31;
-
-            int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + rc.getMapWidth()/10;
-            int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + rc.getMapHeight()/10;
+            int visAttackers = rc.readSharedArray(quadrant) & 31;
+            int visEnemies = (rc.readSharedArray(quadrant) >> 14) & 1;
+            int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + Utils.randomInt(0, rc.getMapWidth()/5 - 1);
+            int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5 - 1);
             MapLocation target = new MapLocation(x, y);
             if (visAttackers > 0 && rc.getLocation().distanceSquaredTo(target) < sDist) {
                 isBackup = true;
@@ -142,15 +128,9 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
-        if (rc.getLocation().distanceSquaredTo(spawn) <= 13 && toLeadFarm) {
-            for (Direction dir : Constants.directions) {
-                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble) {
-                    go = dir;
-                    rubble = rc.senseRubble(rc.adjacentLocation(dir));
-                }
-            }
-            if (rc.canMove(go)) rc.move(go);
+        if (rc.getLocation().distanceSquaredTo(spawn) > 13 && toLeadFarm) {
             attack(rc);
+            UnrolledPathfinder.move(rc, spawn);
             return;
         }
         if (visibleEnemies > 0) {
@@ -158,9 +138,6 @@ class Sage {
                 UnrolledPathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
-            }
-            if (closeAlly == 0 && visibleAttackers > 0 && rc.getActionCooldownTurns() > 50) {
-                Pathfinder.move(rc, spawn);
             }
             int dist = rc.getLocation().distanceSquaredTo(enemyLoc);
             for (Direction dir : Constants.directions) {
@@ -171,20 +148,20 @@ class Sage {
                         break;
                     case 2:
                         if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
-                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > enemy.type.actionRadiusSquared) {
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > enemy.type.actionRadiusSquared + 5) {
                             go = dir;
                             rubble = rc.senseRubble(rc.adjacentLocation(dir));
                         }
                         break;
                     case 3:
-                        if (visibleAllies >= visibleAttackers + 5) {
+                        if (closeAlly >= visibleAttackers) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble 
                             && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
                                 dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
                             }
-                        } else if ((closeAlly >= visibleAttackers || lastHP - rc.getHealth() >= 45)) {
+                        } else if (lastHP - rc.getHealth() >= 45) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -309,6 +286,7 @@ class Sage {
         }
     }
 
+
     static void run(RobotController rc) throws GameActionException {
         senseEnemies(rc);
         setDestination(rc);
@@ -329,6 +307,5 @@ class Sage {
             prev = rc.getLocation();
         }
         lastHP = rc.getHealth();
-        rc.writeSharedArray(53, rc.readSharedArray(53) + 1);
     }
 }

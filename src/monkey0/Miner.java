@@ -7,7 +7,7 @@ class Miner {
     static int numReached = 0;
     static MapLocation destination = null;
     static MapLocation spawn = null;
-    static int lowerID = 0;
+    static int near = 0;
     static int visibleEnemies = 0;
     static int visibleAllies = 0;
     static int visibleAttackers = 0;
@@ -36,7 +36,7 @@ class Miner {
     static void move(RobotController rc) throws GameActionException {
         // experiment with returning to spawn and with running directly opposite to soldiers
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam().opponent())) {
-            if (closeAlly > 0) break;
+            if (closeAlly > 0)break;
             if (info.type.equals(RobotType.SOLDIER)) {
                 int dist = rc.getLocation().distanceSquaredTo(info.location);
                 int curr = rc.senseRubble(rc.getLocation());
@@ -109,7 +109,6 @@ class Miner {
         if (lead > 15) lead = 15;
         if (visibleAllies > 31) visibleAllies = 31;
         if (visibleAttackers > 31) visibleAttackers = 31;
-        if ((rc.readSharedArray(2 + quadrant) & 31) > 0)return;
         int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
             rc.writeSharedArray(2 + quadrant, writeValue);
         assert(quadrant < 27);
@@ -143,14 +142,12 @@ class Miner {
 
     static void senseAllies(RobotController rc) throws  GameActionException {
         isMinID = true;
+        near = 0;
         closeAlly = 0;
-        lowerID = 0;
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
             if (info.getType().equals(RobotType.MINER)) {
-                if (info.getID() < rc.getID()) {
-                    isMinID = false;
-                    lowerID++;
-                }
+                ++near;
+                if (info.getID() < rc.getID()) isMinID = false;
             }
             if (info.getType().equals(RobotType.SOLDIER) || info.getType().equals(RobotType.SAGE)) {
                 ++visibleAllies;
@@ -165,7 +162,7 @@ class Miner {
         MapLocation[] goldLocations = rc.senseNearbyLocationsWithGold();
         for (MapLocation loc : goldLocations) {
             while (rc.canMineGold(loc)) rc.mineGold(loc);
-            if (rc.canSenseLocation(loc) && rc.senseGold(loc) > 0) {
+            if (rc.canSenseLocation(loc) && rc.senseGold(loc) > 0 && isMinID) {
                 destination = loc;
                 gold = true;
             }
@@ -176,7 +173,7 @@ class Miner {
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
-            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && lowerID < 5) {
+            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead) {
                 destination = loc;
                 hiLead = rc.senseLead(loc);
             }
@@ -192,7 +189,8 @@ class Miner {
         move(rc);
         mine(rc);
         writeQuadrantInformation(rc);
-        rc.writeSharedArray(35, rc.readSharedArray(35) + 1);
+        spawn = Utils.nearestArchon(rc);
+        rc.writeSharedArray(35, rc.readSharedArray(35) +1);
 //        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
 
     }

@@ -3,8 +3,6 @@ package monkey0clone2;
 import battlecode.common.*;
 
 
-
-
 class Builder {
     static Direction previousStep = Direction.CENTER;
     static MapLocation destination = null;
@@ -60,14 +58,14 @@ class Builder {
                 if (destination.add(o).equals(toPlace)) dir = o;
             }
             if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
-                rc.writeSharedArray(55, (rc.readSharedArray(55) / 2) * 2);
+                rc.writeSharedArray(55, rc.readSharedArray(55) & 126);
                 rc.writeSharedArray(55, rc.readSharedArray(55) + 2);
                 rc.buildRobot(RobotType.LABORATORY, dir);
                 close++;
             }
         } else {
-            if (destination == null) Pathfinder.move(rc, wall);
-            else Pathfinder.move(rc, destination);
+            if (destination == null) UnrolledPathfinder.move(rc, wall);
+            else UnrolledPathfinder.move(rc, destination);
         }
     }
     static void repair(RobotController rc) throws GameActionException {

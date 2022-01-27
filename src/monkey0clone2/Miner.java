@@ -2,9 +2,6 @@ package monkey0clone2;
 
 import battlecode.common.*;
 
-
-
-
 class Miner {
 
     static int numReached = 0;
@@ -52,7 +49,7 @@ class Miner {
                     }
                 }
                 if (best == null || !rc.canMove(best)) {
-                    Pathfinder.move(rc, spawn);
+                    UnrolledPathfinder.move(rc, spawn);
                 } else rc.move(best);
                 return;
             }
@@ -68,7 +65,7 @@ class Miner {
                 }
             }
             if (rc.canMove(best)) rc.move(best);
-        } else Pathfinder.move(rc, destination);
+        } else UnrolledPathfinder.move(rc, destination);
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
@@ -172,13 +169,19 @@ class Miner {
         }
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead();
         lead = 0;
+        int dist = 500;
         int hiLead = 5;
         for (MapLocation loc : leadLocations) {
             while (rc.canMineLead(loc) && rc.senseLead(loc) > 1) rc.mineLead(loc);
             if (enemyArchon && rc.canMineLead(loc)) rc.mineLead(loc);
-            if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead) {
+            if (visibleAttackers > 0) {
+                if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && spawn.distanceSquaredTo(loc) < dist) {
+                    destination = loc;
+                    dist = spawn.distanceSquaredTo(loc);
+                }
+            } else if (!gold && rc.canSenseLocation(loc) && rc.senseLead(loc) > hiLead && rc.getLocation().distanceSquaredTo(loc) < dist) {
                 destination = loc;
-                hiLead = rc.senseLead(loc);
+                dist = rc.getLocation().distanceSquaredTo(loc);
             }
             lead += rc.senseLead(loc);
         }
@@ -192,7 +195,7 @@ class Miner {
         move(rc);
         mine(rc);
         writeQuadrantInformation(rc);
-
+        spawn = Utils.nearestArchon(rc);
 //        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
 
     }

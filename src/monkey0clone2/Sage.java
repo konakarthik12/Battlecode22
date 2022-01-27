@@ -3,11 +3,6 @@ package monkey0clone2;
 import battlecode.common.*;
 
 
-
-
-import java.awt.*;
-
-
 class Sage {
     static MapLocation prev = null;
     static MapLocation destination = null;
@@ -133,20 +128,14 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
-        if (rc.getLocation().distanceSquaredTo(spawn) <= 13 && toLeadFarm) {
-            for (Direction dir : Constants.directions) {
-                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble) {
-                    go = dir;
-                    rubble = rc.senseRubble(rc.adjacentLocation(dir));
-                }
-            }
-            if (rc.canMove(go)) rc.move(go);
+        if (rc.getLocation().distanceSquaredTo(spawn) > 13 && toLeadFarm) {
             attack(rc);
+            UnrolledPathfinder.move(rc, spawn);
             return;
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
-                Pathfinder.move(rc, enemyLoc);
+                UnrolledPathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
             }
@@ -159,20 +148,20 @@ class Sage {
                         break;
                     case 2:
                         if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
-                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > enemy.type.actionRadiusSquared) {
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > enemy.type.actionRadiusSquared + 5) {
                             go = dir;
                             rubble = rc.senseRubble(rc.adjacentLocation(dir));
                         }
                         break;
                     case 3:
-                        if (visibleAllies >= visibleAttackers + 5) {
+                        if (closeAlly >= visibleAttackers) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble 
                             && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
                                 dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
                             }
-                        } else if ((closeAlly >= visibleAttackers || lastHP - rc.getHealth() >= 45)) {
+                        } else if (lastHP - rc.getHealth() >= 45) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -204,18 +193,18 @@ class Sage {
                 } else {
                     attack(rc);
                     if (rc.canMove(go)) rc.move(go);
-                    else Pathfinder.move(rc, spawn);
+                    else UnrolledPathfinder.move(rc, spawn);
                 }
             } else if (rc.canMove(go)) {
                 rc.move(go);
             } else {
-                Pathfinder.move(rc, spawn);
+                UnrolledPathfinder.move(rc, spawn);
             }
         } else if (visibleAttackers > visibleAllies) {
             attack(rc);
-            Pathfinder.move(rc, spawn);
+            UnrolledPathfinder.move(rc, spawn);
         } else {
-            Pathfinder.move(rc, destination);
+            UnrolledPathfinder.move(rc, destination);
             attack(rc);
         }
     }
@@ -296,6 +285,7 @@ class Sage {
             enemy = null;
         }
     }
+
 
     static void run(RobotController rc) throws GameActionException {
         senseEnemies(rc);

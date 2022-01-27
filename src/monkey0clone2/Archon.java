@@ -323,9 +323,9 @@ public class Archon {
                     }
                 }
             }
-            Pathfinder.move(rc, lowRubble);
+            UnrolledPathfinder.move(rc, lowRubble);
         } else {
-            Pathfinder.move(rc, destination);
+            UnrolledPathfinder.move(rc, destination);
         }
     }
 
