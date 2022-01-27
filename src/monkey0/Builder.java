@@ -78,6 +78,10 @@ class Builder {
             wall = rc.getLocation();
             rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
             cntr *= 2;
+        } else if (rc.readSharedArray(38) == 1) {
+            wall = rc.getLocation();
+            rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
+            rc.writeSharedArray(38, 0);
         }
         setDestination(rc);
         act(rc);
@@ -86,5 +90,6 @@ class Builder {
             rc.setIndicatorString(destination.toString());
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }
+        rc.writeSharedArray(37, rc.readSharedArray(37) + 1);
     }
 }

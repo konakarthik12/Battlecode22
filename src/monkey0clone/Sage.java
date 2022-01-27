@@ -2,8 +2,6 @@ package monkey0clone;
 
 import battlecode.common.*;
 
-import java.awt.*;
-
 
 class Sage {
     static MapLocation prev = null;
@@ -28,14 +26,14 @@ class Sage {
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         prev = spawn;
+        readQuadrant(rc);
     }
 
     static void attack(RobotController rc) throws GameActionException{
+        // TODO: prefer enemies on lower rubble
         int priority = Integer.MAX_VALUE;
         int units = 0;
         RobotInfo target = null;
-        RobotInfo sageTarget = null;
-        int sageScore = Integer.MIN_VALUE;
         for (RobotInfo robotInfo : rc.senseNearbyRobots(25, rc.getTeam().opponent())) {
             int multiplier;
             units++;
@@ -47,23 +45,17 @@ class Sage {
                 case MINER: multiplier = 4; break;
                 default: multiplier = 5;
             }
-
-//            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health;
-            int score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) + Math.abs(45 - robotInfo.health);
-            int score2 = rc.getHealth();
-            if (score2 > sageScore && score2 <= 45 && robotInfo.type == RobotType.SAGE) {
-                sageScore = score2;
-                sageTarget = robotInfo;
-            }
+            int score = 0;
+            if (robotInfo.health <= 45) score = multiplier * 1000000 + rc.senseRubble(robotInfo.location) - robotInfo.health - 100;
+            else score = multiplier * 1000000 + 10 * rc.senseRubble(robotInfo.location) + robotInfo.health;
             if (score < priority) {
                 priority = score;
                 target = robotInfo;
             }
         }
 
-//        if (sageTarget != null && rc.canAttack(sageTarget.location)) rc.attack(sageTarget.location);
         if (target == null) rc.writeSharedArray(0, (rc.getLocation().x << 6) + rc.getLocation().y);
-        if (target != null && (units > 4 || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
+        if (target != null && !target.getType().isBuilding() && ((units > 4 && visibleAllies >= visibleAttackers) || target.health <= 10) && rc.canEnvision(AnomalyType.CHARGE)) {
             rc.envision(AnomalyType.CHARGE);
             sinceLastAttack = 0;
         } else if (target != null && rc.canAttack(target.location))  {
@@ -99,8 +91,6 @@ class Sage {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
-            int sages = rc.readSharedArray(57) - 1;
-            rc.writeSharedArray(57, Math.max(sages, 0));
         }
     }
 
@@ -112,8 +102,8 @@ class Sage {
         for (int quadrant = 2; quadrant <= 26; ++quadrant) {
             int visAttackers = rc.readSharedArray(quadrant) & 31;
             int visEnemies = (rc.readSharedArray(quadrant) >> 14) & 1;
-            int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + Utils.randomInt(0, rc.getMapWidth()/5 - 1);
-            int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + Utils.randomInt(0, rc.getMapHeight()/5 - 1);
+            int x = (quadrant - 2) / 5 * rc.getMapWidth() / 5 + rc.getMapWidth()/10;
+            int y = (quadrant - 2) % 5 * rc.getMapHeight() / 5 + rc.getMapHeight()/10;
             MapLocation target = new MapLocation(x, y);
             if (visAttackers > 0 && rc.getLocation().distanceSquaredTo(target) < sDist) {
                 isBackup = true;
@@ -139,20 +129,10 @@ class Sage {
         boolean action = rc.isActionReady();
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
-        if (rc.canSenseLocation(spawn) && toLeadFarm) {
-            for (Direction dir : Constants.directions) {
-                if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
-                    && rc.adjacentLocation(dir).distanceSquaredTo(spawn) <= 20) {
-                    go = dir;
-                    rubble = rc.senseRubble(rc.adjacentLocation(dir));
-                }
-            }
-            if (rc.canMove(go)) rc.move(go);
-            attack(rc);
-        }
+        
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
-                Pathfinder.move(rc, enemyLoc);
+                UnrolledPathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
             }
@@ -165,20 +145,20 @@ class Sage {
                         break;
                     case 2:
                         if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble
-                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > enemy.type.actionRadiusSquared) {
+                            && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) > enemy.type.actionRadiusSquared + 5) {
                             go = dir;
                             rubble = rc.senseRubble(rc.adjacentLocation(dir));
                         }
                         break;
                     case 3:
-                        if (visibleAllies >= visibleAttackers * 2) {
+                        if (closeAlly >= visibleAttackers) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) <= rubble 
                             && rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc) < dist) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
                                 dist = rc.adjacentLocation(dir).distanceSquaredTo(enemyLoc);
                             }
-                        } else if ((closeAlly >= visibleAttackers || lastHP - rc.getHealth() >= 45)) {
+                        } else if (lastHP - rc.getHealth() >= 45) {
                             if (rc.canMove(dir) && rc.senseRubble(rc.adjacentLocation(dir)) < rubble) {
                                 go = dir;
                                 rubble = rc.senseRubble(rc.adjacentLocation(dir));
@@ -210,18 +190,18 @@ class Sage {
                 } else {
                     attack(rc);
                     if (rc.canMove(go)) rc.move(go);
-                    else Pathfinder.move(rc, spawn);
+                    else UnrolledPathfinder.move(rc, spawn);
                 }
             } else if (rc.canMove(go)) {
                 rc.move(go);
             } else {
-                Pathfinder.move(rc, spawn);
+                UnrolledPathfinder.move(rc, spawn);
             }
         } else if (visibleAttackers > visibleAllies) {
             attack(rc);
-            Pathfinder.move(rc, spawn);
+            UnrolledPathfinder.move(rc, spawn);
         } else {
-            Pathfinder.move(rc, destination);
+            UnrolledPathfinder.move(rc, destination);
             attack(rc);
         }
     }
@@ -238,8 +218,7 @@ class Sage {
         if (visibleAllies > 31) visibleAllies = 31;
         if (visibleAttackers > 31) visibleAttackers = 31;
         int writeValue = (visibleEnemies << 14) + (lead<<10) + (visibleAllies<<5) + visibleAttackers + (1<<15);
-
-        rc.writeSharedArray(2 + quadrant, writeValue);
+            rc.writeSharedArray(2 + quadrant, writeValue);
         assert(quadrant < 27);
     }
 
@@ -254,7 +233,7 @@ class Sage {
             ++visibleEnemies;
             switch (info.type) {
                 case SAGE:
-                case SOLDIER:
+                case SOLDIER: 
                 case WATCHTOWER: 
                     ++visibleAttackers;
             }
@@ -302,10 +281,8 @@ class Sage {
             enemyLoc = null;
             enemy = null;
         }
-        if (Utils.randomInt(1, visibleAllies) == 1) {
-            rc.writeSharedArray(0, rc.readSharedArray(0) + visibleAttackers);
-        }
     }
+
 
     static void run(RobotController rc) throws GameActionException {
         senseEnemies(rc);
@@ -327,5 +304,6 @@ class Sage {
             prev = rc.getLocation();
         }
         lastHP = rc.getHealth();
+        rc.writeSharedArray(53, rc.readSharedArray(53) + 1);
     }
 }

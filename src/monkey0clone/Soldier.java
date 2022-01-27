@@ -2,6 +2,8 @@ package monkey0clone;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 
 class Soldier {
     static MapLocation prev = null;
@@ -26,6 +28,7 @@ class Soldier {
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
         prev = spawn;
+        readQuadrant(rc);
     }
 
     static void attack(RobotController rc) throws GameActionException{
@@ -61,7 +64,7 @@ class Soldier {
 
     static void setDestination(RobotController rc) throws GameActionException {
         if (toLeadFarm) {
-            if (rc.getHealth() >= 44) {
+            if (rc.getHealth() > 45) {
                 toLeadFarm = false;
                 isBackup = false;
             }
@@ -84,8 +87,6 @@ class Soldier {
             destination = spawn;
             // TODO change to closest archon
             toLeadFarm = true;
-            int soldiers = rc.readSharedArray(1) - 1;
-            rc.writeSharedArray(1, Math.max(soldiers, 0));
         }
     }
 
@@ -125,7 +126,7 @@ class Soldier {
         boolean move = rc.isMovementReady();
         Direction go = Direction.CENTER;
         if (rc.canSenseLocation(spawn) && toLeadFarm) {
-            if (visibleAllies > 7 && rc.senseLead(rc.getLocation()) == 0) {
+            if (visibleAllies > 10 && rc.senseLead(rc.getLocation()) == 0) {
                 rc.disintegrate();
                 return;
             }
@@ -138,10 +139,11 @@ class Soldier {
             }
             if (rc.canMove(go)) rc.move(go);
             attack(rc);
+            return;
         }
         if (visibleEnemies > 0) {
             if (!(enemy.type == RobotType.SOLDIER || enemy.type == RobotType.SAGE)) {
-                Pathfinder.move(rc, enemyLoc);
+                UnrolledPathfinder.move(rc, enemyLoc);
                 attack(rc);
                 return;
             }
@@ -193,16 +195,16 @@ class Soldier {
                 } else {
                     attack(rc);
                     if (rc.canMove(go)) rc.move(go);
-                    else Pathfinder.move(rc, spawn);
+                    else UnrolledPathfinder.move(rc, spawn);
                 }
             } else if (rc.canMove(go)) {
                 rc.move(go);
             }
         } else if (visibleAttackers > visibleAllies) {
             attack(rc);
-            Pathfinder.move(rc, spawn);
+            UnrolledPathfinder.move(rc, spawn);
         } else {
-            Pathfinder.move(rc, destination);
+            UnrolledPathfinder.move(rc, destination);
             attack(rc);
         }
     }
@@ -266,7 +268,7 @@ class Soldier {
             curDist = rc.getLocation().distanceSquaredTo(enemyLoc);
         }
         for (RobotInfo info : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (info.type == RobotType.SOLDIER) {
+            if (info.type == RobotType.SOLDIER || info.type == RobotType.SAGE) {
                 visibleAllies++;
                 if (visibleAttackers > 0) {
                     if (info.location.distanceSquaredTo(enemyLoc) <= curDist) {

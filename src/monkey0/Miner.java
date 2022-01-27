@@ -190,7 +190,7 @@ class Miner {
         mine(rc);
         writeQuadrantInformation(rc);
         spawn = Utils.nearestArchon(rc);
-        rc.writeSharedArray(35, rc.readSharedArray(35) +1);
+        rc.writeSharedArray(35, rc.readSharedArray(35) + 1);
 //        rc.writeSharedArray(48, rc.readSharedArray(48) + 1);
 
     }

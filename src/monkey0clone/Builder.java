@@ -11,44 +11,29 @@ class Builder {
     static MapLocation spawn;
 
     static int close = 0;
-
+    static int cntr = 0;
     static void setup(RobotController rc) throws GameActionException {
         spawn = rc.getLocation();
-        int best = 1000;
-        if (spawn.distanceSquaredTo(new MapLocation(0, spawn.y)) < best) {
-            wall = new MapLocation(0, spawn.y);
-            best = spawn.distanceSquaredTo(new MapLocation(0, spawn.y));
-        } 
-        if (spawn.distanceSquaredTo(new MapLocation(rc.getMapWidth() - 1, spawn.y)) < best) {
-            wall = new MapLocation(rc.getMapWidth() - 1, spawn.y);
-            best = spawn.distanceSquaredTo(new MapLocation(rc.getMapWidth() - 1, spawn.y));
-        } 
-        if (spawn.distanceSquaredTo(new MapLocation(spawn.x, 0)) < best) {
-            wall = new MapLocation(spawn.x, 0);
-            best = spawn.distanceSquaredTo(new MapLocation(spawn.x, 0));
-        } 
-        if (spawn.distanceSquaredTo(new MapLocation(spawn.x, rc.getMapHeight() - 1)) < best) {
-            wall = new MapLocation(spawn.x, rc.getMapHeight() - 1);
-            best = spawn.distanceSquaredTo(new MapLocation(spawn.x, rc.getMapHeight() - 1));
-        } 
+        wall = rc.getLocation();
+        cntr = 200;
+        rc.writeSharedArray(55, 1);
     }
 
     static void setDestination(RobotController rc) throws GameActionException {
-        if (wall != null && rc.getLocation().isAdjacentTo(wall)) {
+        if (wall != null && rc.getLocation().distanceSquaredTo(wall) <= 4) {
             int cDist = Integer.MAX_VALUE;
             int aDist = Utils.archonDist(wall);
             int rubble = rc.senseRubble(rc.getLocation());
             MapLocation best = wall;
-            for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(wall, 12)) {
-                if (!rc.canSenseLocation(loc))continue;
+            for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(wall, 20)) {
+                if (!rc.canSenseLocation(loc) || rc.canSenseRobotAtLocation(loc))continue;
                 int rubble_ = rc.senseRubble(loc);
-                if (rubble_ < rubble && Utils.archonDist(loc) >= aDist) {
+                if (rubble_ < rubble) {
                     best = loc;
                     rubble = rubble_;
                     aDist = Utils.archonDist(loc);
                     cDist = Utils.cornerDist(rc, loc);
-                } else if (rubble_ == rubble && Utils.archonDist(loc) >= aDist
-                && Utils.cornerDist(rc, loc) >= cDist) {
+                } else if (rubble_ == rubble && Utils.cornerDist(rc, loc) < cDist) {
                     best = loc;
                     rubble = rubble_;
                     aDist = Utils.archonDist(loc);
@@ -58,7 +43,7 @@ class Builder {
             toPlace = best;
             rubble = Integer.MAX_VALUE;
             for (Direction dir : Constants.directions) {
-                if (rc.canSenseLocation(toPlace.add(dir)) && rc.senseRubble(toPlace.add(dir)) < rubble) {
+                if (rc.canSenseLocation(toPlace.add(dir)) && !rc.canSenseRobotAtLocation(toPlace.add(dir)) && rc.senseRubble(toPlace.add(dir)) < rubble) {
                     destination = toPlace.add(dir);
                     rubble = rc.senseRubble(toPlace.add(dir));
                 }
@@ -66,7 +51,6 @@ class Builder {
             wall = null;
         }
     }
-
     static void act(RobotController rc) throws GameActionException {
         if (rc.getLocation().equals(destination)) {
             Direction dir = null;
@@ -74,12 +58,14 @@ class Builder {
                 if (destination.add(o).equals(toPlace)) dir = o;
             }
             if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
-                rc.writeSharedArray(55, 0);
+                rc.writeSharedArray(55, (rc.readSharedArray(55) / 2) * 2);
+                rc.writeSharedArray(55, rc.readSharedArray(55) + 2);
                 rc.buildRobot(RobotType.LABORATORY, dir);
+                close++;
             }
         } else {
-            if (destination == null) Pathfinder.move(rc, wall);
-            else Pathfinder.move(rc, destination);
+            if (destination == null) UnrolledPathfinder.move(rc, wall);
+            else UnrolledPathfinder.move(rc, destination);
         }
     }
     static void repair(RobotController rc) throws GameActionException {
@@ -88,9 +74,16 @@ class Builder {
         }
     }
     static void run(RobotController rc) throws GameActionException {
-        if (rc.getRoundNum() == 400) {
+        if (rc.getRoundNum() == cntr || (cntr == 200 && rc.readSharedArray(34) == 10)) {
+            if (rc.readSharedArray(35) >= 3) {
+                wall = rc.getLocation();
+                rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
+                cntr *= 2;
+            } else cntr++;
+        } else if (rc.readSharedArray(38) == 1 && close < 6) {
             wall = rc.getLocation();
-            rc.writeSharedArray(55, 1);
+            rc.writeSharedArray(55, rc.readSharedArray(55) | 1);
+            rc.writeSharedArray(38, 0);
         }
         setDestination(rc);
         act(rc);
@@ -99,5 +92,7 @@ class Builder {
             rc.setIndicatorString(destination.toString());
             rc.setIndicatorLine(rc.getLocation(), destination, 255, 255, 255);
         }
+
+        rc.writeSharedArray(37, 5);
     }
 }

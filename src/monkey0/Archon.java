@@ -104,7 +104,9 @@ public class Archon {
         while (rc.readSharedArray(ind) != 0) --ind;
         archonID = 64 - ind;
         rc.writeSharedArray(ind, (1 << 15) + (rc.getLocation().x << 6) + rc.getLocation().y);
-        
+        if (archonID == 1) {
+            rc.writeSharedArray(36, 30);
+        }
     }
 
     static void reset(RobotController rc) throws GameActionException {
@@ -137,6 +139,8 @@ public class Archon {
                     rc.writeSharedArray(i, fromShared - (1 << 15));
                 } else rc.writeSharedArray(i, 0);
                 rc.writeSharedArray(35, 0);
+                rc.writeSharedArray(37, 0);
+
             }
         }
         rc.writeSharedArray(64 - archonID, (1 << 15) + (rc.getLocation().x << 6) + rc.getLocation().y);
@@ -176,7 +180,7 @@ public class Archon {
             }
         }
         else {
-            if (buildersBuilt == 0 && myTurn) {
+            if (rc.readSharedArray(37) == 0 && myTurn) {
                 if (nid <= 1) summonUnitAnywhere(rc, RobotType.BUILDER);
             }
             // TODO don't spawn on rubble :skull:
@@ -208,8 +212,11 @@ public class Archon {
                 summonUnitAnywhere(rc, RobotType.SAGE);
             } else if (rc.readSharedArray(56) > 0 || (myTurn && ((rc.readSharedArray(55) & 1) == 0 || rc.getTeamLeadAmount(rc.getTeam()) >= 230)
             && rc.readSharedArray(34) - 4 <= rc.readSharedArray(1) + rc.readSharedArray(57))) {
-                summonUnitAnywhere(rc, RobotType.MINER);
-            } else if (myTurn) {
+                if (rc.readSharedArray(35) > rc.readSharedArray(36)) {
+                    rc.writeSharedArray(36, rc.readSharedArray(36) + 20);
+                    rc.writeSharedArray(38, 1);
+                } else summonUnitAnywhere(rc, RobotType.MINER);
+            } else if (myTurn || rc.getTeamLeadAmount(rc.getTeam()) > 300) {
                 summonUnitAnywhere(rc, RobotType.SOLDIER);
             }
             //if (rc.getRoundNum() >= 300 && rc.getRoundNum() % 20 == 0) minersBuilt--;
@@ -240,10 +247,6 @@ public class Archon {
                 }
             }
         }
-
-//        if (Utils.randomInt(1, allies) <= 3) {
-        rc.writeSharedArray(0, rc.readSharedArray(0) + visibleEnemies);
-//        }
     }
 
     static void readQuadrant(RobotController rc) throws GameActionException {
@@ -260,14 +263,21 @@ public class Archon {
             if (visAttackers > 1 && visAllies > 1 && rc.getLocation().distanceSquaredTo(target) < dist) {
                 dist = rc.getLocation().distanceSquaredTo(target);
                 destination = target;
-            } else if (dist == Integer.MAX_VALUE && buildersBuilt > 0 && rc.getRoundNum() < 100 && rc.readSharedArray(35) >= 4 && nid <= 1) {
-                destination = new MapLocation(cur.x + (mid.x - cur.x) / 2, cur.y + (mid.y - cur.y) / 2);
             }
         }
+        boolean special = false;
+        //System.out.println(dist + " " + buildersBuilt + " " + rc.getArchonCount());
+        if (dist == Integer.MAX_VALUE && buildersBuilt > 0 && rc.getRoundNum() < 100 && rc.readSharedArray(35) >= 4 && nid <= 1) {
+            destination = new MapLocation(cur.x + (mid.x - cur.x) / 2, cur.y + (mid.y - cur.y) / 2);
+        }
+        if (dist == Integer.MAX_VALUE && buildersBuilt == 1 && rc.getRoundNum() < 100 && rc.getArchonCount() == 1) {
+            buildersBuilt++;
+            special = true;
+            destination = new MapLocation(cur.x + (mid.x - cur.x) / 2, cur.y + (mid.y - cur.y) / 2);
+        }
         //System.out.println(dist + " " + visibleAllies + " " + rc.readSharedArray(58));
-        if (dist > 50 && rc.readSharedArray(58) < rc.getArchonCount() - 1
-            && turret && destination != null && sinceMove >= 50 && visibleAllies < 2) {
-            //System.out.println("HI?");
+        if (special || (dist > 50 && rc.readSharedArray(58) < rc.getArchonCount() - 1 
+            && turret && destination != null && sinceMove >= 50 && visibleAllies < 2)) {
             turret = false;
             rc.writeSharedArray(58, rc.readSharedArray(58) + 1);
         } else if ((rc.senseRubble(rc.getLocation()) >= 30 && turret && rc.readSharedArray(58) < rc.getArchonCount() - 1)) {
@@ -295,7 +305,8 @@ public class Archon {
             if (rc.canTransform()) rc.transform();
         } else if (turret || rc.getMode() == RobotMode.TURRET) return;
         MapLocation cur = rc.getLocation();
-        if ((visibleAllies > 3 || visibleAttackers > 0 || rc.senseRubble(rc.getLocation()) >= 80) && lowRubble == null) {
+        if ((rc.getLocation().isAdjacentTo(destination) || visibleAllies > 3 || visibleAttackers > 0 || rc.senseRubble(rc.getLocation()) >= 80
+            || (rc.getArchonCount() == 1 && rc.getTeamGoldAmount(rc.getTeam()) >= 20)) && lowRubble == null) {
             int rubble = rc.senseRubble(cur);
             int dist = Integer.MAX_VALUE;
             for (MapLocation poss : rc.getAllLocationsWithinRadiusSquared(cur, 8)) {
